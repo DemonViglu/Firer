@@ -4,7 +4,7 @@ using UnityEngine;
 namespace DemonViglu.FirePlay.Flame
 {
     /// <summary>
-    /// 火苗的空间行为：在玩家身旁平滑漂浮。
+    /// 火苗的空间行为：作为独立世界对象，平滑跟随一个由玩家提供的 Anchor。
     /// 颜色和亮度由 FlameColorState 保存，视觉表现由 FlameVisuals 读取。
     /// </summary>
     public sealed class FlameBrush : MonoBehaviour
@@ -19,8 +19,14 @@ namespace DemonViglu.FirePlay.Flame
         private Vector3 _followVelocity;
 
         public FlameColorState State => _state;
+        public float InteractionRadius => _config.InteractionRadius;
         public float LightRange => _config.LightRange;
         public float LightIntensity => _config.LightIntensity;
+
+        public void SetFollowAnchor(Transform anchor)
+        {
+            _followTarget = anchor;
+        }
 
         private void Awake()
         {
@@ -52,6 +58,14 @@ namespace DemonViglu.FirePlay.Flame
                 targetPosition,
                 ref _followVelocity,
                 _config.FollowSmoothTime);
+        }
+
+        /// <summary>
+        /// 由色彩源等世界对象调用。视觉组件会在同一帧末尾读取更新后的状态。
+        /// </summary>
+        public void AbsorbColor(Color color)
+        {
+            _state.SetColor(color);
         }
     }
 }

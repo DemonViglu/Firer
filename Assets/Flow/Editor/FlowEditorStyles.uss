@@ -1,0 +1,30 @@
+GridBackground {
+    --grid-background-color: #1a1a1a;
+    --line-color: #2a2a2a;
+    --thick-line-color: #3a3a3a;
+    --spacing: 50;
+}
+
+.flow-node-active #node-border {
+    border-color: #4CAF50;
+    border-width: 3px;
+}
+
+.flow-node-active #title {
+    background-color: rgba(76, 175, 80, 0.4);
+}
+
+.flow-node-completed #node-border {
+    border-color: #888888;
+    border-width: 2px;
+    opacity: 0.7;
+}
+
+.flow-node-failed #node-border {
+    border-color: #f44336;
+    border-width: 3px;
+}
+
+.flow-node-failed #title {
+    background-color: rgba(244, 67, 54, 0.4);
+}

@@ -20,7 +20,7 @@ public class GameBootstrapper : MonoBehaviour
     private void Awake()
     {
         // 确保只有一个 Bootstrapper
-        var existingBootstrapper = FindFirstObjectByType<GameBootstrapper>();
+        var existingBootstrapper = FindAnyObjectByType<GameBootstrapper>();
         if (existingBootstrapper != this)
         {
             Debug.LogWarning("[GameBootstrapper] 场景中已有 Bootstrapper，销毁重复的");
@@ -48,7 +48,7 @@ public class GameBootstrapper : MonoBehaviour
         //Debug.Log("[GameBootstrapper] ✓ 事件系统初始化");
 
 
-        var gameManager = FindFirstObjectByType<GameManager>();
+        var gameManager = FindAnyObjectByType<GameManager>();
         if (gameManager == null)
         {
             Debug.LogWarning("[GameBootstrapper] 场景中未找到 GameManager，自动创建");

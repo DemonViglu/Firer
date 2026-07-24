@@ -184,7 +184,7 @@ namespace Flow.Editor
                 }
             }
 
-            var runners = Object.FindObjectsByType<FlowGraphRunner>(FindObjectsSortMode.None);
+            var runners = Object.FindObjectsByType<FlowGraphRunner>();
             foreach (var runner in runners)
             {
                 if (runner.Graph == m_CurrentGraph && runner.IsRunning)

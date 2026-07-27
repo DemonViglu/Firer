@@ -29,6 +29,11 @@ namespace DemonViglu.FirePlay.Save
             {
                 data.campfires.Add(campfire.CreateRecord());
             }
+            var worldTree = FindFirstObjectByType<WorldTreeContribution>();
+            if (worldTree != null)
+            {
+                data.worldTree = worldTree.CreateRecord();
+            }
 
             Status = _repository.TrySave(data, out var error)
                 ? $"Saved {data.campfires.Count} campfires"
@@ -53,6 +58,8 @@ namespace DemonViglu.FirePlay.Save
             }
 
             Campfire.ClearRuntimeInstances();
+            var worldTree = FindFirstObjectByType<WorldTreeContribution>();
+            worldTree?.ApplySavedState(data.worldTree);
             var loaded = 0;
             foreach (var record in data.campfires)
             {

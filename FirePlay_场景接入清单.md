@@ -32,11 +32,25 @@
 - `MarshmallowRitual`：与 RestSpot 同物体，标记可烤；Player 的 `MarshmallowInteraction` 在停留时显示手持占位物并支持 Q 旋转；
 - 后续仪式都继承 `RestSpotRitual`，不直接修改 `RestInteraction`。
 
+## 温暖节点
+
+- 在需要被火点亮的区域创建空物体并挂载 `WarmthNode`；默认半径为 6 米，可按关卡空间调整。
+- 可选：在该物体或其子物体添加 Point Light，并将其引用赋给 `Warmth Light`。Light 的最终 Intensity/Range 由 0–1 温暖值驱动；未引用 Light 时节点仍正常计算，可供后续 Shader、树或世界进度读取。
+- `SmallFire` 按较低温暖值供热；等级大于 0 的 `Campfire` 提供更高温暖值，且随等级提高。节点不会改变火源、余火或存档。
+
+## 大树贡献（M4 基础）
+
+- 在大树根物体挂载 `WorldTreeContribution`。树必须有启用的 Collider，且该 Collider 所在 Layer 包含在 Player 的 `Interaction Layers` 中；建议使用球形 Trigger 覆盖树根附近的停留区域。
+- 靠近时按 E 消耗 `Contribution Cost`（默认 10）余火；本地玩家仅能贡献一次，状态与颜色会随存档恢复。Demo 不设探索或篝火前置。
+- 可选：在树冠预留一个 Point Light，初始关闭后赋给 `Personal Light`；首次贡献后它会启用，并使用已选择的颜色。Player 挂载 `TreeLightColorSelector` 后，靠近大树按 V 可循环选择原型颜色，按 E 贡献；移动端 UI 直接调用 `SelectPersonalLightColor(Color)`。位置尚未固定为玩法数据，后续可扩展多个锚点。
+- 多光点占位：树上额外挂 `TreePersonalLightVisuals`，赋予一个 Point Light Prefab 与树冠 `Light Root`。它按光点记录生成实例；当前本地仅有一条记录，未来可直接显示同步而来的其他玩家记录。
+
 ## 已验证
 
 - 小火种放置、回收、上限、升级为公共篝火；
 - 预置/运行时篝火保存与恢复，预置小火种升级后的隐藏；
 - 停留、观星镜头引导/退出复原、烤棉花显示/旋转；
 - 公共篝火等级视觉桥接（占位缩放，Light/VFX 可选）。
+- 大树个人光点原型颜色选择（靠近大树按 V 循环后再按 E 贡献）。
 
 场景、Prefab 或 Inspector 接入发生变化时，请同步更新本清单。

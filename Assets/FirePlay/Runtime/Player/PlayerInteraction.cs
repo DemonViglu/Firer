@@ -23,6 +23,7 @@ namespace DemonViglu.FirePlay.Player
         public FlameSource NearestFlameSource { get; private set; }
         public SmallFire NearestSmallFire { get; private set; }
         public Campfire NearestCampfire { get; private set; }
+        public WorldTreeContribution NearestWorldTree { get; private set; }
         public CampfireUpgradeController CampfireUpgradeController => _campfireUpgradeController;
 
         private void Awake()
@@ -62,6 +63,7 @@ namespace DemonViglu.FirePlay.Player
                 NearestFlameSource = null;
                 NearestSmallFire = null;
                 NearestCampfire = null;
+                NearestWorldTree = null;
                 return;
             }
 
@@ -82,6 +84,8 @@ namespace DemonViglu.FirePlay.Player
                 transform.position,
                 activeFlame.InteractionRadius,
                 out _);
+            WorldTreeContribution nearestWorldTree = null;
+            var nearestWorldTreeDistance = float.PositiveInfinity;
             var interactPressed = _input.InteractPressedThisFrame;
 
             for (var index = 0; index < count; index++)
@@ -109,12 +113,24 @@ namespace DemonViglu.FirePlay.Player
                     }
                 }
 
+                var worldTree = _overlapResults[index].GetComponentInParent<WorldTreeContribution>();
+                if (worldTree != null)
+                {
+                    var distance = (worldTree.transform.position - transform.position).sqrMagnitude;
+                    if (distance < nearestWorldTreeDistance)
+                    {
+                        nearestWorldTree = worldTree;
+                        nearestWorldTreeDistance = distance;
+                    }
+                }
+
                 _overlapResults[index] = null;
             }
 
             NearestFlameSource = nearestFlameSource;
             NearestSmallFire = nearestSmallFire;
             NearestCampfire = nearestCampfire;
+            NearestWorldTree = nearestWorldTree;
 
             if (_input.UpgradeCampfirePressedThisFrame && nearestCampfire != null)
             {
@@ -132,6 +148,10 @@ namespace DemonViglu.FirePlay.Player
             else if (interactPressed && nearestFlameSource != null)
             {
                 nearestFlameSource.TryRestore(_flameResourceController);
+            }
+            else if (interactPressed && nearestWorldTree != null)
+            {
+                nearestWorldTree.TryContribute(_flameResourceController, activeFlame);
             }
         }
 

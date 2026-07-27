@@ -152,6 +152,7 @@ namespace DemonViglu.FirePlay.Debugging
             var nearbyFlameSource = _playerInteraction != null ? _playerInteraction.NearestFlameSource : null;
             var nearbySmallFire = _playerInteraction != null ? _playerInteraction.NearestSmallFire : null;
             var nearbyCampfire = _playerInteraction != null ? _playerInteraction.NearestCampfire : null;
+            var nearbyWorldTree = _playerInteraction != null ? _playerInteraction.NearestWorldTree : null;
             if (nearbyCampfire != null)
             {
                 _text.Append("Nearby Campfire: ").Append(nearbyCampfire.CampfireId).Append(" / Level ")
@@ -184,6 +185,11 @@ namespace DemonViglu.FirePlay.Debugging
             {
                 _text.Append("Nearby Fire: ").AppendLine(NearbyCampfireStatus);
             }
+            _text.Append("World Tree: ").AppendLine(nearbyWorldTree == null
+                ? "Unavailable"
+                : nearbyWorldTree.HasLocalContribution
+                    ? $"Contributed / Total {nearbyWorldTree.TotalContribution:0.0} / {nearbyWorldTree.LastContributionStatus}"
+                    : $"Press E contribute ({nearbyWorldTree.ContributionCost:0.0}) / Total {nearbyWorldTree.TotalContribution:0.0} / {nearbyWorldTree.LastContributionStatus}");
             _text.Append("Save: ").AppendLine(SaveStatus);
             _text.Append("Small Fires: ").Append(SmallFire.ActiveCount).Append(" / ");
             _text.AppendLine(_campfirePlacement != null

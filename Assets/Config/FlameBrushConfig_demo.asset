@@ -20,5 +20,5 @@ MonoBehaviour:
   _interactionLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  _lightRange: 3
-  _lightIntensity: 1.4
+  _lightRange: 4
+  _lightIntensity: 3.8

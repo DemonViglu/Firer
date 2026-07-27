@@ -37,13 +37,14 @@ namespace DemonViglu.FirePlay.Save
             try
             {
                 data = JsonUtility.FromJson<FirePlaySaveData>(File.ReadAllText(SavePath));
-                if (data == null || data.version != FirePlaySaveData.CurrentVersion)
+                if (data == null || (data.version != 2 && data.version != FirePlaySaveData.CurrentVersion))
                 {
                     error = "Unsupported save version";
                     return false;
                 }
                 Debug.Log($"Load from {SavePath}");
                 data.campfires ??= new();
+                data.worldTree ??= new();
                 error = null;
                 return true;
             }

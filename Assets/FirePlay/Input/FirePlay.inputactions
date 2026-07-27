@@ -78,6 +78,14 @@
                     "interactions": "Press"
                 },
                 {
+                    "name": "CycleTreeLightColor",
+                    "type": "Button",
+                    "id": "cb20819d-34a4-44cd-aab7-14a220e5d82b",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Press"
+                },
+                {
                     "name": "Pause",
                     "type": "Button",
                     "id": "ef2ecb5b-10f1-40b3-9477-9003e14d18cf",
@@ -238,6 +246,17 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Pause",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "31a0c0c6-a36d-4d40-a3b9-dd1c015ae88a",
+                    "path": "<Keyboard>/v",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "CycleTreeLightColor",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

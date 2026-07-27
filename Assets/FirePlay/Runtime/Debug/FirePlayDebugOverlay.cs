@@ -151,9 +151,27 @@ namespace DemonViglu.FirePlay.Debugging
             }
             var nearbyFlameSource = _playerInteraction != null ? _playerInteraction.NearestFlameSource : null;
             var nearbySmallFire = _playerInteraction != null ? _playerInteraction.NearestSmallFire : null;
-            if (nearbySmallFire != null)
+            var nearbyCampfire = _playerInteraction != null ? _playerInteraction.NearestCampfire : null;
+            if (nearbyCampfire != null)
             {
+                _text.Append("Nearby Campfire: ").Append(nearbyCampfire.CampfireId).Append(" / Level ")
+                    .Append(nearbyCampfire.Level).Append(" / ")
+                    .AppendLine(nearbyCampfire.IsMaxLevel
+                        ? "Maximum level"
+                        : $"G upgrade ({nearbyCampfire.NextUpgradeCost:0.0})");
+                _text.Append("Campfire Status: ").AppendLine(nearbyCampfire.LastUpgradeStatus);
+            }
+            else if (nearbySmallFire != null)
+            {
+                var upgradeController = _playerInteraction.CampfireUpgradeController;
                 _text.Append("Nearby Fire: Small fire / Press E reclaim").AppendLine();
+                _text.Append("Small Fire Upgrade: ").AppendLine(upgradeController == null
+                    ? "MISSING COMPONENT"
+                    : upgradeController.HasValidSetup ? "Press G" : "INVALID SETUP");
+                if (upgradeController != null)
+                {
+                    _text.Append("Upgrade Status: ").AppendLine(upgradeController.LastUpgradeStatus);
+                }
             }
             else if (nearbyFlameSource != null)
             {
@@ -186,7 +204,7 @@ namespace DemonViglu.FirePlay.Debugging
 
             _text.Append("Rest: ").AppendLine(_restInteraction == null
                 ? "MISSING COMPONENT"
-                : _restInteraction.IsResting ? "Resting" : _restInteraction.NearestRestSpot != null ? "Available (Press R)" : "Unavailable");
+                : _restInteraction.IsResting ? $"Resting at {_restInteraction.ActiveRestSpot.name}" : _restInteraction.NearestRestSpot != null ? "Available (Press R)" : "Unavailable");
         }
 
         private void EnsureStyle()

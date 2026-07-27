@@ -18,16 +18,20 @@ namespace DemonViglu.FirePlay.Player
         private InputAction _constrictFlameAction;
         private InputAction _placeFireAction;
         private InputAction _restAction;
+        private InputAction _upgradeCampfireAction;
         private InputAction _lookAction;
         private InputAction _interactAction;
+        private InputAction _emoteAction;
 
         public Vector2 Move => _moveAction?.ReadValue<Vector2>() ?? Vector2.zero;
         public bool SprintHeld => _sprintAction != null && _sprintAction.IsPressed();
         public bool ConstrictFlameHeld => _constrictFlameAction != null && _constrictFlameAction.IsPressed();
         public bool PlaceFirePressedThisFrame => _placeFireAction != null && _placeFireAction.WasPressedThisFrame();
         public bool RestPressedThisFrame => _restAction != null && _restAction.WasPressedThisFrame();
+        public bool UpgradeCampfirePressedThisFrame => _upgradeCampfireAction != null && _upgradeCampfireAction.WasPressedThisFrame();
         public Vector2 Look => _lookAction?.ReadValue<Vector2>() ?? Vector2.zero;
         public bool InteractPressedThisFrame => _interactAction != null && _interactAction.WasPressedThisFrame();
+        public bool EmotePressedThisFrame => _emoteAction != null && _emoteAction.WasPressedThisFrame();
 
         private void Awake()
         {
@@ -51,8 +55,10 @@ namespace DemonViglu.FirePlay.Player
             _constrictFlameAction = FindRequiredAction("ConstrictFlame");
             _placeFireAction = FindRequiredAction("PlaceFire");
             _restAction = FindRequiredAction("Rest");
+            _upgradeCampfireAction = FindRequiredAction("UpgradeCampfire");
             _lookAction = FindRequiredAction("Look");
             _interactAction = FindRequiredAction("Interact");
+            _emoteAction = FindRequiredAction("Emote");
         }
 
         private void OnEnable()

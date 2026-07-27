@@ -121,6 +121,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1362091146816636917}
+  - component: {fileID: 5626814030419998241}
   - component: {fileID: 8542682576192916304}
   m_Layer: 0
   m_Name: SmallFire
@@ -146,6 +147,20 @@ Transform:
   - {fileID: 8832435381620650470}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5626814030419998241
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4632934166947303754}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96a61ae6f42b4de2bc177b982a039bc3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Core.StableSceneId
+  _value: 
+  _allowRuntimeAssignment: 0
 --- !u!114 &8542682576192916304
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -160,6 +175,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.SmallFire
   _fireLight: {fileID: 0}
   _fireVfx: {fileID: 0}
+  _config: {fileID: 0}
 --- !u!1 &6633939677757737703
 GameObject:
   m_ObjectHideFlags: 0

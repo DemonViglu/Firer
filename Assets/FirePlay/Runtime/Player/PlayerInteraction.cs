@@ -15,12 +15,15 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField] private PlayerFlameController _flameController;
         [SerializeField] private FirePlayPlayerInput _input;
         [SerializeField] private FlameResourceController _flameResourceController;
+        [SerializeField] private CampfireUpgradeController _campfireUpgradeController;
         [SerializeField] private LayerMask _interactionLayers = ~0;
 
         private readonly Collider[] _overlapResults = new Collider[MaxDetectedColliders];
 
         public FlameSource NearestFlameSource { get; private set; }
         public SmallFire NearestSmallFire { get; private set; }
+        public Campfire NearestCampfire { get; private set; }
+        public CampfireUpgradeController CampfireUpgradeController => _campfireUpgradeController;
 
         private void Awake()
         {
@@ -39,6 +42,11 @@ namespace DemonViglu.FirePlay.Player
                 _flameResourceController = GetComponent<FlameResourceController>();
             }
 
+            if (_campfireUpgradeController == null)
+            {
+                _campfireUpgradeController = GetComponent<CampfireUpgradeController>();
+            }
+
             if (_flameController == null || _input == null || _flameResourceController == null)
             {
                 Debug.LogError("[PlayerInteraction] 缺少 PlayerFlameController、输入或余火控制器。", this);
@@ -53,6 +61,7 @@ namespace DemonViglu.FirePlay.Player
             {
                 NearestFlameSource = null;
                 NearestSmallFire = null;
+                NearestCampfire = null;
                 return;
             }
 
@@ -69,6 +78,10 @@ namespace DemonViglu.FirePlay.Player
                 transform.position,
                 activeFlame.InteractionRadius,
                 out var nearestSmallFireDistance);
+            var nearestCampfire = Campfire.FindNearest(
+                transform.position,
+                activeFlame.InteractionRadius,
+                out _);
             var interactPressed = _input.InteractPressedThisFrame;
 
             for (var index = 0; index < count; index++)
@@ -101,6 +114,16 @@ namespace DemonViglu.FirePlay.Player
 
             NearestFlameSource = nearestFlameSource;
             NearestSmallFire = nearestSmallFire;
+            NearestCampfire = nearestCampfire;
+
+            if (_input.UpgradeCampfirePressedThisFrame && nearestCampfire != null)
+            {
+                nearestCampfire.TryUpgrade(_flameResourceController);
+            }
+            else if (_input.UpgradeCampfirePressedThisFrame && nearestSmallFire != null)
+            {
+                _campfireUpgradeController?.TryUpgradeSmallFire(nearestSmallFire);
+            }
 
             if (interactPressed && nearestSmallFire != null && nearestSmallFireDistance <= nearestFlameSourceDistance)
             {

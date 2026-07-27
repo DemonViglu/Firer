@@ -46,6 +46,14 @@
                     "interactions": "Press"
                 },
                 {
+                    "name": "UpgradeCampfire",
+                    "type": "Button",
+                    "id": "a5982ba6-b5a7-4d3f-b9c1-23d2593d769a",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Press"
+                },
+                {
                     "name": "Look",
                     "type": "Value",
                     "id": "d18fb896-ca62-42de-b8e8-0a697207b1db",
@@ -175,6 +183,17 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Rest",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c5b43823-3aa3-4756-afb5-542430e4079f",
+                    "path": "<Keyboard>/g",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "UpgradeCampfire",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

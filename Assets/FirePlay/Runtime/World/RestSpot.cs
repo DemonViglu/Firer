@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DemonViglu.FirePlay.Player;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.World
@@ -11,6 +12,8 @@ namespace DemonViglu.FirePlay.World
         private static readonly List<RestSpot> ActiveSpots = new();
 
         [SerializeField, Min(0.1f)] private float _interactionRadius = 1.75f;
+
+        public float InteractionRadius => _interactionRadius;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetActiveSpots()
@@ -54,6 +57,22 @@ namespace DemonViglu.FirePlay.World
         private void OnDisable()
         {
             ActiveSpots.Remove(this);
+        }
+
+        public void NotifyRestStarted(RestInteraction interaction)
+        {
+            foreach (var ritual in GetComponents<RestSpotRitual>())
+            {
+                ritual.OnRestStarted(interaction);
+            }
+        }
+
+        public void NotifyRestEnded(RestInteraction interaction)
+        {
+            foreach (var ritual in GetComponents<RestSpotRitual>())
+            {
+                ritual.OnRestEnded(interaction);
+            }
         }
 
         private void OnDrawGizmosSelected()

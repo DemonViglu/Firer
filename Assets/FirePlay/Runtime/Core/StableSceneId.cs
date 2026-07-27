@@ -13,9 +13,44 @@ namespace DemonViglu.FirePlay.Core
         private static readonly Dictionary<string, StableSceneId> ActiveIds = new();
 
         [SerializeField] private string _value;
+        [SerializeField] private bool _allowRuntimeAssignment;
 
         public string Value => _value;
         public bool IsValid => !string.IsNullOrWhiteSpace(_value);
+        public bool AllowsRuntimeAssignment => _allowRuntimeAssignment;
+
+        public static bool TryFind(string value, out StableSceneId stableSceneId)
+        {
+            stableSceneId = null;
+            return !string.IsNullOrWhiteSpace(value) && ActiveIds.TryGetValue(value.Trim().ToLowerInvariant(), out stableSceneId);
+        }
+
+        /// <summary>
+        /// 仅供运行时创建且需要持久化的对象在创建命令中显式分配 ID。
+        /// 场景预置对象仍应在 Inspector 手动填写，不会自动生成。
+        /// </summary>
+        public bool TryAssignRuntimeValue(string value)
+        {
+            if (!_allowRuntimeAssignment || IsValid || string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            var normalized = value.Trim().ToLowerInvariant();
+            if (ActiveIds.TryGetValue(normalized, out var existing) && existing != this)
+            {
+                Debug.LogError($"[StableSceneId] 运行时 ID 重复：{normalized}", this);
+                return false;
+            }
+
+            _value = normalized;
+            if (isActiveAndEnabled)
+            {
+                ActiveIds[_value] = this;
+            }
+
+            return true;
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetRegistry()
@@ -27,7 +62,10 @@ namespace DemonViglu.FirePlay.Core
         {
             if (!IsValid)
             {
-                Debug.LogWarning("[StableSceneId] 未配置稳定 ID。", this);
+                if (!_allowRuntimeAssignment)
+                {
+                    Debug.LogWarning("[StableSceneId] 未配置稳定 ID。", this);
+                }
                 return;
             }
 

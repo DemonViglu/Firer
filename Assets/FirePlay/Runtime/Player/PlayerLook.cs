@@ -17,6 +17,7 @@ namespace DemonViglu.FirePlay.Player
         private float _pitch;
 
         public Transform CameraPivot => _cameraPivot;
+        public bool LookLocked { get; private set; }
 
         private void Awake()
         {
@@ -46,12 +47,19 @@ namespace DemonViglu.FirePlay.Player
 
         private void Update()
         {
+            if (LookLocked)
+            {
+                return;
+            }
+
             var look = _input.Look * _sensitivity;
             transform.Rotate(Vector3.up, look.x, Space.World);
 
             _pitch = Mathf.Clamp(_pitch - look.y, _pitchLimits.x, _pitchLimits.y);
             _cameraPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
         }
+
+        public void SetLookLocked(bool locked) => LookLocked = locked;
 
         private static float NormalizeAngle(float angle)
         {

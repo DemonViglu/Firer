@@ -1,4 +1,5 @@
 using DemonViglu.FirePlay.World;
+using System;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.Player
@@ -20,6 +21,10 @@ namespace DemonViglu.FirePlay.Player
 
         public bool IsResting { get; private set; }
         public RestSpot NearestRestSpot { get; private set; }
+        public RestSpot ActiveRestSpot { get; private set; }
+
+        public event Action<RestSpot> RestStarted;
+        public event Action<RestSpot> RestEnded;
 
         private void Awake()
         {
@@ -78,7 +83,10 @@ namespace DemonViglu.FirePlay.Player
             }
 
             IsResting = true;
+            ActiveRestSpot = NearestRestSpot;
             _movement.SetMovementLocked(true);
+            ActiveRestSpot.NotifyRestStarted(this);
+            RestStarted?.Invoke(ActiveRestSpot);
             return true;
         }
 
@@ -89,8 +97,15 @@ namespace DemonViglu.FirePlay.Player
                 return;
             }
 
+            var completedSpot = ActiveRestSpot;
             IsResting = false;
+            ActiveRestSpot = null;
             _movement.SetMovementLocked(false);
+            if (completedSpot != null)
+            {
+                completedSpot.NotifyRestEnded(this);
+                RestEnded?.Invoke(completedSpot);
+            }
         }
 
         private void OnDisable()

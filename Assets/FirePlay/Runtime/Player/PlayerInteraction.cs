@@ -13,9 +13,13 @@ namespace DemonViglu.FirePlay.Player
         private const int MaxDetectedColliders = 8;
 
         [SerializeField] private PlayerFlameController _flameController;
+        [SerializeField] private FirePlayPlayerInput _input;
+        [SerializeField] private FlameResourceController _flameResourceController;
         [SerializeField] private LayerMask _interactionLayers = ~0;
 
         private readonly Collider[] _overlapResults = new Collider[MaxDetectedColliders];
+
+        public FlameSource NearestFlameSource { get; private set; }
 
         private void Awake()
         {
@@ -24,9 +28,19 @@ namespace DemonViglu.FirePlay.Player
                 _flameController = GetComponent<PlayerFlameController>();
             }
 
-            if (_flameController == null)
+            if (_input == null)
             {
-                Debug.LogError("[PlayerInteraction] 未指定 PlayerFlameController。", this);
+                _input = GetComponent<FirePlayPlayerInput>();
+            }
+
+            if (_flameResourceController == null)
+            {
+                _flameResourceController = GetComponent<FlameResourceController>();
+            }
+
+            if (_flameController == null || _input == null || _flameResourceController == null)
+            {
+                Debug.LogError("[PlayerInteraction] 缺少 PlayerFlameController、输入或余火控制器。", this);
                 enabled = false;
             }
         }
@@ -36,6 +50,7 @@ namespace DemonViglu.FirePlay.Player
             var activeFlame = _flameController.ActiveFlame;
             if (activeFlame == null)
             {
+                NearestFlameSource = null;
                 return;
             }
 
@@ -45,6 +60,10 @@ namespace DemonViglu.FirePlay.Player
                 _overlapResults,
                 _interactionLayers,
                 QueryTriggerInteraction.Collide);
+
+            FlameSource nearestFlameSource = null;
+            var nearestFlameSourceDistance = float.PositiveInfinity;
+            var interactPressed = _input.InteractPressedThisFrame;
 
             for (var index = 0; index < count; index++)
             {
@@ -60,7 +79,25 @@ namespace DemonViglu.FirePlay.Player
                     restorableNode.TryRestore(activeFlame);
                 }
 
+                var flameSource = _overlapResults[index].GetComponentInParent<FlameSource>();
+                if (flameSource != null)
+                {
+                    var distance = (flameSource.transform.position - transform.position).sqrMagnitude;
+                    if (distance < nearestFlameSourceDistance)
+                    {
+                        nearestFlameSource = flameSource;
+                        nearestFlameSourceDistance = distance;
+                    }
+                }
+
                 _overlapResults[index] = null;
+            }
+
+            NearestFlameSource = nearestFlameSource;
+
+            if (interactPressed && nearestFlameSource != null)
+            {
+                nearestFlameSource.TryRestore(_flameResourceController);
             }
         }
 

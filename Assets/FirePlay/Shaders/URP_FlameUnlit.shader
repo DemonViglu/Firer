@@ -89,7 +89,8 @@ Shader "DemonViglu/FirePlay/URP Flame Unlit"
                 // 不透明度与发光强度分开：视觉亮度能增加而轮廓不会变硬。
                 half intensity = max(_FlameIntensity, 0.0);
                 color *= intensity;
-                alpha *= saturate(0.72 + intensity * 0.12) * _FlameColor.a;
+                // 低火时保留柔和可见轮廓，高火时增加实体感；不让余火归零等于火苗消失。
+                alpha *= lerp(0.42, 1.0, saturate(intensity)) * _FlameColor.a;
 
                 return half4(color, alpha);
             }

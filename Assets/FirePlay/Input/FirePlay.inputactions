@@ -14,6 +14,30 @@
                     "interactions": ""
                 },
                 {
+                    "name": "Sprint",
+                    "type": "Button",
+                    "id": "4473d673-b51e-4a56-95d4-64b5ca248b86",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "ConstrictFlame",
+                    "type": "Button",
+                    "id": "d6824a06-15e2-46e8-afae-a6dd6f898e1b",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "PlaceFire",
+                    "type": "Button",
+                    "id": "cff405ee-b469-4cf5-8c9c-1a77c34d4e9e",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Press"
+                },
+                {
                     "name": "Look",
                     "type": "Value",
                     "id": "d18fb896-ca62-42de-b8e8-0a697207b1db",
@@ -101,6 +125,39 @@
                     "action": "Move",
                     "isComposite": false,
                     "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "6f5bb12e-e9a9-4270-97de-31ec4381eaf6",
+                    "path": "<Keyboard>/leftShift",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Sprint",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "43cbd9fd-29bf-42bf-a0ab-2aa9cdd39af4",
+                    "path": "<Keyboard>/c",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "ConstrictFlame",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e399a699-9c7d-4de0-b9c4-47d6a1c5fc3d",
+                    "path": "<Keyboard>/f",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "PlaceFire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
                 },
                 {
                     "name": "",

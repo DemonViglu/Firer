@@ -22,6 +22,7 @@ namespace DemonViglu.FirePlay.Player
         private float _verticalVelocity;
 
         public bool IsSprinting { get; private set; }
+        public bool MovementLocked { get; private set; }
 
         private void Awake()
         {
@@ -46,8 +47,8 @@ namespace DemonViglu.FirePlay.Player
                 return;
             }
 
-            var input = _input.Move;
-            IsSprinting = TrySprint(input);
+            var input = MovementLocked ? Vector2.zero : _input.Move;
+            IsSprinting = !MovementLocked && TrySprint(input);
             var forward = Vector3.ProjectOnPlane(_cameraTransform.forward, Vector3.up).normalized;
             var right = Vector3.ProjectOnPlane(_cameraTransform.right, Vector3.up).normalized;
             var speed = _moveSpeed * (IsSprinting ? _sprintSpeedMultiplier : 1f);
@@ -61,6 +62,15 @@ namespace DemonViglu.FirePlay.Player
             _verticalVelocity -= _gravity * Time.deltaTime;
             var velocity = horizontalVelocity + Vector3.up * _verticalVelocity;
             _controller.Move(velocity * Time.deltaTime);
+        }
+
+        public void SetMovementLocked(bool locked)
+        {
+            MovementLocked = locked;
+            if (locked)
+            {
+                IsSprinting = false;
+            }
         }
 
         private bool TrySprint(Vector2 moveInput)

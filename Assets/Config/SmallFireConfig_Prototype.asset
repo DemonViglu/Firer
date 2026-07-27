@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: SmallFireConfig_Prototype
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Data.SmallFireConfig
   _fuelCost: 15
+  _reclaimFuel: 5
   _durationSeconds: 45
   _maximumActiveCount: 3
   _maximumPlacementDistance: 5

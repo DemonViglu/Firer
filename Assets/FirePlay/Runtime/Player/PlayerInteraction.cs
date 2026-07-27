@@ -20,6 +20,7 @@ namespace DemonViglu.FirePlay.Player
         private readonly Collider[] _overlapResults = new Collider[MaxDetectedColliders];
 
         public FlameSource NearestFlameSource { get; private set; }
+        public SmallFire NearestSmallFire { get; private set; }
 
         private void Awake()
         {
@@ -51,6 +52,7 @@ namespace DemonViglu.FirePlay.Player
             if (activeFlame == null)
             {
                 NearestFlameSource = null;
+                NearestSmallFire = null;
                 return;
             }
 
@@ -63,6 +65,10 @@ namespace DemonViglu.FirePlay.Player
 
             FlameSource nearestFlameSource = null;
             var nearestFlameSourceDistance = float.PositiveInfinity;
+            var nearestSmallFire = SmallFire.FindNearest(
+                transform.position,
+                activeFlame.InteractionRadius,
+                out var nearestSmallFireDistance);
             var interactPressed = _input.InteractPressedThisFrame;
 
             for (var index = 0; index < count; index++)
@@ -94,8 +100,13 @@ namespace DemonViglu.FirePlay.Player
             }
 
             NearestFlameSource = nearestFlameSource;
+            NearestSmallFire = nearestSmallFire;
 
-            if (interactPressed && nearestFlameSource != null)
+            if (interactPressed && nearestSmallFire != null && nearestSmallFireDistance <= nearestFlameSourceDistance)
+            {
+                nearestSmallFire.TryReclaim(_flameResourceController);
+            }
+            else if (interactPressed && nearestFlameSource != null)
             {
                 nearestFlameSource.TryRestore(_flameResourceController);
             }

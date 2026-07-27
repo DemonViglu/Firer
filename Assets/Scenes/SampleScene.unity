@@ -1459,6 +1459,7 @@ GameObject:
   - component: {fileID: 955297938}
   - component: {fileID: 955297939}
   - component: {fileID: 955297940}
+  - component: {fileID: 955297941}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1653,6 +1654,23 @@ MonoBehaviour:
   _config: {fileID: 11400000, guid: d24ad6320c394959bd02f4f26a87211e, type: 2}
   _smallFirePrefab: {fileID: 8542682576192916304, guid: 6820af6efa36512438d65dc4e8d4567e, type: 3}
   _preview: {fileID: 0}
+--- !u!114 &955297941
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 955297929}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 291ea573c36b4607b6e94e75b9e22942, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.RestInteraction
+  _input: {fileID: 0}
+  _movement: {fileID: 0}
+  _look: {fileID: 0}
+  _cameraDrop: 0.55
+  _cameraTransitionSpeed: 5
 --- !u!1 &961716272
 GameObject:
   m_ObjectHideFlags: 0
@@ -1864,6 +1882,7 @@ GameObject:
   - component: {fileID: 1166213193}
   - component: {fileID: 1166213192}
   - component: {fileID: 1166213191}
+  - component: {fileID: 1166213194}
   m_Layer: 0
   m_Name: Plane
   m_TagString: Untagged
@@ -1965,6 +1984,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1166213189}
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1166213194
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1166213189}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35a346a9dc3643bcab6107d04febd697, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.CampfirePlacementSurface
 --- !u!1 &1185250136
 GameObject:
   m_ObjectHideFlags: 0
@@ -3272,6 +3303,7 @@ Transform:
   - {fileID: 406636038}
   - {fileID: 961716273}
   - {fileID: 2137547512}
+  - {fileID: 1949186157}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1920201673
@@ -3386,6 +3418,51 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1920201673}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1949186156
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1949186157}
+  - component: {fileID: 1949186158}
+  m_Layer: 0
+  m_Name: RestPot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1949186157
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1949186156}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 11.25, y: 2.7, z: -1.45}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1916826856}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1949186158
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1949186156}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b44c9ed4a4d4781aca16896bb2a6e3a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.RestSpot
+  _interactionRadius: 4.33
 --- !u!1 &2057460205
 GameObject:
   m_ObjectHideFlags: 0
@@ -3621,6 +3698,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: SmallFire
       objectReference: {fileID: 0}
+    - target: {fileID: 8542682576192916304, guid: 6820af6efa36512438d65dc4e8d4567e, type: 3}
+      propertyPath: _config
+      value: 
+      objectReference: {fileID: 11400000, guid: d24ad6320c394959bd02f4f26a87211e, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

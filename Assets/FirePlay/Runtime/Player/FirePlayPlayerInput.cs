@@ -17,6 +17,7 @@ namespace DemonViglu.FirePlay.Player
         private InputAction _sprintAction;
         private InputAction _constrictFlameAction;
         private InputAction _placeFireAction;
+        private InputAction _restAction;
         private InputAction _lookAction;
         private InputAction _interactAction;
 
@@ -24,6 +25,7 @@ namespace DemonViglu.FirePlay.Player
         public bool SprintHeld => _sprintAction != null && _sprintAction.IsPressed();
         public bool ConstrictFlameHeld => _constrictFlameAction != null && _constrictFlameAction.IsPressed();
         public bool PlaceFirePressedThisFrame => _placeFireAction != null && _placeFireAction.WasPressedThisFrame();
+        public bool RestPressedThisFrame => _restAction != null && _restAction.WasPressedThisFrame();
         public Vector2 Look => _lookAction?.ReadValue<Vector2>() ?? Vector2.zero;
         public bool InteractPressedThisFrame => _interactAction != null && _interactAction.WasPressedThisFrame();
 
@@ -44,12 +46,13 @@ namespace DemonViglu.FirePlay.Player
                 return;
             }
 
-            _moveAction = _playerMap.FindAction("Move", throwIfNotFound: false);
-            _sprintAction = _playerMap.FindAction("Sprint", throwIfNotFound: false);
-            _constrictFlameAction = _playerMap.FindAction("ConstrictFlame", throwIfNotFound: false);
-            _placeFireAction = _playerMap.FindAction("PlaceFire", throwIfNotFound: false);
-            _lookAction = _playerMap.FindAction("Look", throwIfNotFound: false);
-            _interactAction = _playerMap.FindAction("Interact", throwIfNotFound: false);
+            _moveAction = FindRequiredAction("Move");
+            _sprintAction = FindRequiredAction("Sprint");
+            _constrictFlameAction = FindRequiredAction("ConstrictFlame");
+            _placeFireAction = FindRequiredAction("PlaceFire");
+            _restAction = FindRequiredAction("Rest");
+            _lookAction = FindRequiredAction("Look");
+            _interactAction = FindRequiredAction("Interact");
         }
 
         private void OnEnable()
@@ -60,6 +63,17 @@ namespace DemonViglu.FirePlay.Player
         private void OnDisable()
         {
             _playerMap?.Disable();
+        }
+
+        private InputAction FindRequiredAction(string actionName)
+        {
+            var action = _playerMap.FindAction(actionName, throwIfNotFound: false);
+            if (action == null)
+            {
+                Debug.LogError($"[FirePlayPlayerInput] Action Map '{_playerActionMapName}' 缺少动作：{actionName}。", this);
+            }
+
+            return action;
         }
     }
 }

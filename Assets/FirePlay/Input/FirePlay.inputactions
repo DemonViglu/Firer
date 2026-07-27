@@ -38,6 +38,14 @@
                     "interactions": "Press"
                 },
                 {
+                    "name": "Rest",
+                    "type": "Button",
+                    "id": "be9dbce6-c7bb-46c2-9505-3f931aed8f15",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Press"
+                },
+                {
                     "name": "Look",
                     "type": "Value",
                     "id": "d18fb896-ca62-42de-b8e8-0a697207b1db",
@@ -156,6 +164,17 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "PlaceFire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4b500ca9-1c65-434f-a51b-8d57e28ec623",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Rest",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

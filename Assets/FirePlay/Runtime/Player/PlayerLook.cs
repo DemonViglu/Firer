@@ -16,6 +16,8 @@ namespace DemonViglu.FirePlay.Player
         private FirePlayPlayerInput _input;
         private float _pitch;
 
+        public Transform CameraPivot => _cameraPivot;
+
         private void Awake()
         {
             _input = GetComponent<FirePlayPlayerInput>();

@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using DemonViglu.FirePlay.Data;
+using DemonViglu.FirePlay.Flame;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.World
@@ -7,24 +10,140 @@ namespace DemonViglu.FirePlay.World
     /// </summary>
     public sealed class SmallFire : MonoBehaviour
     {
+        private static readonly List<SmallFire> ActiveFires = new();
+
         [SerializeField] private Light _fireLight;
         [SerializeField] private ParticleSystem _fireVfx;
 
         private float _remainingSeconds;
         private float _initialLightIntensity;
+        [SerializeField] private SmallFireConfig _config;
+        private bool _initialized;
 
-        public void Initialize(float durationSeconds)
+        public static int ActiveCount
         {
-            _remainingSeconds = Mathf.Max(0.01f, durationSeconds);
+            get
+            {
+                CleanupDestroyedFires();
+                return ActiveFires.Count;
+            }
+        }
+
+        public bool IsInitialized => _initialized;
+        public float RemainingSeconds => Mathf.Max(0f, _remainingSeconds);
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetActiveFires()
+        {
+            ActiveFires.Clear();
+        }
+
+        public static SmallFire FindNearest(Vector3 position, float maximumDistance, out float squaredDistance)
+        {
+            SmallFire nearest = null;
+            squaredDistance = maximumDistance * maximumDistance;
+
+            CleanupDestroyedFires();
+            for (var index = ActiveFires.Count - 1; index >= 0; index--)
+            {
+                var fire = ActiveFires[index];
+                var distance = (fire.transform.position - position).sqrMagnitude;
+                if (distance <= squaredDistance)
+                {
+                    nearest = fire;
+                    squaredDistance = distance;
+                }
+            }
+
+            return nearest;
+        }
+
+        private void OnEnable()
+        {
+            if (!ActiveFires.Contains(this))
+            {
+                ActiveFires.Add(this);
+            }
+        }
+
+        private void OnDisable()
+        {
+            ActiveFires.Remove(this);
+        }
+
+        private void Start()
+        {
+            if (!_initialized && _config != null)
+            {
+                Initialize(_config);
+            }
+            else if (!_initialized)
+            {
+                Debug.LogWarning("[SmallFire] 未指定 SmallFireConfig，火种不会自动熄灭。", this);
+            }
+        }
+
+        private static void CleanupDestroyedFires()
+        {
+            ActiveFires.RemoveAll(fire => fire == null);
+        }
+
+        public void Initialize(SmallFireConfig config)
+        {
+            if (config == null)
+            {
+                Debug.LogError("[SmallFire] Initialize 需要 SmallFireConfig。", this);
+                return;
+            }
+
+            _config = config;
+            _remainingSeconds = Mathf.Max(0.01f, _config.DurationSeconds);
+            _initialized = true;
             if (_fireLight != null)
             {
                 _initialLightIntensity = _fireLight.intensity;
             }
 
-            if(_fireVfx != null)
+            _fireVfx?.Play(true);
+        }
+
+        public bool TryReclaim(FlameResourceController resourceController)
+        {
+            if (resourceController == null || _config == null)
             {
-                _fireVfx?.Play(true);
+                return false;
             }
+
+            resourceController.Restore(_config.ReclaimFuel);
+            Destroy(gameObject);
+            return true;
+        }
+
+        public void AlignToSurface(Vector3 surfacePoint, Vector3 surfaceNormal)
+        {
+            transform.SetPositionAndRotation(surfacePoint, Quaternion.FromToRotation(Vector3.up, surfaceNormal));
+
+            var colliders = GetComponentsInChildren<Collider>();
+            if (colliders.Length == 0)
+            {
+                return;
+            }
+
+            var lowestProjection = float.PositiveInfinity;
+            foreach (var targetCollider in colliders)
+            {
+                var bounds = targetCollider.bounds;
+                var extentAlongNormal =
+                    Mathf.Abs(surfaceNormal.x) * bounds.extents.x +
+                    Mathf.Abs(surfaceNormal.y) * bounds.extents.y +
+                    Mathf.Abs(surfaceNormal.z) * bounds.extents.z;
+                lowestProjection = Mathf.Min(
+                    lowestProjection,
+                    Vector3.Dot(bounds.center, surfaceNormal) - extentAlongNormal);
+            }
+
+            var targetProjection = Vector3.Dot(surfacePoint, surfaceNormal) + 0.02f;
+            transform.position += surfaceNormal * (targetProjection - lowestProjection);
         }
 
         private void Update()

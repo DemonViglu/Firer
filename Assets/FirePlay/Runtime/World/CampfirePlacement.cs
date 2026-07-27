@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using DemonViglu.FirePlay.Data;
 using DemonViglu.FirePlay.Flame;
 using DemonViglu.FirePlay.Player;
@@ -18,13 +17,15 @@ namespace DemonViglu.FirePlay.World
         [SerializeField] private SmallFire _smallFirePrefab;
         [SerializeField] private Transform _preview;
 
-        private readonly List<SmallFire> _activeFires = new();
         private Vector2 _screenPoint;
         private RaycastHit _candidate;
 
         public bool IsPlacing { get; private set; }
         public bool IsPlacementValid { get; private set; }
         public string PlacementStatus { get; private set; } = "Idle";
+        public int ActiveFireCount => SmallFire.ActiveCount;
+        public int MaximumActiveFireCount => _config != null ? _config.MaximumActiveCount : 0;
+        public bool HasRequiredSetup => _resourceController != null && _config != null && _smallFirePrefab != null;
 
         private void Awake()
         {
@@ -43,11 +44,24 @@ namespace DemonViglu.FirePlay.World
                 _placementCamera = Camera.main;
             }
 
+            if (!HasRequiredSetup)
+            {
+                PlacementStatus = "Missing setup";
+                Debug.LogError("[CampfirePlacement] 缺少余火控制器、小火种配置或小火种 Prefab。", this);
+            }
+
             SetPreviewVisible(false);
         }
 
         private void Update()
         {
+            if (!IsPlacing && _config != null && PlacementStatus != "Missing setup")
+            {
+                PlacementStatus = SmallFire.ActiveCount >= _config.MaximumActiveCount
+                    ? "Fire limit reached"
+                    : "Ready";
+            }
+
             if (_input != null && _input.PlaceFirePressedThisFrame)
             {
                 if (IsPlacing)
@@ -68,14 +82,13 @@ namespace DemonViglu.FirePlay.World
 
         public bool BeginPlacement()
         {
-            if (_config == null || _smallFirePrefab == null || _resourceController == null)
+            if (!HasRequiredSetup)
             {
                 PlacementStatus = "Missing setup";
                 return false;
             }
 
-            CleanupExpiredFires();
-            if (_activeFires.Count >= _config.MaximumActiveCount)
+            if (SmallFire.ActiveCount >= _config.MaximumActiveCount)
             {
                 PlacementStatus = "Fire limit reached";
                 return false;
@@ -101,8 +114,7 @@ namespace DemonViglu.FirePlay.World
 
             _screenPoint = screenPoint;
             var ray = _placementCamera.ScreenPointToRay(_screenPoint);
-            if (Physics.Raycast(ray, out _candidate, 100f, _config.PlacementLayers,
-                    QueryTriggerInteraction.Ignore))
+            if (TryFindPlacementHit(ray, out _candidate))
             {
                 IsPlacementValid = CampfireSiteValidator.TryValidate(
                     _candidate,
@@ -126,17 +138,20 @@ namespace DemonViglu.FirePlay.World
                 return false;
             }
 
-            CleanupExpiredFires();
-            if (_activeFires.Count >= _config.MaximumActiveCount || !_resourceController.TryConsume(_config.FuelCost))
+            if (SmallFire.ActiveCount >= _config.MaximumActiveCount ||
+                _resourceController.State == null ||
+                _resourceController.State.CurrentFuel < _config.FuelCost)
             {
                 PlacementStatus = "Cannot place";
                 return false;
             }
 
-            var rotation = Quaternion.FromToRotation(Vector3.up, _candidate.normal);
-            var instance = Instantiate(_smallFirePrefab, _candidate.point + _candidate.normal * 0.02f, rotation);
-            instance.Initialize(_config.DurationSeconds);
-            _activeFires.Add(instance);
+            // 已确认余额足够；TryConsume 仍负责最终写入状态。
+            _resourceController.TryConsume(_config.FuelCost);
+
+            var instance = Instantiate(_smallFirePrefab, _candidate.point, Quaternion.identity);
+            instance.AlignToSurface(_candidate.point, _candidate.normal);
+            instance.Initialize(_config);
 
             IsPlacing = false;
             IsPlacementValid = false;
@@ -164,6 +179,26 @@ namespace DemonViglu.FirePlay.World
             SetPreviewVisible(true);
         }
 
+        private bool TryFindPlacementHit(Ray ray, out RaycastHit placementHit)
+        {
+            placementHit = default;
+            var hits = Physics.RaycastAll(ray, 100f, _config.PlacementLayers, QueryTriggerInteraction.Ignore);
+            var closestDistance = float.PositiveInfinity;
+
+            foreach (var hit in hits)
+            {
+                if (hit.collider.GetComponentInParent<CampfirePlacementSurface>() == null || hit.distance >= closestDistance)
+                {
+                    continue;
+                }
+
+                placementHit = hit;
+                closestDistance = hit.distance;
+            }
+
+            return closestDistance < float.PositiveInfinity;
+        }
+
         private void SetPreviewVisible(bool visible)
         {
             if (_preview != null && _preview.gameObject.activeSelf != visible)
@@ -172,9 +207,5 @@ namespace DemonViglu.FirePlay.World
             }
         }
 
-        private void CleanupExpiredFires()
-        {
-            _activeFires.RemoveAll(fire => fire == null);
-        }
     }
 }

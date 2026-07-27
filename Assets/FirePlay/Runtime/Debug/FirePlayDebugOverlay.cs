@@ -18,6 +18,7 @@ namespace DemonViglu.FirePlay.Debugging
         [SerializeField] private PlayerInteraction _playerInteraction;
         [SerializeField] private CampfirePlacement _campfirePlacement;
         [SerializeField] private FlameResourceController _flameResourceController;
+        [SerializeField] private RestInteraction _restInteraction;
         [SerializeField] private bool _visible = true;
         [SerializeField] private Vector2 _screenPosition = new(16f, 16f);
         [SerializeField, Min(240f)] private float _width = 360f;
@@ -25,6 +26,7 @@ namespace DemonViglu.FirePlay.Debugging
         private readonly StringBuilder _text = new(256);
         private GUIStyle _labelStyle;
         private float _smoothedDeltaTime;
+        private float _nextMissingReferenceSearchTime;
 
         public string FlameResourceStatus { get; private set; } = "未接入（M1）";
         public string FlameModeStatus { get; private set; } = "未接入（M1）";
@@ -43,6 +45,11 @@ namespace DemonViglu.FirePlay.Debugging
         public void SetSaveStatus(string status) => SaveStatus = NormalizeStatus(status);
 
         private void Awake()
+        {
+            ResolveReferences();
+        }
+
+        private void ResolveReferences()
         {
             if (_playerFlameController == null)
             {
@@ -68,11 +75,21 @@ namespace DemonViglu.FirePlay.Debugging
             {
                 _flameResourceController = FindFirstObjectByType<FlameResourceController>();
             }
+
+            if (_restInteraction == null)
+            {
+                _restInteraction = FindFirstObjectByType<RestInteraction>();
+            }
         }
 
         private void Update()
         {
             _smoothedDeltaTime = Mathf.Lerp(_smoothedDeltaTime, Time.unscaledDeltaTime, 0.1f);
+            if (Time.unscaledTime >= _nextMissingReferenceSearchTime)
+            {
+                ResolveReferences();
+                _nextMissingReferenceSearchTime = Time.unscaledTime + 1f;
+            }
         }
 
         private void OnGUI()
@@ -100,8 +117,9 @@ namespace DemonViglu.FirePlay.Debugging
             _text.Append("Scene: ").AppendLine(SceneManager.GetActiveScene().name);
             _text.Append("FPS: ").AppendLine(fps.ToString("0"));
             _text.Append("Player: ").AppendLine(_playerFlameController != null ? "OK" : "MISSING");
-            _text.Append("Movement: ").AppendLine(
-                _playerMovement != null && _playerMovement.IsSprinting ? "Sprinting" : "Walking");
+            _text.Append("Movement: ").AppendLine(_playerMovement == null
+                ? "MISSING COMPONENT"
+                : _playerMovement.MovementLocked ? "Locked" : _playerMovement.IsSprinting ? "Sprinting" : "Walking");
             _text.Append("Active Flame: ").AppendLine(activeFlame != null ? activeFlame.name : "MISSING");
 
             if (activeFlame != null)
@@ -132,7 +150,12 @@ namespace DemonViglu.FirePlay.Debugging
                 _text.Append("Mode: ").AppendLine(FlameModeStatus);
             }
             var nearbyFlameSource = _playerInteraction != null ? _playerInteraction.NearestFlameSource : null;
-            if (nearbyFlameSource != null)
+            var nearbySmallFire = _playerInteraction != null ? _playerInteraction.NearestSmallFire : null;
+            if (nearbySmallFire != null)
+            {
+                _text.Append("Nearby Fire: Small fire / Press E reclaim").AppendLine();
+            }
+            else if (nearbyFlameSource != null)
             {
                 _text.Append("Nearby Fire: ").Append(nearbyFlameSource.SourceId).Append(" / ")
                     .AppendLine(nearbyFlameSource.IsAvailable
@@ -144,10 +167,26 @@ namespace DemonViglu.FirePlay.Debugging
                 _text.Append("Nearby Fire: ").AppendLine(NearbyCampfireStatus);
             }
             _text.Append("Save: ").AppendLine(SaveStatus);
-            if (_campfirePlacement != null)
+            _text.Append("Small Fires: ").Append(SmallFire.ActiveCount).Append(" / ");
+            _text.AppendLine(_campfirePlacement != null
+                ? _campfirePlacement.MaximumActiveFireCount.ToString()
+                : "MISSING PLACEMENT COMPONENT");
+            if (_campfirePlacement == null)
+            {
+                _text.AppendLine("Placement: MISSING COMPONENT");
+            }
+            else
             {
                 _text.Append("Placement: ").AppendLine(_campfirePlacement.PlacementStatus);
+                if (!_campfirePlacement.HasRequiredSetup)
+                {
+                    _text.AppendLine("Placement Setup: INVALID");
+                }
             }
+
+            _text.Append("Rest: ").AppendLine(_restInteraction == null
+                ? "MISSING COMPONENT"
+                : _restInteraction.IsResting ? "Resting" : _restInteraction.NearestRestSpot != null ? "Available (Press R)" : "Unavailable");
         }
 
         private void EnsureStyle()

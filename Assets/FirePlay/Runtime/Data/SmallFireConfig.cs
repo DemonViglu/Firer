@@ -6,6 +6,7 @@ namespace DemonViglu.FirePlay.Data
     public sealed class SmallFireConfig : ScriptableObject
     {
         [SerializeField, Min(0.01f)] private float _fuelCost = 15f;
+        [SerializeField, Min(0f)] private float _reclaimFuel = 5f;
         [SerializeField, Min(1f)] private float _durationSeconds = 45f;
         [SerializeField, Min(1)] private int _maximumActiveCount = 3;
         [SerializeField, Min(0.5f)] private float _maximumPlacementDistance = 5f;
@@ -13,6 +14,7 @@ namespace DemonViglu.FirePlay.Data
         [SerializeField] private LayerMask _placementLayers = ~0;
 
         public float FuelCost => _fuelCost;
+        public float ReclaimFuel => _reclaimFuel;
         public float DurationSeconds => _durationSeconds;
         public int MaximumActiveCount => _maximumActiveCount;
         public float MaximumPlacementDistance => _maximumPlacementDistance;

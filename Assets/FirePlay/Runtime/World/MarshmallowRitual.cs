@@ -1,5 +1,12 @@
+using UnityEngine;
+
 namespace DemonViglu.FirePlay.World
 {
-    /// <summary>标记此 RestSpot 支持烤棉花；手持表现由 Player 管理。</summary>
-    public sealed class MarshmallowRitual : RestSpotRitual { }
+    /// <summary>烤棉花停留仪式；手持表现由 Player 管理，视角由 Look Target 引导至火焰。</summary>
+    [DefaultExecutionOrder(100)]
+    public sealed class MarshmallowRitual : RestLookTargetRitual
+    {
+        protected override bool RotatePlayerTowardsTarget => true;
+        protected override bool UsesExternalCamera => true;
+    }
 }

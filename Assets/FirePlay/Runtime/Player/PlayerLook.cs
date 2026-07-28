@@ -15,6 +15,7 @@ namespace DemonViglu.FirePlay.Player
 
         private FirePlayPlayerInput _input;
         private float _pitch;
+        private int _framesToIgnoreLookInput;
 
         public Transform CameraPivot => _cameraPivot;
         public bool LookLocked { get; private set; }
@@ -37,6 +38,10 @@ namespace DemonViglu.FirePlay.Player
         {
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+
+            // 进入 Play Mode 或重新启用组件时，Unity 编辑器可能会把光标锁定本身
+            // 报告为一次很大的鼠标 Delta。丢弃首帧，避免视角直接跳到俯仰角上限。
+            _framesToIgnoreLookInput = 1;
         }
 
         private void OnDisable()
@@ -47,6 +52,12 @@ namespace DemonViglu.FirePlay.Player
 
         private void Update()
         {
+            if (_framesToIgnoreLookInput > 0)
+            {
+                _framesToIgnoreLookInput--;
+                return;
+            }
+
             if (LookLocked)
             {
                 return;

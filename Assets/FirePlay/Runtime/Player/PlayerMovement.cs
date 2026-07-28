@@ -34,6 +34,13 @@ namespace DemonViglu.FirePlay.Player
                 _flameResourceController = GetComponent<FlameResourceController>();
             }
 
+            // 移动方向优先跟随 PlayerLook 的 CameraPivot，而不是实际渲染相机。
+            // 这样 Main Camera 交给 Cinemachine 或从 Player 层级移出后，探索移动仍与玩家视角一致。
+            if (_cameraTransform == null)
+            {
+                _cameraTransform = GetComponent<PlayerLook>()?.CameraPivot;
+            }
+
             if (_cameraTransform == null && Camera.main != null)
             {
                 _cameraTransform = Camera.main.transform;
@@ -49,8 +56,11 @@ namespace DemonViglu.FirePlay.Player
 
             var input = MovementLocked ? Vector2.zero : _input.Move;
             IsSprinting = !MovementLocked && TrySprint(input);
-            var forward = Vector3.ProjectOnPlane(_cameraTransform.forward, Vector3.up).normalized;
-            var right = Vector3.ProjectOnPlane(_cameraTransform.right, Vector3.up).normalized;
+            // 移动只读取视角的世界 Yaw。不要直接使用 forward/right：当相机 Pivot
+            // 因俯仰、滚转或 Cinemachine 层级调整而倾斜时，移动仍必须严格留在地面平面。
+            var yawOnlyRotation = Quaternion.Euler(0f, _cameraTransform.eulerAngles.y, 0f);
+            var forward = yawOnlyRotation * Vector3.forward;
+            var right = yawOnlyRotation * Vector3.right;
             var speed = _moveSpeed * (IsSprinting ? _sprintSpeedMultiplier : 1f);
             var horizontalVelocity = (forward * input.y + right * input.x) * speed;
 

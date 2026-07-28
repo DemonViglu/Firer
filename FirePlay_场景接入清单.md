@@ -5,6 +5,7 @@
 ## Player
 
 - 基础：`FirePlayPlayerInput`、`PlayerMovement`、`PlayerLook`、`PlayerInteraction`、`PlayerFlameController`、`FlameResourceController`；
+- `PlayerMovement.Camera Transform` 可留空：运行时会优先使用 `PlayerLook` 的 `CameraPivot` 作为移动参考方向。不要为了移动而给 Unity Input System 的 `PlayerInput` 组件配置 Camera；本项目输入入口是 `FirePlayPlayerInput`。
 - 火焰：`FlameContractionController`（C 原型）、`FlameResourceVisualBridge`；
 - 小火种：`CampfirePlacement`（F 原型）、`CampfireUpgradeController`，其 `Campfire Prefab` 必须引用 Project 中的 `Assets/FirePlay/Runtime/Prefab/CampFire.prefab`，不可引用 Hierarchy 中对象；
 - 停留：`RestInteraction`；
@@ -30,9 +31,24 @@
 ## 停留仪式
 
 - `RestSpot` 可直接挂在 `CampFire.prefab`，R 进入/退出原型停留；
-- `StargazingRitual`：与 RestSpot 同物体，指定场景 `Look Target`。停留时保持相机位置，只转向目标；
-- `MarshmallowRitual`：与 RestSpot 同物体，标记可烤；Player 的 `MarshmallowInteraction` 在停留时显示手持占位物并支持 Q 旋转；
-- 后续仪式都继承 `RestSpotRitual`，不直接修改 `RestInteraction`。
+- `StargazingRitual`：与 RestSpot 同物体，指定场景 `Look Target`（天空目标）与可选 `Companion Frame Target`（朋友/同伴模型胸口处的空物体）。进入时由独立 `CM_Stargaze` 将玩家、朋友和天空目标加入 Target Group；退出时自动清理。天空目标建议放在观星点前上方约 20–40 米处；
+- `MarshmallowRitual`：与 RestSpot 同物体，标记可烤；在篝火火焰中心上方创建空物体 `MarshmallowLookTarget`（建议约高于地面 1.0–1.4m），并赋给仪式的 `Look Target`。停留时玩家会水平转向篝火、锁定常规视角并平滑看向该目标；Player 的 `MarshmallowInteraction` 同时显示手持占位物并支持 Q 旋转；
+- 需要固定构图的后续仪式继承 `RestLookTargetRitual`；只需指定 `Look Target`，不直接修改 `RestInteraction`。同一 RestSpot 不要同时挂多个会锁定视角的仪式。
+
+### Cinemachine 烤棉花镜头
+
+- `CM_Explore` 的 `ExploreCameraAnchor`（Follow）与 `ExploreCameraLookAt`（Look At）均保留在 `CameraPivot` 下，使镜头能围绕玩家进行上下轨道旋转；推荐起点分别为 `(0, 1, -6)` 与 `(0, 1, 8)`。玩家移动逻辑只读取该 Pivot 的世界 Yaw，绝不读取其 Pitch/Roll。
+- Player 下创建两个仪式构图锚点：`RitualCameraFollowAnchor` 放在约 `(0, 1.2, 0)` 并设 Local Rotation 为 `(0, 180, 0)`；`RitualCameraFrameTarget` 放在约 `(0, 1.25, 0)`。前者让 `Third Person Follow` 出现在角色正面偏侧，后者让 Target Group 对准胸口而非脚底。
+- 场景常驻对象挂载 `RitualCameraDirector`，并引用 `CM_Explore`、`CM_Marshmallow`、`CinemachineTargetGroup`、Player 的 `RitualCameraFollowAnchor` 与 `RitualCameraFrameTarget`。探索/仪式优先级默认是 10 / 20。
+- `CM_Explore` 保持当前已验证的 Follow/Look At 配置。`CM_Marshmallow` 的 Position Control 应使用 `Third Person Follow`，Rotation Control 使用 `Rotation Composer`；Director 会在仪式开始时将其 Follow 指向正面镜头 Anchor、Look At 指向 Target Group。
+- Target Group 初始不放任何动态篝火目标。进入烤棉花时，Director 自动将玩家胸口锚点与当前 `MarshmallowLookTarget` 加入；退出时移除，因此运行时生成和存档恢复的 Campfire 都可使用同一组镜头。
+- `MarshmallowRitual` 找不到有效 Director 时会回退为原先的固定 Look Target 镜头，仍可完成停留与棉花旋转。
+
+### Cinemachine 观星镜头
+
+- 新建 `CM_Stargaze` 和 `CM_Stargaze_TargetGroup`，初始 Priority 为 0。`CM_Stargaze` 推荐使用 `Third Person Follow` + `Rotation Composer`，并使用比烤棉花稍远的距离与更宽的 FOV（先试 Distance 5–7、FOV 70）。
+- Player 下新增 `StargazingCameraFollowAnchor`，放在约 `(0, 1.4, 0)`；先以本地 Y 约 150–180° 作为从角色正面偏侧取景的起点。将它赋给 `RitualCameraDirector > Stargazing Follow Anchor`。
+- `RitualCameraDirector` 还需引用 `CM_Stargaze` 和 `CM_Stargaze_TargetGroup`。Target Group 初始保持空，运行时由观星仪式填充玩家、朋友和天空。
 
 ## 温暖节点
 
@@ -42,11 +58,10 @@
 
 ## 玩家氛围桥接
 
-- 在 Player 挂载 `PlayerAtmosphereBridge`；它会自动读取同物体的 `FlameResourceController` 与 `RestInteraction`，不修改余火、停留或存档状态。
-- 场景建立两个独立的全局 Volume：`Atmosphere_Receiver`（冷、低曝光、低饱和）与 `Atmosphere_Giver`（暖、稍高曝光与 Bloom），将引用分别赋给桥接器。不要复用场景的基础 Global Volume，以免权重归零时丢失基础调色。
+- 场景只保留一套固定的夜色 Global Volume；不要再用 Receiver/Giver 两套全局 Volume 随余火改变整屏曝光或颜色。余火强弱由现有 `FlameResourceVisualBridge` 与 `FlameVisuals` 驱动随身火苗尺寸、Shader 和 Point Light，温暖应主要出现在玩家附近的真实光照中。
+- 可选：在 Player 挂载 `PlayerAtmosphereBridge`；它只读取同物体的 `FlameResourceController` 与 `RestInteraction` 来控制音景，不修改余火、停留、Volume 或存档状态。
 - 建立三个循环 AudioSource 并关闭 `Play On Awake` 以外的随机启停逻辑：`Ambient Bed`（夜风/虫鸣/水声）、`Warmth Layer`（火焰/暖音乐层）、`Rest Layer`（近场篝火或仪式层）。先把 Clip 的无缝循环和 Mixer 路由配置好，再交给桥接器控制音量。
-- `Receiver Volume At Full Fuel` 默认保留少量冷色层；`Ambient Minimum Volume` 防止火旺时环境完全消失。所有过渡都使用平滑插值，后续移动端与网络玩家不需要改输入或状态层。
-- 当前未自动写入 `Player.prefab` 或场景，避免覆盖正在进行的 Inspector/场景修改；完成上述引用后在 Play Mode 用余火调试步进及进入/退出停留验证淡入淡出。
+- `Ambient Minimum Volume` 防止火旺时环境完全消失。所有音景过渡都使用平滑插值；完成引用后在 Play Mode 用余火调试步进及进入/退出停留验证淡入淡出。
 
 ## 大树贡献（M4 基础）
 

@@ -1,25 +1,18 @@
 using DemonViglu.FirePlay.Flame;
 using DemonViglu.FirePlay.Player;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace DemonViglu.FirePlay.Rendering
 {
     /// <summary>
-    /// 只读取本地玩家的余火与停留状态，平滑驱动环境后处理和音景。
-    /// 不修改玩法状态；音频素材、Mixer 路由与 Volume Profile 均由场景配置。
+    /// 只读取本地玩家的余火与停留状态，平滑驱动音景。
+    /// 全局夜色由固定 Volume 负责，近场明暗由玩家火苗灯光负责，避免整屏调色随状态变化。
     /// </summary>
     public sealed class PlayerAtmosphereBridge : MonoBehaviour
     {
         [Header("State Sources")]
         [SerializeField] private FlameResourceController _resourceController;
         [SerializeField] private RestInteraction _restInteraction;
-
-        [Header("Post Processing")]
-        [Tooltip("偏冷、安静的低余火后处理。建议使用独立的局部或全局 Volume。")]
-        [SerializeField] private Volume _receiverVolume;
-        [Tooltip("偏暖、明亮的高余火后处理。建议使用独立的局部或全局 Volume。")]
-        [SerializeField] private Volume _giverVolume;
 
         [Header("Audio Layers")]
         [Tooltip("常驻环境底噪，例如夜风、虫鸣或远处水声。")]
@@ -31,7 +24,6 @@ namespace DemonViglu.FirePlay.Rendering
 
         [Header("Blend")]
         [SerializeField, Min(0.01f)] private float _blendSpeed = 2f;
-        [SerializeField, Range(0f, 1f)] private float _receiverVolumeAtFullFuel = 0.05f;
         [SerializeField, Range(0f, 1f)] private float _ambientMinimumVolume = 0.35f;
         [SerializeField, Range(0f, 1f)] private float _warmthMaximumVolume = 0.8f;
         [SerializeField, Range(0f, 1f)] private float _restMaximumVolume = 1f;
@@ -76,17 +68,6 @@ namespace DemonViglu.FirePlay.Rendering
 
         private void Apply(float warmth, bool isResting, float blend)
         {
-            if (_receiverVolume != null)
-            {
-                var receiverTarget = Mathf.Lerp(1f, _receiverVolumeAtFullFuel, warmth);
-                _receiverVolume.weight = Mathf.Lerp(_receiverVolume.weight, receiverTarget, blend);
-            }
-
-            if (_giverVolume != null)
-            {
-                _giverVolume.weight = Mathf.Lerp(_giverVolume.weight, warmth, blend);
-            }
-
             SetVolume(_ambientBed, Mathf.Lerp(1f, _ambientMinimumVolume, warmth), blend);
             SetVolume(_warmthLayer, warmth * _warmthMaximumVolume, blend);
             SetVolume(_restLayer, isResting ? _restMaximumVolume : 0f, blend);
@@ -94,16 +75,6 @@ namespace DemonViglu.FirePlay.Rendering
 
         private void ApplyImmediate(float warmth, bool isResting)
         {
-            if (_receiverVolume != null)
-            {
-                _receiverVolume.weight = Mathf.Lerp(1f, _receiverVolumeAtFullFuel, warmth);
-            }
-
-            if (_giverVolume != null)
-            {
-                _giverVolume.weight = warmth;
-            }
-
             SetVolumeImmediate(_ambientBed, Mathf.Lerp(1f, _ambientMinimumVolume, warmth));
             SetVolumeImmediate(_warmthLayer, warmth * _warmthMaximumVolume);
             SetVolumeImmediate(_restLayer, isResting ? _restMaximumVolume : 0f);

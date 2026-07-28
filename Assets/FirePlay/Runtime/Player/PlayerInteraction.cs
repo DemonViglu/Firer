@@ -4,6 +4,14 @@ using UnityEngine;
 
 namespace DemonViglu.FirePlay.Player
 {
+    public enum PlayerInteractTargetKind
+    {
+        None,
+        WorldTree,
+        FlameSource,
+        SmallFire
+    }
+
     /// <summary>
     /// 玩家在世界中的近距离交互入口。
     /// 交互范围围绕玩家本体，而不是视觉上有偏移的火苗。
@@ -17,6 +25,7 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField] private FlameResourceController _flameResourceController;
         [SerializeField] private CampfireUpgradeController _campfireUpgradeController;
         [SerializeField] private LayerMask _interactionLayers = ~0;
+        [SerializeField] private PlayerModeController _modeController;
 
         private readonly Collider[] _overlapResults = new Collider[MaxDetectedColliders];
 
@@ -25,6 +34,8 @@ namespace DemonViglu.FirePlay.Player
         public Campfire NearestCampfire { get; private set; }
         public WorldTreeContribution NearestWorldTree { get; private set; }
         public CampfireUpgradeController CampfireUpgradeController => _campfireUpgradeController;
+        public PlayerInteractTargetKind CurrentInteractTargetKind { get; private set; }
+        public string CurrentInteractPrompt { get; private set; } = "No interaction target";
 
         private void Awake()
         {
@@ -47,6 +58,7 @@ namespace DemonViglu.FirePlay.Player
             {
                 _campfireUpgradeController = GetComponent<CampfireUpgradeController>();
             }
+            _modeController ??= GetComponent<PlayerModeController>();
 
             if (_flameController == null || _input == null || _flameResourceController == null)
             {
@@ -57,13 +69,15 @@ namespace DemonViglu.FirePlay.Player
 
         private void Update()
         {
+            if (_modeController != null && !_modeController.IsExploring)
+            {
+                ClearNearbyTargets();
+                return;
+            }
             var activeFlame = _flameController.ActiveFlame;
             if (activeFlame == null)
             {
-                NearestFlameSource = null;
-                NearestSmallFire = null;
-                NearestCampfire = null;
-                NearestWorldTree = null;
+                ClearNearbyTargets();
                 return;
             }
 
@@ -131,6 +145,7 @@ namespace DemonViglu.FirePlay.Player
             NearestSmallFire = nearestSmallFire;
             NearestCampfire = nearestCampfire;
             NearestWorldTree = nearestWorldTree;
+            SelectCurrentInteractTarget(nearestSmallFire, nearestSmallFireDistance, nearestFlameSource, nearestFlameSourceDistance, nearestWorldTree, nearestWorldTreeDistance);
 
             if (_input.UpgradeCampfirePressedThisFrame && nearestCampfire != null)
             {
@@ -141,18 +156,73 @@ namespace DemonViglu.FirePlay.Player
                 _campfireUpgradeController?.TryUpgradeSmallFire(nearestSmallFire);
             }
 
-            if (interactPressed && nearestSmallFire != null && nearestSmallFireDistance <= nearestFlameSourceDistance)
+            if (interactPressed)
             {
-                nearestSmallFire.TryReclaim(_flameResourceController);
+                InteractWithCurrentTarget(activeFlame);
             }
-            else if (interactPressed && nearestFlameSource != null)
+        }
+
+        private void SelectCurrentInteractTarget(
+            SmallFire smallFire,
+            float smallFireDistance,
+            FlameSource flameSource,
+            float flameSourceDistance,
+            WorldTreeContribution worldTree,
+            float worldTreeDistance)
+        {
+            CurrentInteractTargetKind = PlayerInteractTargetKind.None;
+            CurrentInteractPrompt = "No interaction target";
+
+            // Explicit priorities prevent overlapping colliders from silently changing E behaviour.
+            if (worldTree != null)
             {
-                nearestFlameSource.TryRestore(_flameResourceController);
+                CurrentInteractTargetKind = PlayerInteractTargetKind.WorldTree;
+                CurrentInteractPrompt = worldTree.HasLocalContribution
+                    ? "World Tree: already contributed"
+                    : $"Press E: contribute ({worldTree.ContributionCost:0.0})";
+                return;
             }
-            else if (interactPressed && nearestWorldTree != null)
+
+            if (flameSource != null)
             {
-                nearestWorldTree.TryContribute(_flameResourceController, activeFlame);
+                CurrentInteractTargetKind = PlayerInteractTargetKind.FlameSource;
+                CurrentInteractPrompt = flameSource.IsAvailable
+                    ? "Press E: restore flame"
+                    : $"Flame source cooling ({flameSource.RemainingCooldownSeconds:0.0}s)";
+                return;
             }
+
+            if (smallFire != null)
+            {
+                CurrentInteractTargetKind = PlayerInteractTargetKind.SmallFire;
+                CurrentInteractPrompt = "Press E: reclaim small fire";
+            }
+        }
+
+        private void InteractWithCurrentTarget(FlameBrush activeFlame)
+        {
+            switch (CurrentInteractTargetKind)
+            {
+                case PlayerInteractTargetKind.WorldTree:
+                    NearestWorldTree?.TryContribute(_flameResourceController, activeFlame);
+                    break;
+                case PlayerInteractTargetKind.FlameSource:
+                    NearestFlameSource?.TryRestore(_flameResourceController);
+                    break;
+                case PlayerInteractTargetKind.SmallFire:
+                    NearestSmallFire?.TryReclaim(_flameResourceController);
+                    break;
+            }
+        }
+
+        private void ClearNearbyTargets()
+        {
+            NearestFlameSource = null;
+            NearestSmallFire = null;
+            NearestCampfire = null;
+            NearestWorldTree = null;
+            CurrentInteractTargetKind = PlayerInteractTargetKind.None;
+            CurrentInteractPrompt = "No interaction target";
         }
 
         private void OnDrawGizmosSelected()

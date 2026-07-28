@@ -11,6 +11,7 @@ namespace DemonViglu.FirePlay.Player
     {
         [SerializeField] private FirePlayPlayerInput _input;
         [SerializeField] private PlayerInteraction _interaction;
+        [SerializeField] private PlayerModeController _modeController;
         [SerializeField] private Color[] _availableColors =
         {
             new(1f, 0.45f, 0.2f),
@@ -25,12 +26,13 @@ namespace DemonViglu.FirePlay.Player
         {
             _input ??= GetComponent<FirePlayPlayerInput>();
             _interaction ??= GetComponent<PlayerInteraction>();
+            _modeController ??= GetComponent<PlayerModeController>();
         }
 
         private void Update()
         {
             var worldTree = _interaction != null ? _interaction.NearestWorldTree : null;
-            if (_input == null || worldTree == null || worldTree.HasLocalContribution || !_input.CycleTreeLightColorPressedThisFrame)
+            if (_input == null || (_modeController != null && !_modeController.IsExploring) || worldTree == null || worldTree.HasLocalContribution || !_input.CycleTreeLightColorPressedThisFrame)
             {
                 return;
             }

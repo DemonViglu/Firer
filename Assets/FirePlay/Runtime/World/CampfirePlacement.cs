@@ -16,6 +16,7 @@ namespace DemonViglu.FirePlay.World
         [SerializeField] private SmallFireConfig _config;
         [SerializeField] private SmallFire _smallFirePrefab;
         [SerializeField] private Transform _preview;
+        [SerializeField] private PlayerModeController _modeController;
 
         private Vector2 _screenPoint;
         private RaycastHit _candidate;
@@ -38,6 +39,7 @@ namespace DemonViglu.FirePlay.World
             {
                 _input = GetComponent<FirePlayPlayerInput>();
             }
+            _modeController ??= GetComponent<PlayerModeController>();
 
             if (_placementCamera == null)
             {
@@ -62,7 +64,7 @@ namespace DemonViglu.FirePlay.World
                     : "Ready";
             }
 
-            if (_input != null && _input.PlaceFirePressedThisFrame)
+            if (_input != null && _input.PlaceFirePressedThisFrame && (_modeController == null || _modeController.IsExploring || IsPlacing))
             {
                 if (IsPlacing)
                 {
@@ -100,6 +102,11 @@ namespace DemonViglu.FirePlay.World
                 return false;
             }
 
+            if (_modeController != null && !_modeController.TryEnter(PlayerMode.Placing))
+            {
+                PlacementStatus = "Unavailable in current mode";
+                return false;
+            }
             IsPlacing = true;
             PlacementStatus = "Find ground";
             return true;
@@ -154,6 +161,7 @@ namespace DemonViglu.FirePlay.World
             instance.Initialize(_config);
 
             IsPlacing = false;
+            _modeController?.Exit(PlayerMode.Placing);
             IsPlacementValid = false;
             PlacementStatus = "Placed";
             SetPreviewVisible(false);
@@ -163,6 +171,7 @@ namespace DemonViglu.FirePlay.World
         public void CancelPlacement()
         {
             IsPlacing = false;
+            _modeController?.Exit(PlayerMode.Placing);
             IsPlacementValid = false;
             PlacementStatus = "Cancelled";
             SetPreviewVisible(false);

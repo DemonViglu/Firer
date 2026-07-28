@@ -13,6 +13,7 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField] private FirePlayPlayerInput _input;
         [SerializeField] private PlayerMovement _movement;
         [SerializeField] private PlayerLook _look;
+        [SerializeField] private PlayerModeController _modeController;
         [SerializeField, Min(0f)] private float _cameraDrop = 0.55f;
         [SerializeField, Min(0f)] private float _cameraTransitionSpeed = 5f;
 
@@ -31,9 +32,10 @@ namespace DemonViglu.FirePlay.Player
             _input ??= GetComponent<FirePlayPlayerInput>();
             _movement ??= GetComponent<PlayerMovement>();
             _look ??= GetComponent<PlayerLook>();
+            _modeController ??= GetComponent<PlayerModeController>();
             _cameraPivot = _look != null ? _look.CameraPivot : null;
 
-            if (_input == null || _movement == null || _cameraPivot == null)
+            if (_input == null || _movement == null || _cameraPivot == null || _modeController == null)
             {
                 Debug.LogError("[RestInteraction] 缺少输入、移动组件或 Camera Pivot。", this);
                 enabled = false;
@@ -77,7 +79,7 @@ namespace DemonViglu.FirePlay.Player
 
         public bool TryBeginRest()
         {
-            if (IsResting || NearestRestSpot == null)
+            if (IsResting || NearestRestSpot == null || !_modeController.TryEnter(PlayerMode.Resting))
             {
                 return false;
             }
@@ -99,6 +101,7 @@ namespace DemonViglu.FirePlay.Player
 
             var completedSpot = ActiveRestSpot;
             IsResting = false;
+            _modeController?.Exit(PlayerMode.Resting);
             ActiveRestSpot = null;
             _movement.SetMovementLocked(false);
             if (completedSpot != null)

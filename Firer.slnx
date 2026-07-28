@@ -1,4 +1,6 @@
 ﻿<Solution>
   <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="MicahW.PointGrassRenderer.Runtime.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="MicahW.PointGrassRenderer.Editor.csproj" />
 </Solution>

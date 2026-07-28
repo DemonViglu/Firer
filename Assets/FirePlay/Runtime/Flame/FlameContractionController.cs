@@ -11,6 +11,7 @@ namespace DemonViglu.FirePlay.Flame
     {
         [SerializeField] private FirePlayPlayerInput _input;
         [SerializeField] private FlameResourceController _resourceController;
+        [SerializeField] private PlayerModeController _modeController;
 
         private void Awake()
         {
@@ -23,6 +24,7 @@ namespace DemonViglu.FirePlay.Flame
             {
                 _resourceController = GetComponent<FlameResourceController>();
             }
+            _modeController ??= GetComponent<PlayerModeController>();
 
             if (_input == null || _resourceController == null)
             {
@@ -33,7 +35,7 @@ namespace DemonViglu.FirePlay.Flame
 
         private void Update()
         {
-            _resourceController.SetReceiverOverride(_input.ConstrictFlameHeld);
+            _resourceController.SetReceiverOverride((_modeController == null || _modeController.IsExploring) && _input.ConstrictFlameHeld);
         }
 
         private void OnDisable()

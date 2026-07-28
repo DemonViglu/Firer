@@ -153,6 +153,9 @@ namespace DemonViglu.FirePlay.Debugging
             var nearbySmallFire = _playerInteraction != null ? _playerInteraction.NearestSmallFire : null;
             var nearbyCampfire = _playerInteraction != null ? _playerInteraction.NearestCampfire : null;
             var nearbyWorldTree = _playerInteraction != null ? _playerInteraction.NearestWorldTree : null;
+            _text.Append("Interaction: ").AppendLine(_playerInteraction == null
+                ? "MISSING COMPONENT"
+                : _playerInteraction.CurrentInteractPrompt);
             if (nearbyCampfire != null)
             {
                 _text.Append("Nearby Campfire: ").Append(nearbyCampfire.CampfireId).Append(" / Level ")
@@ -165,7 +168,7 @@ namespace DemonViglu.FirePlay.Debugging
             else if (nearbySmallFire != null)
             {
                 var upgradeController = _playerInteraction.CampfireUpgradeController;
-                _text.Append("Nearby Fire: Small fire / Press E reclaim").AppendLine();
+                _text.Append("Nearby Fire: Small fire").AppendLine();
                 _text.Append("Small Fire Upgrade: ").AppendLine(upgradeController == null
                     ? "MISSING COMPONENT"
                     : upgradeController.HasValidSetup ? "Press G" : "INVALID SETUP");
@@ -176,10 +179,7 @@ namespace DemonViglu.FirePlay.Debugging
             }
             else if (nearbyFlameSource != null)
             {
-                _text.Append("Nearby Fire: ").Append(nearbyFlameSource.SourceId).Append(" / ")
-                    .AppendLine(nearbyFlameSource.IsAvailable
-                        ? "Press E"
-                        : $"Cooldown {nearbyFlameSource.RemainingCooldownSeconds:0.0}s");
+                _text.Append("Nearby Fire: ").AppendLine(nearbyFlameSource.SourceId);
             }
             else
             {
@@ -189,7 +189,7 @@ namespace DemonViglu.FirePlay.Debugging
                 ? "Unavailable"
                 : nearbyWorldTree.HasLocalContribution
                     ? $"Contributed / Total {nearbyWorldTree.TotalContribution:0.0} / {nearbyWorldTree.LastContributionStatus}"
-                    : $"Press E contribute ({nearbyWorldTree.ContributionCost:0.0}) / Total {nearbyWorldTree.TotalContribution:0.0} / {nearbyWorldTree.LastContributionStatus}");
+                    : $"Available / Total {nearbyWorldTree.TotalContribution:0.0} / {nearbyWorldTree.LastContributionStatus}");
             _text.Append("Save: ").AppendLine(SaveStatus);
             _text.Append("Small Fires: ").Append(SmallFire.ActiveCount).Append(" / ");
             _text.AppendLine(_campfirePlacement != null

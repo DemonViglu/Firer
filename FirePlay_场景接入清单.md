@@ -9,6 +9,8 @@
 - 小火种：`CampfirePlacement`（F 原型）、`CampfireUpgradeController`，其 `Campfire Prefab` 必须引用 Project 中的 `Assets/FirePlay/Runtime/Prefab/CampFire.prefab`，不可引用 Hierarchy 中对象；
 - 停留：`RestInteraction`；
 - 烤棉花：`MarshmallowInteraction`，引用 Player 下的手持占位物；Q 旋转仅为原型输入。
+- 输入模式：Player 挂载 `PlayerModeController`。Exploring / Placing / Resting 由放火与停留自动切换；不要让其他组件自行维护第二套模式状态。
+- 探索交互：无需新增场景组件。E 键目标由 `PlayerInteraction` 统一选择，调试面板的 `Interaction` 行直接显示实际将响应的目标；重叠时优先大树、其次自然火源、最后小火种。
 
 ## Prefab 与 ID
 
@@ -37,6 +39,14 @@
 - 在需要被火点亮的区域创建空物体并挂载 `WarmthNode`；默认半径为 6 米，可按关卡空间调整。
 - 可选：在该物体或其子物体添加 Point Light，并将其引用赋给 `Warmth Light`。Light 的最终 Intensity/Range 由 0–1 温暖值驱动；未引用 Light 时节点仍正常计算，可供后续 Shader、树或世界进度读取。
 - `SmallFire` 按较低温暖值供热；等级大于 0 的 `Campfire` 提供更高温暖值，且随等级提高。节点不会改变火源、余火或存档。
+
+## 玩家氛围桥接
+
+- 在 Player 挂载 `PlayerAtmosphereBridge`；它会自动读取同物体的 `FlameResourceController` 与 `RestInteraction`，不修改余火、停留或存档状态。
+- 场景建立两个独立的全局 Volume：`Atmosphere_Receiver`（冷、低曝光、低饱和）与 `Atmosphere_Giver`（暖、稍高曝光与 Bloom），将引用分别赋给桥接器。不要复用场景的基础 Global Volume，以免权重归零时丢失基础调色。
+- 建立三个循环 AudioSource 并关闭 `Play On Awake` 以外的随机启停逻辑：`Ambient Bed`（夜风/虫鸣/水声）、`Warmth Layer`（火焰/暖音乐层）、`Rest Layer`（近场篝火或仪式层）。先把 Clip 的无缝循环和 Mixer 路由配置好，再交给桥接器控制音量。
+- `Receiver Volume At Full Fuel` 默认保留少量冷色层；`Ambient Minimum Volume` 防止火旺时环境完全消失。所有过渡都使用平滑插值，后续移动端与网络玩家不需要改输入或状态层。
+- 当前未自动写入 `Player.prefab` 或场景，避免覆盖正在进行的 Inspector/场景修改；完成上述引用后在 Play Mode 用余火调试步进及进入/退出停留验证淡入淡出。
 
 ## 大树贡献（M4 基础）
 

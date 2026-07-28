@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 412745844895327691}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalPosition: {x: 0, y: 1, z: -6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -338,6 +338,9 @@ GameObject:
   - component: {fileID: 1743969675154280312}
   - component: {fileID: 1536743572776703721}
   - component: {fileID: 2924035416857554141}
+  - component: {fileID: 1357382950971186938}
+  - component: {fileID: 2759977987356437026}
+  - component: {fileID: 8662161886728232265}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -467,6 +470,7 @@ MonoBehaviour:
   _interactionLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  _modeController: {fileID: 0}
 --- !u!114 &1518005239310531485
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -514,6 +518,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Flame.FlameContractionController
   _input: {fileID: 7708806687425791670}
   _resourceController: {fileID: 1518005239310531485}
+  _modeController: {fileID: 0}
 --- !u!114 &656637033389967464
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -532,6 +537,7 @@ MonoBehaviour:
   _config: {fileID: 11400000, guid: d24ad6320c394959bd02f4f26a87211e, type: 2}
   _smallFirePrefab: {fileID: 8542682576192916304, guid: 6820af6efa36512438d65dc4e8d4567e, type: 3}
   _preview: {fileID: 0}
+  _modeController: {fileID: 0}
 --- !u!114 &1743969675154280312
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -547,6 +553,7 @@ MonoBehaviour:
   _input: {fileID: 0}
   _movement: {fileID: 0}
   _look: {fileID: 0}
+  _modeController: {fileID: 0}
   _cameraDrop: 0.55
   _cameraTransitionSpeed: 5
 --- !u!114 &1536743572776703721
@@ -579,6 +586,62 @@ MonoBehaviour:
   _input: {fileID: 0}
   _marshmallowProp: {fileID: 6623862794109983138}
   _turnDegrees: 90
+--- !u!114 &1357382950971186938
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5546368970521514861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b861ca7ffb2c4fc6aab6bc5cfdab1e84, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.TreeLightColorSelector
+  _input: {fileID: 0}
+  _interaction: {fileID: 0}
+  _modeController: {fileID: 0}
+  _availableColors:
+  - {r: 1, g: 0.45, b: 0.2, a: 1}
+  - {r: 1, g: 0.82, b: 0.25, a: 1}
+  - {r: 0.3, g: 0.8, b: 1, a: 1}
+  - {r: 0.8, g: 0.45, b: 1, a: 1}
+--- !u!114 &2759977987356437026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5546368970521514861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bc2cda1ec9b4abe938b4455c3ef190d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerModeController
+--- !u!114 &8662161886728232265
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5546368970521514861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09acf5d138c94ef3a32f657e479e0052, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Rendering.PlayerAtmosphereBridge
+  _resourceController: {fileID: 0}
+  _restInteraction: {fileID: 0}
+  _receiverVolume: {fileID: 0}
+  _giverVolume: {fileID: 0}
+  _ambientBed: {fileID: 0}
+  _warmthLayer: {fileID: 0}
+  _restLayer: {fileID: 0}
+  _blendSpeed: 2
+  _receiverVolumeAtFullFuel: 0.05
+  _ambientMinimumVolume: 0.35
+  _warmthMaximumVolume: 0.8
+  _restMaximumVolume: 1
 --- !u!1 &6885646609970973548
 GameObject:
   m_ObjectHideFlags: 0

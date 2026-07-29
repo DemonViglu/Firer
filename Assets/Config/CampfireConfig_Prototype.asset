@@ -12,7 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9bbff4c541bf4e7cabb7c3c9204323aa, type: 3}
   m_Name: CampfireConfig_Prototype
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Data.CampfireConfig
-  _upgradeCosts:
-  - 25
-  - 35
-  - 50
+  _levelContributionThresholds:
+  - 0
+  - 20
+  - 55
+  - 110
+  _tendFuelCost: 5
+  _maximumWarmth: 100
+  _initialWarmthNormalized: 1
+  _warmthDecayPerSecond: 0.1
+  _warmthPerTend: 16
+  _nearbyRecoveryRadius: 3.5
+  _nearbyRecoveryPerSecond: 0.25
+  _restingRecoveryPerSecond: 1.5
+  _warmthCostPerRecoveredFuel: 4

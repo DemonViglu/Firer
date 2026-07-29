@@ -19,6 +19,7 @@ namespace DemonViglu.FirePlay.Debugging
         [SerializeField] private CampfirePlacement _campfirePlacement;
         [SerializeField] private FlameResourceController _flameResourceController;
         [SerializeField] private RestInteraction _restInteraction;
+        [SerializeField] private MarshmallowInteraction _marshmallowInteraction;
         [SerializeField] private bool _visible = true;
         [SerializeField] private Vector2 _screenPosition = new(16f, 16f);
         [SerializeField, Min(240f)] private float _width = 360f;
@@ -79,6 +80,11 @@ namespace DemonViglu.FirePlay.Debugging
             if (_restInteraction == null)
             {
                 _restInteraction = FindFirstObjectByType<RestInteraction>();
+            }
+
+            if (_marshmallowInteraction == null)
+            {
+                _marshmallowInteraction = FindAnyObjectByType<MarshmallowInteraction>();
             }
         }
 
@@ -159,19 +165,17 @@ namespace DemonViglu.FirePlay.Debugging
             if (nearbyCampfire != null)
             {
                 _text.Append("Nearby Campfire: ").Append(nearbyCampfire.CampfireId).Append(" / Level ")
-                    .Append(nearbyCampfire.Level).Append(" / ")
-                    .AppendLine(nearbyCampfire.IsMaxLevel
-                        ? "Maximum level"
-                        : $"G upgrade ({nearbyCampfire.NextUpgradeCost:0.0})");
+                    .Append(nearbyCampfire.Level).Append(" / Warmth ")
+                    .AppendLine($"{nearbyCampfire.Warmth:0.0} / 100");
                 _text.Append("Campfire Status: ").AppendLine(nearbyCampfire.LastUpgradeStatus);
             }
             else if (nearbySmallFire != null)
             {
                 var upgradeController = _playerInteraction.CampfireUpgradeController;
                 _text.Append("Nearby Fire: Small fire").AppendLine();
-                _text.Append("Small Fire Upgrade: ").AppendLine(upgradeController == null
+                _text.Append("Small Fire Growth: ").AppendLine(upgradeController == null
                     ? "MISSING COMPONENT"
-                    : upgradeController.HasValidSetup ? "Press G" : "INVALID SETUP");
+                    : upgradeController.HasValidSetup ? "Press E" : "INVALID SETUP");
                 if (upgradeController != null)
                 {
                     _text.Append("Upgrade Status: ").AppendLine(upgradeController.LastUpgradeStatus);
@@ -211,6 +215,9 @@ namespace DemonViglu.FirePlay.Debugging
             _text.Append("Rest: ").AppendLine(_restInteraction == null
                 ? "MISSING COMPONENT"
                 : _restInteraction.IsResting ? $"Resting at {_restInteraction.ActiveRestSpot.name}" : _restInteraction.NearestRestSpot != null ? "Available (Press R)" : "Unavailable");
+            _text.Append("Marshmallow: ").AppendLine(_marshmallowInteraction == null
+                ? "MISSING COMPONENT"
+                : _marshmallowInteraction.Status);
         }
 
         private void EnsureStyle()

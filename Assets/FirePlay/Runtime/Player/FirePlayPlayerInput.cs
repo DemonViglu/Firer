@@ -23,6 +23,7 @@ namespace DemonViglu.FirePlay.Player
         private InputAction _interactAction;
         private InputAction _emoteAction;
         private InputAction _cycleTreeLightColorAction;
+        private InputAction _pauseAction;
 
         public Vector2 Move => _moveAction?.ReadValue<Vector2>() ?? Vector2.zero;
         public bool SprintHeld => _sprintAction != null && _sprintAction.IsPressed();
@@ -34,6 +35,7 @@ namespace DemonViglu.FirePlay.Player
         public bool InteractPressedThisFrame => _interactAction != null && _interactAction.WasPressedThisFrame();
         public bool EmotePressedThisFrame => _emoteAction != null && _emoteAction.WasPressedThisFrame();
         public bool CycleTreeLightColorPressedThisFrame => _cycleTreeLightColorAction != null && _cycleTreeLightColorAction.WasPressedThisFrame();
+        public bool PausePressedThisFrame => _pauseAction != null && _pauseAction.WasPressedThisFrame();
 
         private void Awake()
         {
@@ -62,6 +64,7 @@ namespace DemonViglu.FirePlay.Player
             _interactAction = FindRequiredAction("Interact");
             _emoteAction = FindRequiredAction("Emote");
             _cycleTreeLightColorAction = FindRequiredAction("CycleTreeLightColor");
+            _pauseAction = FindRequiredAction("Pause");
         }
 
         private void OnEnable()

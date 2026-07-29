@@ -44,8 +44,8 @@ Light:
   serializedVersion: 13
   m_Type: 2
   m_Color: {r: 0.9169811, g: 0.5053203, b: 0.15052326, a: 1}
-  m_Intensity: 5.25
-  m_Range: 7.4
+  m_Intensity: 4.2
+  m_Range: 2.52
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
   m_CookieSize2D: {x: 0.5, y: 0.5}
@@ -335,7 +335,6 @@ GameObject:
   - component: {fileID: 8292225297649727681}
   - component: {fileID: 1827968074440552529}
   - component: {fileID: 5305289997750256037}
-  - component: {fileID: 964779888469101245}
   m_Layer: 0
   m_Name: CampFire
   m_TagString: Untagged
@@ -388,8 +387,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.Campfire
   _config: {fileID: 11400000, guid: 8ca73f64dce5477e85b80ca1ce039c5f, type: 2}
-  _level: 0
+  _level: 3
   _totalContribution: 0
+  _warmth: 0
+  _warmthInitialized: 0
   _isRuntimeCreated: 0
   _sourceSmallFireId: 
 --- !u!114 &3161424325882539189
@@ -407,6 +408,11 @@ MonoBehaviour:
   _visualRoot: {fileID: 0}
   _fireLight: {fileID: 0}
   _fireVfx: {fileID: 0}
+  _stageVisualRoots:
+  - {fileID: 4632934166947303754, guid: 6820af6efa36512438d65dc4e8d4567e, type: 3}
+  - {fileID: 919132149155446097, guid: 611acf50bc761554fb3fb8fedbced4a7, type: 3}
+  - {fileID: 919132149155446097, guid: 611acf50bc761554fb3fb8fedbced4a7, type: 3}
+  - {fileID: 919132149155446097, guid: 611acf50bc761554fb3fb8fedbced4a7, type: 3}
   _scalePerLevel: 0.2
   _lightIntensityPerLevel: 0.5
 --- !u!114 &8292225297649727681
@@ -457,18 +463,6 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 1.7
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &964779888469101245
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5893462792062315505}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 04c18499e3254422a6798968886cc37a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.FlameRecoveryVolume
 --- !u!1001 &7283557018508234258
 PrefabInstance:
   m_ObjectHideFlags: 0

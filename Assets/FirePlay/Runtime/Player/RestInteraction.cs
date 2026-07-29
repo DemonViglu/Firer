@@ -1,4 +1,5 @@
 using DemonViglu.FirePlay.World;
+using DemonViglu.FirePlay.Flame;
 using System;
 using UnityEngine;
 
@@ -19,6 +20,7 @@ namespace DemonViglu.FirePlay.Player
 
         private Transform _cameraPivot;
         private Vector3 _standingPivotLocalPosition;
+        private FlameResourceController _restRecoveryController;
 
         public bool IsResting { get; private set; }
         public RestSpot NearestRestSpot { get; private set; }
@@ -87,6 +89,7 @@ namespace DemonViglu.FirePlay.Player
             IsResting = true;
             ActiveRestSpot = NearestRestSpot;
             _movement.SetMovementLocked(true);
+            BeginCampfireRecovery(ActiveRestSpot);
             ActiveRestSpot.NotifyRestStarted(this);
             RestStarted?.Invoke(ActiveRestSpot);
             return true;
@@ -104,6 +107,7 @@ namespace DemonViglu.FirePlay.Player
             _modeController?.Exit(PlayerMode.Resting);
             ActiveRestSpot = null;
             _movement.SetMovementLocked(false);
+            EndCampfireRecovery();
             if (completedSpot != null)
             {
                 completedSpot.NotifyRestEnded(this);
@@ -117,6 +121,27 @@ namespace DemonViglu.FirePlay.Player
             if (_cameraPivot != null)
             {
                 _cameraPivot.localPosition = _standingPivotLocalPosition;
+            }
+        }
+
+        private void BeginCampfireRecovery(RestSpot spot)
+        {
+            var campfire = spot != null ? spot.GetComponent<Campfire>() : null;
+            if (campfire == null || campfire.IsExtinguished || campfire.Config == null)
+            {
+                return;
+            }
+
+            _restRecoveryController = GetComponent<FlameResourceController>();
+            _restRecoveryController?.EnterCampfireRestRecovery(campfire, campfire.Config.RestingRecoveryPerSecond);
+        }
+
+        private void EndCampfireRecovery()
+        {
+            if (_restRecoveryController != null)
+            {
+                _restRecoveryController.ExitCampfireRestRecovery();
+                _restRecoveryController = null;
             }
         }
     }

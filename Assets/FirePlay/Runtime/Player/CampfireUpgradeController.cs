@@ -25,6 +25,9 @@ namespace DemonViglu.FirePlay.Player
             }
         }
         public string LastUpgradeStatus { get; private set; } = "Ready";
+        public float TendFuelCost => _campfirePrefab != null && _campfirePrefab.Config != null
+            ? _campfirePrefab.Config.TendFuelCost
+            : 0f;
 
         private void Awake()
         {
@@ -40,7 +43,7 @@ namespace DemonViglu.FirePlay.Player
             }
         }
 
-        public bool TryUpgradeSmallFire(SmallFire smallFire)
+        public bool TryTendSmallFire(SmallFire smallFire)
         {
             if (!HasValidSetup || smallFire == null)
             {
@@ -58,7 +61,7 @@ namespace DemonViglu.FirePlay.Player
                 return false;
             }
 
-            if (!instance.TryUpgrade(_resourceController))
+            if (!instance.TryTend(_resourceController))
             {
                 LastUpgradeStatus = instance.LastUpgradeStatus;
                 Destroy(instance.gameObject);
@@ -66,7 +69,7 @@ namespace DemonViglu.FirePlay.Player
             }
 
             Destroy(smallFire.gameObject);
-            LastUpgradeStatus = "Upgraded small fire";
+            LastUpgradeStatus = "Started a public fire";
             return true;
         }
     }

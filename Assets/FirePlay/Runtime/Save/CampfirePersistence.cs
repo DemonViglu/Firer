@@ -10,6 +10,7 @@ namespace DemonViglu.FirePlay.Save
         [SerializeField] private Campfire _campfirePrefab;
         [SerializeField] private bool _loadOnStart = true;
         private readonly LocalSaveRepository _repository = new();
+        private bool _isLoading;
 
         public string Status { get; private set; } = "Not loaded";
 
@@ -19,6 +20,16 @@ namespace DemonViglu.FirePlay.Save
             {
                 LoadNow();
             }
+        }
+
+        private void OnEnable()
+        {
+            Campfire.StateChanged += SaveAfterCampfireChanged;
+        }
+
+        private void OnDisable()
+        {
+            Campfire.StateChanged -= SaveAfterCampfireChanged;
         }
 
         [ContextMenu("Save Now")]
@@ -57,43 +68,59 @@ namespace DemonViglu.FirePlay.Save
                 return;
             }
 
-            Campfire.ClearRuntimeInstances();
-            var worldTree = FindFirstObjectByType<WorldTreeContribution>();
-            worldTree?.ApplySavedState(data.worldTree);
-            var loaded = 0;
-            foreach (var record in data.campfires)
+            _isLoading = true;
+            try
             {
-                if (!record.runtimeCreated)
+                Campfire.ClearRuntimeInstances();
+                var worldTree = FindFirstObjectByType<WorldTreeContribution>();
+                worldTree?.ApplySavedState(data.worldTree);
+                var loaded = 0;
+                foreach (var record in data.campfires)
                 {
-                    if (StableSceneId.TryFind(record.id, out var sceneId))
+                    if (!record.runtimeCreated)
                     {
-                        sceneId.GetComponent<Campfire>()?.ApplySavedState(record);
+                        if (StableSceneId.TryFind(record.id, out var sceneId))
+                        {
+                            sceneId.GetComponent<Campfire>()?.ApplySavedState(record);
+                        }
+                        continue;
                     }
-                    continue;
+
+                    if (!string.IsNullOrWhiteSpace(record.sourceSmallFireId) && StableSceneId.TryFind(record.sourceSmallFireId, out var sourceId))
+                    {
+                        var sourceFire = sourceId.GetComponent<SmallFire>();
+                        if (sourceFire != null)
+                        {
+                            sourceFire.gameObject.SetActive(false);
+                        }
+                    }
+
+                    var instance = Instantiate(_campfirePrefab, record.position, record.rotation);
+                    if (instance.RestoreRuntime(record))
+                    {
+                        loaded++;
+                    }
+                    else
+                    {
+                        Destroy(instance.gameObject);
+                    }
                 }
 
-                if (!string.IsNullOrWhiteSpace(record.sourceSmallFireId) && StableSceneId.TryFind(record.sourceSmallFireId, out var sourceId))
-                {
-                    var sourceFire = sourceId.GetComponent<SmallFire>();
-                    if (sourceFire != null)
-                    {
-                        sourceFire.gameObject.SetActive(false);
-                    }
-                }
-
-                var instance = Instantiate(_campfirePrefab, record.position, record.rotation);
-                if (instance.RestoreRuntime(record))
-                {
-                    loaded++;
-                }
-                else
-                {
-                    Destroy(instance.gameObject);
-                }
+                Status = $"Loaded {loaded} campfires";
+                Debug.Log($"[CampfirePersistence] {Status}", this);
             }
+            finally
+            {
+                _isLoading = false;
+            }
+        }
 
-            Status = $"Loaded {loaded} campfires";
-            Debug.Log($"[CampfirePersistence] {Status}", this);
+        private void SaveAfterCampfireChanged(Campfire _)
+        {
+            if (!_isLoading)
+            {
+                SaveNow();
+            }
         }
 
         private void OnApplicationPause(bool paused)

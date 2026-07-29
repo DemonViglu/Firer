@@ -16,6 +16,6 @@ MonoBehaviour:
   _initialFuel: 80
   _receiverEnterFuel: 25
   _giverEnterFuel: 40
-  _nightDrainPerSecond: 2.5
-  _sprintDrainPerSecond: 2
+  _nightDrainPerSecond: 0.08
+  _sprintDrainPerSecond: 0.35
   _restorePerSecond: 8

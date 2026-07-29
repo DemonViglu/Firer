@@ -68,12 +68,20 @@ namespace DemonViglu.FirePlay.World
             {
                 if (IsPlacing)
                 {
-                    ConfirmPlacement();
+                    if (!ConfirmPlacement())
+                    {
+                        CancelPlacement();
+                    }
                 }
                 else
                 {
                     BeginPlacement();
                 }
+            }
+
+            if (IsPlacing && _input != null && _input.PausePressedThisFrame)
+            {
+                CancelPlacement();
             }
 
             if (IsPlacing && _placementCamera != null)
@@ -142,6 +150,7 @@ namespace DemonViglu.FirePlay.World
         {
             if (!IsPlacing || !IsPlacementValid || _resourceController == null || _config == null)
             {
+                PlacementStatus = "Cannot place";
                 return false;
             }
 

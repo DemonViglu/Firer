@@ -11,6 +11,8 @@ namespace DemonViglu.FirePlay.Save
         public Quaternion rotation;
         public int level;
         public float totalContribution;
+        public float warmth;
+        public bool warmthInitialized;
         public bool runtimeCreated;
         public string sourceSmallFireId;
     }

@@ -8,6 +8,7 @@ namespace DemonViglu.FirePlay.Player
     {
         None,
         WorldTree,
+        Campfire,
         FlameSource,
         SmallFire
     }
@@ -147,18 +148,14 @@ namespace DemonViglu.FirePlay.Player
             NearestWorldTree = nearestWorldTree;
             SelectCurrentInteractTarget(nearestSmallFire, nearestSmallFireDistance, nearestFlameSource, nearestFlameSourceDistance, nearestWorldTree, nearestWorldTreeDistance);
 
-            if (_input.UpgradeCampfirePressedThisFrame && nearestCampfire != null)
-            {
-                nearestCampfire.TryUpgrade(_flameResourceController);
-            }
-            else if (_input.UpgradeCampfirePressedThisFrame && nearestSmallFire != null)
-            {
-                _campfireUpgradeController?.TryUpgradeSmallFire(nearestSmallFire);
-            }
-
             if (interactPressed)
             {
                 InteractWithCurrentTarget(activeFlame);
+            }
+
+            if (_input.UpgradeCampfirePressedThisFrame && nearestSmallFire != null)
+            {
+                nearestSmallFire.TryReclaim(_flameResourceController);
             }
         }
 
@@ -183,19 +180,31 @@ namespace DemonViglu.FirePlay.Player
                 return;
             }
 
-            if (flameSource != null)
+            if (NearestCampfire != null)
             {
-                CurrentInteractTargetKind = PlayerInteractTargetKind.FlameSource;
-                CurrentInteractPrompt = flameSource.IsAvailable
-                    ? "Press E: restore flame"
-                    : $"Flame source cooling ({flameSource.RemainingCooldownSeconds:0.0}s)";
+                CurrentInteractTargetKind = PlayerInteractTargetKind.Campfire;
+                CurrentInteractPrompt = NearestCampfire.NeedsTending
+                    ? $"Press E: tend fire ({NearestCampfire.TendFuelCost:0.0})"
+                    : "Campfire is warm";
                 return;
             }
 
             if (smallFire != null)
             {
                 CurrentInteractTargetKind = PlayerInteractTargetKind.SmallFire;
-                CurrentInteractPrompt = "Press E: reclaim small fire";
+                var tendCost = _campfireUpgradeController != null ? _campfireUpgradeController.TendFuelCost : 0f;
+                CurrentInteractPrompt = tendCost > 0f
+                    ? $"E: begin public fire ({tendCost:0.0}) / G: reclaim"
+                    : "Public fire setup missing";
+                return;
+            }
+
+            if (flameSource != null)
+            {
+                CurrentInteractTargetKind = PlayerInteractTargetKind.FlameSource;
+                CurrentInteractPrompt = flameSource.IsAvailable
+                    ? "Press E: gather ember"
+                    : "Ember already gathered";
             }
         }
 
@@ -209,8 +218,11 @@ namespace DemonViglu.FirePlay.Player
                 case PlayerInteractTargetKind.FlameSource:
                     NearestFlameSource?.TryRestore(_flameResourceController);
                     break;
+                case PlayerInteractTargetKind.Campfire:
+                    NearestCampfire?.TryTend(_flameResourceController);
+                    break;
                 case PlayerInteractTargetKind.SmallFire:
-                    NearestSmallFire?.TryReclaim(_flameResourceController);
+                    _campfireUpgradeController?.TryTendSmallFire(NearestSmallFire);
                     break;
             }
         }

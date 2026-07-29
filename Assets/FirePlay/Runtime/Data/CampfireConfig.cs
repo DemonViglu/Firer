@@ -15,11 +15,12 @@ namespace DemonViglu.FirePlay.Data
         [SerializeField, Min(0f)] private float _warmthDecayPerSecond = 0.1f;
         [SerializeField, Min(0.01f)] private float _warmthPerTend = 16f;
 
-        [Header("Player recovery")]
-        [SerializeField, Min(0.1f)] private float _nearbyRecoveryRadius = 3.5f;
-        [SerializeField, Min(0f)] private float _nearbyRecoveryPerSecond = 1.2f;
-        [SerializeField, Min(0f)] private float _restingRecoveryPerSecond = 5f;
-        [SerializeField, Min(0.01f)] private float _warmthCostPerRecoveredFuel = 4f;
+        [Header("Comfort area")]
+        [SerializeField, Min(0.1f)] private float _nearbyComfortRadius = 3.5f;
+
+        [Header("Emergency warmth withdrawal")]
+        [SerializeField, Min(0.01f)] private float _emergencyWithdrawFuel = 5f;
+        [SerializeField, Min(0.01f)] private float _emergencyWithdrawWarmthCost = 25f;
 
         public int MaximumLevel => _levelContributionThresholds != null
             ? Mathf.Max(0, _levelContributionThresholds.Length - 1)
@@ -29,10 +30,9 @@ namespace DemonViglu.FirePlay.Data
         public float InitialWarmth => _maximumWarmth * _initialWarmthNormalized;
         public float WarmthDecayPerSecond => _warmthDecayPerSecond;
         public float WarmthPerTend => _warmthPerTend;
-        public float NearbyRecoveryRadius => _nearbyRecoveryRadius;
-        public float NearbyRecoveryPerSecond => _nearbyRecoveryPerSecond;
-        public float RestingRecoveryPerSecond => _restingRecoveryPerSecond;
-        public float WarmthCostPerRecoveredFuel => _warmthCostPerRecoveredFuel;
+        public float NearbyComfortRadius => _nearbyComfortRadius;
+        public float EmergencyWithdrawFuel => _emergencyWithdrawFuel;
+        public float EmergencyWithdrawWarmthCost => _emergencyWithdrawWarmthCost;
 
         public float GetUpgradeCost(int currentLevel)
         {
@@ -80,10 +80,9 @@ namespace DemonViglu.FirePlay.Data
             _maximumWarmth = Mathf.Max(1f, _maximumWarmth);
             _warmthDecayPerSecond = Mathf.Max(0f, _warmthDecayPerSecond);
             _warmthPerTend = Mathf.Max(0.01f, _warmthPerTend);
-            _nearbyRecoveryRadius = Mathf.Max(0.1f, _nearbyRecoveryRadius);
-            _nearbyRecoveryPerSecond = Mathf.Max(0f, _nearbyRecoveryPerSecond);
-            _restingRecoveryPerSecond = Mathf.Max(0f, _restingRecoveryPerSecond);
-            _warmthCostPerRecoveredFuel = Mathf.Max(0.01f, _warmthCostPerRecoveredFuel);
+            _nearbyComfortRadius = Mathf.Max(0.1f, _nearbyComfortRadius);
+            _emergencyWithdrawFuel = Mathf.Max(0.01f, _emergencyWithdrawFuel);
+            _emergencyWithdrawWarmthCost = Mathf.Max(0.01f, _emergencyWithdrawWarmthCost);
         }
     }
 }

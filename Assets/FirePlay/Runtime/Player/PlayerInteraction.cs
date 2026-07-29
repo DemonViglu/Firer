@@ -153,7 +153,11 @@ namespace DemonViglu.FirePlay.Player
                 InteractWithCurrentTarget(activeFlame);
             }
 
-            if (_input.UpgradeCampfirePressedThisFrame && nearestSmallFire != null)
+            if (_input.UpgradeCampfirePressedThisFrame && CurrentInteractTargetKind == PlayerInteractTargetKind.Campfire)
+            {
+                NearestCampfire?.TryWithdrawEmergencyFuel(_flameResourceController);
+            }
+            else if (_input.UpgradeCampfirePressedThisFrame && nearestSmallFire != null)
             {
                 nearestSmallFire.TryReclaim(_flameResourceController);
             }
@@ -184,8 +188,8 @@ namespace DemonViglu.FirePlay.Player
             {
                 CurrentInteractTargetKind = PlayerInteractTargetKind.Campfire;
                 CurrentInteractPrompt = NearestCampfire.NeedsTending
-                    ? $"Press E: tend fire ({NearestCampfire.TendFuelCost:0.0})"
-                    : "Campfire is warm";
+                    ? $"E: tend ({NearestCampfire.TendFuelCost:0.0}) / G: draw warmth (+{NearestCampfire.EmergencyWithdrawFuel:0})"
+                    : $"Campfire warm / G: draw warmth (+{NearestCampfire.EmergencyWithdrawFuel:0})";
                 return;
             }
 

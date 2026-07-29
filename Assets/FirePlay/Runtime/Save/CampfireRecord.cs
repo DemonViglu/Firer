@@ -14,6 +14,7 @@ namespace DemonViglu.FirePlay.Save
         public float warmth;
         public bool warmthInitialized;
         public bool runtimeCreated;
+        public bool retired;
         public string sourceSmallFireId;
     }
 }

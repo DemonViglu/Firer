@@ -23,7 +23,14 @@ namespace DemonViglu.FirePlay.World
             get
             {
                 var campfire = ResolveSourceCampfire();
-                return campfire == null ? 0 : campfire.Level;
+                if (campfire != null)
+                {
+                    return campfire.Level;
+                }
+
+                return Campfire.TryGetRetiredSourceStage(_sourceSmallFireId, out var retiredStage)
+                    ? retiredStage
+                    : 0;
             }
         }
 

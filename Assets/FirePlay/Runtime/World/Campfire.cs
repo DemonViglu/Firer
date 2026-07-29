@@ -16,6 +16,7 @@ namespace DemonViglu.FirePlay.World
     public sealed class Campfire : MonoBehaviour
     {
         private static readonly List<Campfire> ActiveCampfires = new();
+        private static readonly Dictionary<string, int> RetiredSourceStages = new();
 
         [SerializeField] private CampfireConfig _config;
         [SerializeField, Min(0)] private int _level;
@@ -23,6 +24,7 @@ namespace DemonViglu.FirePlay.World
         [SerializeField, Min(0f)] private float _warmth;
         [SerializeField] private bool _warmthInitialized;
         [SerializeField] private bool _isRuntimeCreated;
+        [SerializeField] private bool _isRetired;
         [SerializeField] private string _sourceSmallFireId;
 
         public string CampfireId => GetComponent<StableSceneId>().Value;
@@ -36,11 +38,15 @@ namespace DemonViglu.FirePlay.World
         public bool HasValidSetup => _config != null && GetComponent<StableSceneId>().IsValid;
         public bool IsMaxLevel => _config != null && _level >= _config.MaximumLevel;
         public float TendFuelCost => _config != null ? _config.TendFuelCost : 0f;
+        public float EmergencyWithdrawFuel => _config != null ? _config.EmergencyWithdrawFuel : 0f;
+        public float EmergencyWithdrawWarmthCost => _config != null ? _config.EmergencyWithdrawWarmthCost : 0f;
         public string LastUpgradeStatus { get; private set; } = "Ready";
         public bool IsRuntimeCreated => _isRuntimeCreated;
+        public bool IsRetired => _isRetired;
         public string SourceSmallFireId => _sourceSmallFireId;
         public static IReadOnlyList<Campfire> ActiveInstances => ActiveCampfires;
         public static event Action<Campfire> StateChanged;
+        public static event Action<Campfire> Retired;
 
         public static void ClearRuntimeInstances()
         {
@@ -63,7 +69,9 @@ namespace DemonViglu.FirePlay.World
         private static void ResetActiveCampfires()
         {
             ActiveCampfires.Clear();
+            RetiredSourceStages.Clear();
             StateChanged = null;
+            Retired = null;
         }
 
         public static Campfire FindNearest(Vector3 position, float maximumDistance, out float squaredDistance)
@@ -89,6 +97,33 @@ namespace DemonViglu.FirePlay.World
             }
 
             return nearest;
+        }
+
+        public static void RegisterRetiredRecord(CampfireRecord record)
+        {
+            if (record == null || !record.retired || string.IsNullOrWhiteSpace(record.sourceSmallFireId))
+            {
+                return;
+            }
+
+            if (RetiredSourceStages.TryGetValue(record.sourceSmallFireId, out var existingStage))
+            {
+                RetiredSourceStages[record.sourceSmallFireId] = Mathf.Max(existingStage, record.level);
+                return;
+            }
+
+            RetiredSourceStages.Add(record.sourceSmallFireId, record.level);
+        }
+
+        public static bool TryGetRetiredSourceStage(string sourceSmallFireId, out int stage)
+        {
+            if (string.IsNullOrWhiteSpace(sourceSmallFireId))
+            {
+                stage = 0;
+                return false;
+            }
+
+            return RetiredSourceStages.TryGetValue(sourceSmallFireId, out stage);
         }
 
         private void OnEnable()
@@ -124,6 +159,8 @@ namespace DemonViglu.FirePlay.World
             {
                 _warmth = Mathf.Max(0f, _warmth - _config.WarmthDecayPerSecond * Time.deltaTime);
             }
+
+            RetireIfExpired();
         }
 
         public bool InitializeRuntime(string stableId, string sourceSmallFireId = null)
@@ -137,6 +174,7 @@ namespace DemonViglu.FirePlay.World
 
             LastUpgradeStatus = "Ready";
             _isRuntimeCreated = true;
+            _isRetired = false;
             _sourceSmallFireId = sourceSmallFireId;
             // Runtime campfires must not inherit authoring values from CampFire.prefab.
             // Scene-only center campfires may start at level 3, but a fire born from a small fire always starts at level 0.
@@ -161,6 +199,7 @@ namespace DemonViglu.FirePlay.World
                 warmth = _warmth,
                 warmthInitialized = _warmthInitialized,
                 runtimeCreated = _isRuntimeCreated,
+                retired = _isRetired,
                 sourceSmallFireId = _sourceSmallFireId
             };
         }
@@ -230,16 +269,55 @@ namespace DemonViglu.FirePlay.World
             return true;
         }
 
-        public float DrawWarmthForPlayer(float requestedFuel)
+        public bool TryWithdrawEmergencyFuel(FlameResourceController resourceController)
         {
-            if (_config == null || IsExtinguished || requestedFuel <= 0f)
+            if (!HasValidSetup || IsExtinguished)
             {
-                return 0f;
+                LastUpgradeStatus = "Fire is out";
+                return false;
             }
 
-            var restoredFuel = Mathf.Min(requestedFuel, _warmth / _config.WarmthCostPerRecoveredFuel);
-            _warmth = Mathf.Max(0f, _warmth - restoredFuel * _config.WarmthCostPerRecoveredFuel);
-            return restoredFuel;
+            var amount = EmergencyWithdrawFuel;
+            var warmthCost = EmergencyWithdrawWarmthCost;
+            if (resourceController == null || resourceController.State == null ||
+                resourceController.State.CurrentFuel > resourceController.State.MaxFuel - amount)
+            {
+                LastUpgradeStatus = "Fuel already sufficient";
+                return false;
+            }
+
+            if (_warmth < warmthCost)
+            {
+                LastUpgradeStatus = "Not enough warmth";
+                return false;
+            }
+
+            if (!resourceController.Restore(amount))
+            {
+                LastUpgradeStatus = "Restore failed";
+                return false;
+            }
+
+            _warmth = Mathf.Max(0f, _warmth - warmthCost);
+            LastUpgradeStatus = $"Drew {amount:0} fuel from the fire";
+            StateChanged?.Invoke(this);
+            RetireIfExpired();
+            return true;
+        }
+
+        private void RetireIfExpired()
+        {
+            if (_isRetired || !_isRuntimeCreated || !IsExtinguished || IsMaxLevel)
+            {
+                return;
+            }
+
+            _isRetired = true;
+            RegisterRetiredRecord(CreateRecord());
+            ActiveCampfires.Remove(this);
+            LastUpgradeStatus = "Fire faded away";
+            Retired?.Invoke(this);
+            Destroy(gameObject);
         }
 
         private void RestoreWarmth(CampfireRecord record)

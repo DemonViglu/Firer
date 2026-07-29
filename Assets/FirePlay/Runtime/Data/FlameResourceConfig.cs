@@ -23,6 +23,12 @@ namespace DemonViglu.FirePlay.Data
         [SerializeField, Min(0f)] private float _sprintDrainPerSecond = 2f;
         [SerializeField, Min(0f)] private float _restorePerSecond = 8f;
 
+        [Header("公共篝火舒适区")]
+        [Tooltip("在燃烧的公共篝火附近时，夜间余火消耗乘以此值。")]
+        [SerializeField, Range(0f, 1f)] private float _nearbyCampfireDrainMultiplier = 0.375f;
+        [Tooltip("坐在燃烧的公共篝火旁时，夜间余火消耗乘以此值。")]
+        [SerializeField, Range(0f, 1f)] private float _restingCampfireDrainMultiplier = 0.125f;
+
         public float MaxFuel => _maxFuel;
         public float InitialFuel => Mathf.Clamp(_initialFuel, 0f, _maxFuel);
         public float ReceiverEnterFuel => Mathf.Clamp(_receiverEnterFuel, 0f, _maxFuel);
@@ -30,6 +36,8 @@ namespace DemonViglu.FirePlay.Data
         public float NightDrainPerSecond => _nightDrainPerSecond;
         public float SprintDrainPerSecond => _sprintDrainPerSecond;
         public float RestorePerSecond => _restorePerSecond;
+        public float NearbyCampfireDrainMultiplier => _nearbyCampfireDrainMultiplier;
+        public float RestingCampfireDrainMultiplier => _restingCampfireDrainMultiplier;
 
         private void OnValidate()
         {
@@ -37,6 +45,8 @@ namespace DemonViglu.FirePlay.Data
             _initialFuel = Mathf.Clamp(_initialFuel, 0f, _maxFuel);
             _receiverEnterFuel = Mathf.Clamp(_receiverEnterFuel, 0f, _maxFuel);
             _giverEnterFuel = Mathf.Clamp(_giverEnterFuel, _receiverEnterFuel, _maxFuel);
+            _nearbyCampfireDrainMultiplier = Mathf.Clamp01(_nearbyCampfireDrainMultiplier);
+            _restingCampfireDrainMultiplier = Mathf.Clamp01(_restingCampfireDrainMultiplier);
         }
     }
 }

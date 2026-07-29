@@ -19,3 +19,5 @@ MonoBehaviour:
   _nightDrainPerSecond: 0.08
   _sprintDrainPerSecond: 0.35
   _restorePerSecond: 8
+  _nearbyCampfireDrainMultiplier: 0.375
+  _restingCampfireDrainMultiplier: 0.125

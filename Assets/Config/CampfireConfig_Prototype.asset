@@ -20,9 +20,8 @@ MonoBehaviour:
   _tendFuelCost: 5
   _maximumWarmth: 100
   _initialWarmthNormalized: 1
-  _warmthDecayPerSecond: 0.1
+  _warmthDecayPerSecond: 0.03
   _warmthPerTend: 16
-  _nearbyRecoveryRadius: 3.5
-  _nearbyRecoveryPerSecond: 0.25
-  _restingRecoveryPerSecond: 1.5
-  _warmthCostPerRecoveredFuel: 4
+  _nearbyComfortRadius: 3.5
+  _emergencyWithdrawFuel: 5
+  _emergencyWithdrawWarmthCost: 25

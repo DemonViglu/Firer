@@ -16,14 +16,14 @@ namespace DemonViglu.FirePlay.Flame
 
         private int _activeRecoverySources;
         private int _activeSafeZones;
-        private float _campfireRestRecoveryPerSecond = -1f;
-        private Campfire _campfireRestRecoverySource;
+        private Campfire _campfireRestSource;
 
         public FlameResourceState State { get; private set; }
         public FlameResourceConfig Config => _config;
         public bool NightDrainActive => _nightDrainActive;
         public bool IsRecovering => _activeRecoverySources > 0;
         public bool IsInSafeZone => _activeSafeZones > 0;
+        public float CurrentCampfireDrainMultiplier { get; private set; } = 1f;
 
         private void Awake()
         {
@@ -50,18 +50,16 @@ namespace DemonViglu.FirePlay.Flame
 
             if (IsRecovering)
             {
-                var recoveryRate = _campfireRestRecoveryPerSecond >= 0f
-                    ? _campfireRestRecoveryPerSecond
-                    : _config.RestorePerSecond;
-                RestoreFromCampfireOrWorld(recoveryRate * Time.deltaTime);
+                CurrentCampfireDrainMultiplier = 1f;
+                State.Restore(_config.RestorePerSecond * Time.deltaTime);
             }
-            else if (TryGetNearbyCampfire(out var nearbyCampfire))
+            else
             {
-                State.Restore(nearbyCampfire.DrawWarmthForPlayer(nearbyCampfire.Config.NearbyRecoveryPerSecond * Time.deltaTime));
-            }
-            else if (_nightDrainActive)
-            {
-                State.TryConsume(_config.NightDrainPerSecond * Time.deltaTime);
+                CurrentCampfireDrainMultiplier = GetCampfireDrainMultiplier();
+                if (_nightDrainActive)
+                {
+                    State.TryConsume(_config.NightDrainPerSecond * CurrentCampfireDrainMultiplier * Time.deltaTime);
+                }
             }
         }
 
@@ -69,8 +67,8 @@ namespace DemonViglu.FirePlay.Flame
         {
             _activeRecoverySources = 0;
             _activeSafeZones = 0;
-            _campfireRestRecoveryPerSecond = -1f;
-            _campfireRestRecoverySource = null;
+            _campfireRestSource = null;
+            CurrentCampfireDrainMultiplier = 1f;
             State?.SetReceiverOverride(false);
         }
 
@@ -89,31 +87,26 @@ namespace DemonViglu.FirePlay.Flame
             _activeRecoverySources = Mathf.Max(0, _activeRecoverySources - 1);
         }
 
-        public void EnterCampfireRestRecovery(Campfire campfire, float recoveryPerSecond)
+        public void EnterCampfireRest(Campfire campfire)
         {
-            _campfireRestRecoverySource = campfire;
-            _campfireRestRecoveryPerSecond = Mathf.Max(0f, recoveryPerSecond);
-            EnterRecoverySource();
+            _campfireRestSource = campfire;
         }
 
-        public void ExitCampfireRestRecovery()
+        public void ExitCampfireRest()
         {
-            ExitRecoverySource();
-            if (!IsRecovering)
-            {
-                _campfireRestRecoveryPerSecond = -1f;
-                _campfireRestRecoverySource = null;
-            }
+            _campfireRestSource = null;
         }
 
-        private void RestoreFromCampfireOrWorld(float requestedFuel)
+        private float GetCampfireDrainMultiplier()
         {
-            if (_campfireRestRecoverySource != null)
+            if (!TryGetNearbyCampfire(out var nearbyCampfire))
             {
-                State.Restore(_campfireRestRecoverySource.DrawWarmthForPlayer(requestedFuel));
-                return;
+                return 1f;
             }
-            State.Restore(requestedFuel);
+
+            return nearbyCampfire == _campfireRestSource
+                ? _config.RestingCampfireDrainMultiplier
+                : _config.NearbyCampfireDrainMultiplier;
         }
 
         private bool TryGetNearbyCampfire(out Campfire nearbyCampfire)
@@ -124,7 +117,7 @@ namespace DemonViglu.FirePlay.Flame
             {
                 if (campfire != null && campfire.Config != null)
                 {
-                    maximumSearchRadius = Mathf.Max(maximumSearchRadius, campfire.Config.NearbyRecoveryRadius);
+                    maximumSearchRadius = Mathf.Max(maximumSearchRadius, campfire.Config.NearbyComfortRadius);
                 }
             }
 
@@ -135,13 +128,13 @@ namespace DemonViglu.FirePlay.Flame
 
             var nearestCampfire = Campfire.FindNearest(transform.position, maximumSearchRadius, out var squaredDistance);
             if (nearestCampfire == null || nearestCampfire.IsExtinguished || nearestCampfire.Config == null ||
-                squaredDistance > nearestCampfire.Config.NearbyRecoveryRadius * nearestCampfire.Config.NearbyRecoveryRadius)
+                squaredDistance > nearestCampfire.Config.NearbyComfortRadius * nearestCampfire.Config.NearbyComfortRadius)
             {
                 return false;
             }
 
             nearbyCampfire = nearestCampfire;
-            return nearestCampfire.Config.NearbyRecoveryPerSecond > 0f;
+            return true;
         }
 
         public void EnterSafeZone()

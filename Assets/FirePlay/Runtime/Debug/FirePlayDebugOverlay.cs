@@ -148,6 +148,8 @@ namespace DemonViglu.FirePlay.Debugging
                 _text.Append("Resource Flow: ").AppendLine(
                     _flameResourceController.IsRecovering
                         ? "Recovering"
+                        : _flameResourceController.CurrentCampfireDrainMultiplier < 0.999f
+                            ? $"Campfire comfort x{_flameResourceController.CurrentCampfireDrainMultiplier:0.00}"
                         : _flameResourceController.NightDrainActive ? "Night Drain" : "Paused");
             }
             else

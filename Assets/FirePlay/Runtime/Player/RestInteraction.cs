@@ -89,7 +89,7 @@ namespace DemonViglu.FirePlay.Player
             IsResting = true;
             ActiveRestSpot = NearestRestSpot;
             _movement.SetMovementLocked(true);
-            BeginCampfireRecovery(ActiveRestSpot);
+            BeginCampfireComfort(ActiveRestSpot);
             ActiveRestSpot.NotifyRestStarted(this);
             RestStarted?.Invoke(ActiveRestSpot);
             return true;
@@ -107,7 +107,7 @@ namespace DemonViglu.FirePlay.Player
             _modeController?.Exit(PlayerMode.Resting);
             ActiveRestSpot = null;
             _movement.SetMovementLocked(false);
-            EndCampfireRecovery();
+            EndCampfireComfort();
             if (completedSpot != null)
             {
                 completedSpot.NotifyRestEnded(this);
@@ -124,7 +124,7 @@ namespace DemonViglu.FirePlay.Player
             }
         }
 
-        private void BeginCampfireRecovery(RestSpot spot)
+        private void BeginCampfireComfort(RestSpot spot)
         {
             var campfire = spot != null ? spot.GetComponent<Campfire>() : null;
             if (campfire == null || campfire.IsExtinguished || campfire.Config == null)
@@ -133,14 +133,14 @@ namespace DemonViglu.FirePlay.Player
             }
 
             _restRecoveryController = GetComponent<FlameResourceController>();
-            _restRecoveryController?.EnterCampfireRestRecovery(campfire, campfire.Config.RestingRecoveryPerSecond);
+            _restRecoveryController?.EnterCampfireRest(campfire);
         }
 
-        private void EndCampfireRecovery()
+        private void EndCampfireComfort()
         {
             if (_restRecoveryController != null)
             {
-                _restRecoveryController.ExitCampfireRestRecovery();
+                _restRecoveryController.ExitCampfireRest();
                 _restRecoveryController = null;
             }
         }

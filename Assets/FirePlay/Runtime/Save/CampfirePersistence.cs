@@ -10,6 +10,7 @@ namespace DemonViglu.FirePlay.Save
         [SerializeField] private Campfire _campfirePrefab;
         [SerializeField] private bool _loadOnStart = true;
         private readonly LocalSaveRepository _repository = new();
+        private readonly List<CampfireRecord> _retiredRuntimeCampfires = new();
         private bool _isLoading;
 
         public string Status { get; private set; } = "Not loaded";
@@ -25,17 +26,20 @@ namespace DemonViglu.FirePlay.Save
         private void OnEnable()
         {
             Campfire.StateChanged += SaveAfterCampfireChanged;
+            Campfire.Retired += SaveAfterCampfireRetired;
         }
 
         private void OnDisable()
         {
             Campfire.StateChanged -= SaveAfterCampfireChanged;
+            Campfire.Retired -= SaveAfterCampfireRetired;
         }
 
         [ContextMenu("Save Now")]
         public void SaveNow()
         {
             var data = new FirePlaySaveData();
+            data.campfires.AddRange(_retiredRuntimeCampfires);
             foreach (var campfire in Campfire.ActiveInstances)
             {
                 data.campfires.Add(campfire.CreateRecord());
@@ -72,6 +76,7 @@ namespace DemonViglu.FirePlay.Save
             try
             {
                 Campfire.ClearRuntimeInstances();
+                _retiredRuntimeCampfires.Clear();
                 var worldTree = FindFirstObjectByType<WorldTreeContribution>();
                 worldTree?.ApplySavedState(data.worldTree);
                 var loaded = 0;
@@ -93,6 +98,13 @@ namespace DemonViglu.FirePlay.Save
                         {
                             sourceFire.gameObject.SetActive(false);
                         }
+                    }
+
+                    if (record.retired)
+                    {
+                        _retiredRuntimeCampfires.Add(record);
+                        Campfire.RegisterRetiredRecord(record);
+                        continue;
                     }
 
                     var instance = Instantiate(_campfirePrefab, record.position, record.rotation);
@@ -121,6 +133,18 @@ namespace DemonViglu.FirePlay.Save
             {
                 SaveNow();
             }
+        }
+
+        private void SaveAfterCampfireRetired(Campfire campfire)
+        {
+            if (_isLoading || campfire == null)
+            {
+                return;
+            }
+
+            _retiredRuntimeCampfires.RemoveAll(record => record.id == campfire.CampfireId);
+            _retiredRuntimeCampfires.Add(campfire.CreateRecord());
+            SaveNow();
         }
 
         private void OnApplicationPause(bool paused)

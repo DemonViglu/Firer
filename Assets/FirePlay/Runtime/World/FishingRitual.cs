@@ -34,11 +34,11 @@ namespace DemonViglu.FirePlay.World
         {
             if (resourceController == null || !resourceController.TryConsume(_rodFuelCost))
             {
-                status = "Not enough fuel";
+                status = "余火不够啦，先去找一点暖意吧";
                 return false;
             }
 
-            status = "A fishing rod takes shape";
+            status = "一根小鱼竿在手中慢慢成形";
             return true;
         }
 

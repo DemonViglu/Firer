@@ -17,12 +17,6 @@ namespace DemonViglu.FirePlay.UI
             ConfigureUiInput();
         }
 
-        private void Start()
-        {
-            var hud = UnityEngine.Object.FindAnyObjectByType<FirePlayHudForm>();
-            FirePlayMobileOverlay.Ensure(hud != null ? hud.transform.parent : null);
-        }
-
         private static void ConfigureUiInput()
         {
             var eventSystem = UnityEngine.Object.FindAnyObjectByType<EventSystem>();

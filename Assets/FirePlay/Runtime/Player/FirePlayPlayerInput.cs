@@ -29,9 +29,18 @@ namespace DemonViglu.FirePlay.Player
         // keyboard/gamepad. Gameplay systems never need to know whether a command
         // originated from a mobile UI button or a physical device.
         private Vector2 _virtualMove;
+        private Vector2 _virtualLook;
         private bool _virtualPlaceFirePressed;
+        private bool _virtualCancelPlacementPressed;
         private bool _virtualRestPressed;
         private bool _virtualUpgradeCampfirePressed;
+        private bool _virtualTendFirePressed;
+        private bool _virtualAddFirePressed;
+        private bool _virtualGatherEmberPressed;
+        private bool _virtualStartPublicFirePressed;
+        private bool _virtualDrawFirePressed;
+        private bool _virtualReclaimSmallFirePressed;
+        private bool _virtualContributeWorldTreePressed;
         private bool _virtualInteractPressed;
         private bool _virtualEmotePressed;
         private bool _virtualCycleTreeLightColorPressed;
@@ -40,9 +49,25 @@ namespace DemonViglu.FirePlay.Player
         public bool SprintHeld => _sprintAction != null && _sprintAction.IsPressed();
         public bool ConstrictFlameHeld => _constrictFlameAction != null && _constrictFlameAction.IsPressed();
         public bool PlaceFirePressedThisFrame => ConsumeVirtualPress(ref _virtualPlaceFirePressed) || (_placeFireAction != null && _placeFireAction.WasPressedThisFrame());
+        public bool CancelPlacementPressedThisFrame => ConsumeVirtualPress(ref _virtualCancelPlacementPressed);
         public bool RestPressedThisFrame => ConsumeVirtualPress(ref _virtualRestPressed) || (_restAction != null && _restAction.WasPressedThisFrame());
         public bool UpgradeCampfirePressedThisFrame => ConsumeVirtualPress(ref _virtualUpgradeCampfirePressed) || (_upgradeCampfireAction != null && _upgradeCampfireAction.WasPressedThisFrame());
-        public Vector2 Look => _lookAction?.ReadValue<Vector2>() ?? Vector2.zero;
+        public bool TendFirePressedThisFrame => ConsumeVirtualPress(ref _virtualTendFirePressed);
+        public bool AddFirePressedThisFrame => ConsumeVirtualPress(ref _virtualAddFirePressed);
+        public bool GatherEmberPressedThisFrame => ConsumeVirtualPress(ref _virtualGatherEmberPressed);
+        public bool StartPublicFirePressedThisFrame => ConsumeVirtualPress(ref _virtualStartPublicFirePressed);
+        public bool DrawFirePressedThisFrame => ConsumeVirtualPress(ref _virtualDrawFirePressed);
+        public bool ReclaimSmallFirePressedThisFrame => ConsumeVirtualPress(ref _virtualReclaimSmallFirePressed);
+        public bool ContributeWorldTreePressedThisFrame => ConsumeVirtualPress(ref _virtualContributeWorldTreePressed);
+        public Vector2 Look
+        {
+            get
+            {
+                var look = (_lookAction?.ReadValue<Vector2>() ?? Vector2.zero) + _virtualLook;
+                _virtualLook = Vector2.zero;
+                return look;
+            }
+        }
         public bool InteractPressedThisFrame => ConsumeVirtualPress(ref _virtualInteractPressed) || (_interactAction != null && _interactAction.WasPressedThisFrame());
         public bool EmotePressedThisFrame => ConsumeVirtualPress(ref _virtualEmotePressed) || (_emoteAction != null && _emoteAction.WasPressedThisFrame());
         public bool CycleTreeLightColorPressedThisFrame => ConsumeVirtualPress(ref _virtualCycleTreeLightColorPressed) || (_cycleTreeLightColorAction != null && _cycleTreeLightColorAction.WasPressedThisFrame());
@@ -104,9 +129,22 @@ namespace DemonViglu.FirePlay.Player
             _virtualMove = Vector2.ClampMagnitude(value, 1f);
         }
 
+        public void AddVirtualLookDelta(Vector2 delta)
+        {
+            _virtualLook += delta;
+        }
+
         public void RequestVirtualPlaceFire() => _virtualPlaceFirePressed = true;
+        public void RequestVirtualCancelPlacement() => _virtualCancelPlacementPressed = true;
         public void RequestVirtualRest() => _virtualRestPressed = true;
         public void RequestVirtualUpgradeCampfire() => _virtualUpgradeCampfirePressed = true;
+        public void RequestVirtualTendFire() => _virtualTendFirePressed = true;
+        public void RequestVirtualAddFire() => _virtualAddFirePressed = true;
+        public void RequestVirtualGatherEmber() => _virtualGatherEmberPressed = true;
+        public void RequestVirtualStartPublicFire() => _virtualStartPublicFirePressed = true;
+        public void RequestVirtualDrawFire() => _virtualDrawFirePressed = true;
+        public void RequestVirtualReclaimSmallFire() => _virtualReclaimSmallFirePressed = true;
+        public void RequestVirtualContributeWorldTree() => _virtualContributeWorldTreePressed = true;
         public void RequestVirtualInteract() => _virtualInteractPressed = true;
         public void RequestVirtualEmote() => _virtualEmotePressed = true;
         public void RequestVirtualCycleTreeLightColor() => _virtualCycleTreeLightColorPressed = true;

@@ -32,17 +32,17 @@ namespace DemonViglu.FirePlay.World
         {
             if (!IsCampfireBurning)
             {
-                status = "The fire is out";
+                status = "火焰熄灭了，先添一把火吧";
                 return false;
             }
 
             if (resourceController == null || !resourceController.TryConsume(_materializeFuelCost))
             {
-                status = "Not enough fuel";
+                status = "余火不够啦，先去找一点暖意吧";
                 return false;
             }
 
-            status = "A marshmallow takes shape";
+            status = "一颗软乎乎的棉花糖出现了";
             return true;
         }
 

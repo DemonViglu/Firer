@@ -34,6 +34,7 @@ namespace DemonViglu.FirePlay.UI
         [SerializeField] private Text _interactionPromptText;
         [SerializeField] private GameObject _ritualPromptRoot;
         [SerializeField] private Text _ritualPromptText;
+        [SerializeField] private bool _showLegacyRitualPrompt;
 
         private float _nextReferenceSearchTime;
 
@@ -120,7 +121,7 @@ namespace DemonViglu.FirePlay.UI
         private void UpdateInteractionPrompt()
         {
             var prompt = _playerInteraction != null ? _playerInteraction.CurrentInteractPrompt : null;
-            var shouldShow = !string.IsNullOrWhiteSpace(prompt) && prompt != "No interaction target";
+            var shouldShow = !string.IsNullOrWhiteSpace(prompt);
             SetActive(_interactionPromptRoot, shouldShow);
             if (shouldShow && _interactionPromptText != null)
             {
@@ -130,6 +131,12 @@ namespace DemonViglu.FirePlay.UI
 
         private void UpdateRitualPrompt()
         {
+            if (!_showLegacyRitualPrompt)
+            {
+                SetActive(_ritualPromptRoot, false);
+                return;
+            }
+
             var activeSpot = _restInteraction != null && _restInteraction.IsResting
                 ? _restInteraction.ActiveRestSpot
                 : null;

@@ -34,9 +34,10 @@ namespace DemonViglu.FirePlay.Player
         public SmallFire NearestSmallFire { get; private set; }
         public Campfire NearestCampfire { get; private set; }
         public WorldTreeContribution NearestWorldTree { get; private set; }
+        public RestSpot NearestRestSpot { get; private set; }
         public CampfireUpgradeController CampfireUpgradeController => _campfireUpgradeController;
         public PlayerInteractTargetKind CurrentInteractTargetKind { get; private set; }
-        public string CurrentInteractPrompt { get; private set; } = "No interaction target";
+        public string CurrentInteractPrompt { get; private set; } = string.Empty;
 
         private void Awake()
         {
@@ -99,6 +100,7 @@ namespace DemonViglu.FirePlay.Player
                 transform.position,
                 activeFlame.InteractionRadius,
                 out _);
+            var nearestRestSpot = RestSpot.FindNearest(transform.position);
             WorldTreeContribution nearestWorldTree = null;
             var nearestWorldTreeDistance = float.PositiveInfinity;
             var interactPressed = _input.InteractPressedThisFrame;
@@ -146,11 +148,50 @@ namespace DemonViglu.FirePlay.Player
             NearestSmallFire = nearestSmallFire;
             NearestCampfire = nearestCampfire;
             NearestWorldTree = nearestWorldTree;
-            SelectCurrentInteractTarget(nearestSmallFire, nearestSmallFireDistance, nearestFlameSource, nearestFlameSourceDistance, nearestWorldTree, nearestWorldTreeDistance);
+            NearestRestSpot = nearestRestSpot;
+            SelectCurrentInteractTarget(nearestSmallFire, nearestSmallFireDistance, nearestFlameSource, nearestFlameSourceDistance, nearestWorldTree, nearestWorldTreeDistance, nearestRestSpot);
 
             if (interactPressed)
             {
                 InteractWithCurrentTarget(activeFlame);
+            }
+
+            // Touch controls use explicit verbs. Unlike the legacy E/G prototype,
+            // a "Tend" button can never withdraw, and a "Draw" button can never tend.
+            if (_input.AddFirePressedThisFrame)
+            {
+                if (NearestCampfire != null)
+                {
+                    NearestCampfire.TryTend(_flameResourceController);
+                }
+                else
+                {
+                    _campfireUpgradeController?.TryTendSmallFire(NearestSmallFire);
+                }
+            }
+            if (_input.TendFirePressedThisFrame)
+            {
+                NearestCampfire?.TryTend(_flameResourceController);
+            }
+            if (_input.GatherEmberPressedThisFrame)
+            {
+                NearestFlameSource?.TryRestore(_flameResourceController);
+            }
+            if (_input.StartPublicFirePressedThisFrame)
+            {
+                _campfireUpgradeController?.TryTendSmallFire(NearestSmallFire);
+            }
+            if (_input.DrawFirePressedThisFrame)
+            {
+                NearestCampfire?.TryWithdrawEmergencyFuel(_flameResourceController);
+            }
+            if (_input.ReclaimSmallFirePressedThisFrame)
+            {
+                NearestSmallFire?.TryReclaim(_flameResourceController);
+            }
+            if (_input.ContributeWorldTreePressedThisFrame)
+            {
+                NearestWorldTree?.TryContribute(_flameResourceController, activeFlame);
             }
 
             if (_input.UpgradeCampfirePressedThisFrame && CurrentInteractTargetKind == PlayerInteractTargetKind.Campfire)
@@ -169,18 +210,19 @@ namespace DemonViglu.FirePlay.Player
             FlameSource flameSource,
             float flameSourceDistance,
             WorldTreeContribution worldTree,
-            float worldTreeDistance)
+            float worldTreeDistance,
+            RestSpot restSpot)
         {
             CurrentInteractTargetKind = PlayerInteractTargetKind.None;
-            CurrentInteractPrompt = "No interaction target";
+            CurrentInteractPrompt = string.Empty;
 
             // Explicit priorities prevent overlapping colliders from silently changing E behaviour.
             if (worldTree != null)
             {
                 CurrentInteractTargetKind = PlayerInteractTargetKind.WorldTree;
                 CurrentInteractPrompt = worldTree.HasLocalContribution
-                    ? "World Tree: already contributed"
-                    : $"Press E: contribute ({worldTree.ContributionCost:0.0})";
+                    ? "你已经把一束暖光留在树上了"
+                    : $"向大树献上一点暖意（{worldTree.ContributionCost:0.0} 余火）";
                 return;
             }
 
@@ -188,8 +230,9 @@ namespace DemonViglu.FirePlay.Player
             {
                 CurrentInteractTargetKind = PlayerInteractTargetKind.Campfire;
                 CurrentInteractPrompt = NearestCampfire.NeedsTending
-                    ? $"E: tend ({NearestCampfire.TendFuelCost:0.0}) / G: draw warmth (+{NearestCampfire.EmergencyWithdrawFuel:0})"
-                    : $"Campfire warm / G: draw warmth (+{NearestCampfire.EmergencyWithdrawFuel:0})";
+                    ? $"给篝火添一点暖意（{NearestCampfire.TendFuelCost:0.0} 余火）／也可取火 +{NearestCampfire.EmergencyWithdrawFuel:0}"
+                    : $"篝火正暖着，也可取火 +{NearestCampfire.EmergencyWithdrawFuel:0}";
+                CurrentInteractPrompt += GetRestHint(restSpot, true);
                 return;
             }
 
@@ -199,13 +242,13 @@ namespace DemonViglu.FirePlay.Player
                 var tendCost = _campfireUpgradeController != null ? _campfireUpgradeController.TendFuelCost : 0f;
                 if (tendCost <= 0f)
                 {
-                    CurrentInteractPrompt = "Public fire setup missing";
+                    CurrentInteractPrompt = "这团小火还没有准备好";
                     return;
                 }
 
                 CurrentInteractPrompt = _campfireUpgradeController != null && !_campfireUpgradeController.CanStartPublicFire
-                    ? $"Public fires at limit ({_campfireUpgradeController.ActiveRuntimeCampfireCount}/{_campfireUpgradeController.MaximumActiveRuntimeCampfires}) / G: reclaim"
-                    : $"E: begin public fire ({tendCost:0.0}) / G: reclaim";
+                    ? $"公共篝火已经够多了（{_campfireUpgradeController.ActiveRuntimeCampfireCount}/{_campfireUpgradeController.MaximumActiveRuntimeCampfires}），可以先收回这团小火"
+                    : $"让小火慢慢长成篝火（{tendCost:0.0} 余火）／也可收回";
                 return;
             }
 
@@ -213,8 +256,14 @@ namespace DemonViglu.FirePlay.Player
             {
                 CurrentInteractTargetKind = PlayerInteractTargetKind.FlameSource;
                 CurrentInteractPrompt = flameSource.IsAvailable
-                    ? "Press E: gather ember"
-                    : "Ember already gathered";
+                    ? "拾起这一点暖暖的余烬"
+                    : "这里的余烬正在慢慢聚拢";
+                return;
+            }
+
+            if (restSpot != null)
+            {
+                CurrentInteractPrompt = GetRestHint(restSpot, false);
             }
         }
 
@@ -237,14 +286,27 @@ namespace DemonViglu.FirePlay.Player
             }
         }
 
+        private static string GetRestHint(RestSpot restSpot, bool shortForm)
+        {
+            if (restSpot == null) return string.Empty;
+            if (restSpot.GetComponent<MarshmallowRitual>() != null)
+                return shortForm ? " · 这里可以坐下烤棉花糖" : "这里可以坐下，烤一颗棉花糖";
+            if (restSpot.GetComponent<FishingRitual>() != null)
+                return shortForm ? " · 这里可以坐下钓鱼" : "这里适合坐下来，静静钓一会儿鱼";
+            if (restSpot.GetComponent<StargazingRitual>() != null)
+                return shortForm ? " · 这里可以坐下看星星" : "这里可以坐下，抬头看看星星";
+            return shortForm ? " · 这里可以坐下歇一会儿" : "这里可以坐下，安静歇一会儿";
+        }
+
         private void ClearNearbyTargets()
         {
             NearestFlameSource = null;
             NearestSmallFire = null;
             NearestCampfire = null;
             NearestWorldTree = null;
+            NearestRestSpot = null;
             CurrentInteractTargetKind = PlayerInteractTargetKind.None;
-            CurrentInteractPrompt = "No interaction target";
+            CurrentInteractPrompt = string.Empty;
         }
 
         private void OnDrawGizmosSelected()

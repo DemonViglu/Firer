@@ -14,6 +14,9 @@ namespace DemonViglu.FirePlay.World
     public sealed class FlameSource : MonoBehaviour
     {
         [SerializeField, Min(0.01f)] private float _restoreAmount = 20f;
+        [Header("Respawn")]
+        [SerializeField] private bool _respawnEnabled = true;
+        [SerializeField, Min(1f)] private float _respawnSeconds = 600f;
         [SerializeField] private Color _warmthColor = new(1f, 0.72f, 0.35f, 1f);
         [SerializeField] private ParticleSystem _restoreVfx;
         [SerializeField] private AudioSource _restoreAudio;
@@ -21,6 +24,7 @@ namespace DemonViglu.FirePlay.World
 
         private Collider _interactionCollider;
         private bool _collected;
+        private float _respawnRemainingSeconds;
 
         public bool IsAvailable => !_collected;
         public string SourceId => GetComponent<StableSceneId>().Value;
@@ -56,9 +60,24 @@ namespace DemonViglu.FirePlay.World
             }
 
             _collected = true;
+            _respawnRemainingSeconds = _respawnEnabled ? _respawnSeconds : 0f;
             PlayFeedback();
             HideCollectedSource();
             return true;
+        }
+
+        private void Update()
+        {
+            if (!_collected || !_respawnEnabled)
+            {
+                return;
+            }
+
+            _respawnRemainingSeconds -= Time.deltaTime;
+            if (_respawnRemainingSeconds <= 0f)
+            {
+                RestoreSource();
+            }
         }
 
         private void HideCollectedSource()
@@ -75,6 +94,30 @@ namespace DemonViglu.FirePlay.World
                     sourceRenderer.enabled = false;
                 }
             }
+        }
+
+        private void RestoreSource()
+        {
+            _collected = false;
+            _respawnRemainingSeconds = 0f;
+            if (_interactionCollider != null)
+            {
+                _interactionCollider.enabled = true;
+            }
+
+            foreach (var sourceRenderer in _renderersToHide)
+            {
+                if (sourceRenderer != null)
+                {
+                    sourceRenderer.enabled = true;
+                }
+            }
+        }
+
+        private void OnValidate()
+        {
+            _restoreAmount = Mathf.Max(0.01f, _restoreAmount);
+            _respawnSeconds = Mathf.Max(1f, _respawnSeconds);
         }
 
         private void PlayFeedback()

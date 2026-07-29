@@ -16,6 +16,7 @@ namespace DemonViglu.FirePlay.Player
         private FirePlayPlayerInput _input;
         private float _pitch;
         private int _framesToIgnoreLookInput;
+        private bool _cursorCaptured;
 
         public Transform CameraPivot => _cameraPivot;
         public bool LookLocked { get; private set; }
@@ -36,8 +37,7 @@ namespace DemonViglu.FirePlay.Player
 
         private void OnEnable()
         {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            SetCursorCaptured(true);
 
             // 进入 Play Mode 或重新启用组件时，Unity 编辑器可能会把光标锁定本身
             // 报告为一次很大的鼠标 Delta。丢弃首帧，避免视角直接跳到俯仰角上限。
@@ -46,12 +46,28 @@ namespace DemonViglu.FirePlay.Player
 
         private void OnDisable()
         {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+            SetCursorCaptured(false);
         }
 
         private void Update()
         {
+#if UNITY_EDITOR
+            if (UnityEngine.InputSystem.Keyboard.current?.f1Key.wasPressedThisFrame == true)
+            {
+                SetCursorCaptured(!_cursorCaptured);
+            }
+#endif
+
+            // In the Editor, clicking the Game view can cause Unity to reapply its
+            // cursor-focus behavior. While explicitly released for UI testing, keep
+            // the native cursor unlocked every frame and never consume look delta.
+            if (!_cursorCaptured)
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+                return;
+            }
+
             if (_framesToIgnoreLookInput > 0)
             {
                 _framesToIgnoreLookInput--;
@@ -71,6 +87,13 @@ namespace DemonViglu.FirePlay.Player
         }
 
         public void SetLookLocked(bool locked) => LookLocked = locked;
+
+        public void SetCursorCaptured(bool captured)
+        {
+            _cursorCaptured = captured;
+            Cursor.lockState = captured ? CursorLockMode.Locked : CursorLockMode.None;
+            Cursor.visible = !captured;
+        }
 
         private static float NormalizeAngle(float angle)
         {

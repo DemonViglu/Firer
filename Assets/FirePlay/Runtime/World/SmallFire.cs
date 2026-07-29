@@ -14,11 +14,14 @@ namespace DemonViglu.FirePlay.World
 
         [SerializeField] private Light _fireLight;
         [SerializeField] private ParticleSystem _fireVfx;
+        [SerializeField, Min(0f)] private float _visualFlameIntensity = 1.35f;
 
         private float _remainingSeconds;
         private float _initialLightIntensity;
         [SerializeField] private SmallFireConfig _config;
         private bool _initialized;
+        private Renderer[] _visualRenderers;
+        private MaterialPropertyBlock _visualProperties;
 
         public static int ActiveCount
         {
@@ -66,6 +69,17 @@ namespace DemonViglu.FirePlay.World
             }
         }
 
+        private void Awake()
+        {
+            // SmallFire prefabs are authored by artists and often leave these
+            // optional references blank. Resolve child effects once so a placed
+            // fire remains readable without depending on Inspector wiring.
+            _fireLight ??= GetComponentInChildren<Light>(true);
+            _fireVfx ??= GetComponentInChildren<ParticleSystem>(true);
+            _visualRenderers = GetComponentsInChildren<Renderer>(true);
+            _visualProperties = new MaterialPropertyBlock();
+        }
+
         private void OnDisable()
         {
             ActiveFires.Remove(this);
@@ -105,6 +119,7 @@ namespace DemonViglu.FirePlay.World
             }
 
             _fireVfx?.Play(true);
+            ApplyVisualReadability();
         }
 
         public bool TryReclaim(FlameResourceController resourceController)
@@ -162,6 +177,21 @@ namespace DemonViglu.FirePlay.World
             if (_remainingSeconds <= 0f)
             {
                 Destroy(gameObject);
+            }
+        }
+
+        private void ApplyVisualReadability()
+        {
+            if (_visualRenderers == null)
+            {
+                return;
+            }
+
+            foreach (var renderer in _visualRenderers)
+            {
+                renderer.GetPropertyBlock(_visualProperties);
+                _visualProperties.SetFloat("_FlameIntensity", _visualFlameIntensity);
+                renderer.SetPropertyBlock(_visualProperties);
             }
         }
     }

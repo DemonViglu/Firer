@@ -30,7 +30,7 @@ namespace DemonViglu.FirePlay.Player
         private int _catches;
         private float _stateEndsAt;
 
-        public string Status { get; private set; } = "Sit by the water to fish";
+        public string Status { get; private set; } = "坐到湖边，静静钓一会儿吧";
         public bool HasRod => _state != FishingState.None;
         public bool IsLineCast => _state == FishingState.WaitingForBite || _state == FishingState.BiteReady;
         public bool IsFishBiting => _state == FishingState.BiteReady;
@@ -40,6 +40,22 @@ namespace DemonViglu.FirePlay.Player
         public event Action FishBit;
         public event Action<FishingResult> FishCaught;
         public event Action Cancelled;
+
+        /// <summary>
+        /// Dedicated mobile entry point for the primary fishing button. Keeping
+        /// this direct avoids relying on a virtual input press surviving until a
+        /// later Update tick on Android; cost validation remains in FishingRitual.
+        /// </summary>
+        public bool TryPrimaryAction()
+        {
+            if (_activeRitual == null)
+            {
+                return false;
+            }
+
+            HandleEmotePressed();
+            return true;
+        }
 
         private void Awake()
         {
@@ -72,12 +88,12 @@ namespace DemonViglu.FirePlay.Player
                 }
 
                 _activeRitual = ritual;
-                Status = ritual == null ? "Sit by the water to fish" : $"Press Q: materialize fishing rod ({ritual.RodFuelCost:0})";
+                Status = ritual == null ? "坐到湖边，静静钓一会儿吧" : $"消耗 {ritual.RodFuelCost:0} 点余火，拟造一根鱼竿";
             }
 
             if (_activeRitual != null && _input.EmotePressedThisFrame)
             {
-                HandleEmotePressed();
+                TryPrimaryAction();
             }
 
             if (_activeRitual != null && _input.InteractPressedThisFrame && IsFishBiting)
@@ -101,7 +117,7 @@ namespace DemonViglu.FirePlay.Player
                 {
                     _state = FishingState.ReadyToCast;
                     _catches = 0;
-                    Status = "Press Q: cast your line";
+                    Status = "鱼竿准备好了，把鱼线轻轻抛进水里吧";
                     RodMaterialized?.Invoke();
                 }
                 else
@@ -119,7 +135,7 @@ namespace DemonViglu.FirePlay.Player
 
             _state = FishingState.WaitingForBite;
             _stateEndsAt = Time.time + UnityEngine.Random.Range(_activeRitual.MinimumBiteDelay, _activeRitual.MaximumBiteDelay);
-            Status = "The line drifts quietly...";
+            Status = "鱼线随着水波轻轻漂着……";
             _ritualAnimationController?.Play(RitualAnimationCue.FishingCast);
             LineCast?.Invoke();
         }
@@ -130,7 +146,7 @@ namespace DemonViglu.FirePlay.Player
             {
                 _state = FishingState.BiteReady;
                 _stateEndsAt = Time.time + _activeRitual.HookWindowSeconds;
-                Status = "A fish bites! Press E to reel";
+                Status = "有鱼儿上钩了，快轻轻收线";
                 FishBit?.Invoke();
                 return;
             }
@@ -138,7 +154,7 @@ namespace DemonViglu.FirePlay.Player
             if (_state == FishingState.BiteReady && Time.time >= _stateEndsAt)
             {
                 _state = FishingState.ReadyToCast;
-                Status = "It slipped away. Press Q to cast again";
+                Status = "鱼儿溜走了，再试一次吧";
             }
         }
 
@@ -156,12 +172,12 @@ namespace DemonViglu.FirePlay.Player
             if (_catches >= _activeRitual.CatchesPerRod)
             {
                 EndSession(cancelled: false);
-                Status = "The water grows still. Your rod fades gently";
+                Status = "湖面又安静下来，鱼竿化作一点暖光";
                 return;
             }
 
             _state = FishingState.ReadyToCast;
-            Status = $"Caught {_catches}/{_activeRitual.CatchesPerRod} (+{result.FuelRefund:0}). Press Q to cast again";
+            Status = $"钓到第 {_catches}/{_activeRitual.CatchesPerRod} 条鱼，回收 {result.FuelRefund:0} 点余火";
         }
 
         private void EndSession(bool cancelled)

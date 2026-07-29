@@ -25,7 +25,7 @@ namespace DemonViglu.FirePlay.Player
         private MarshmallowResult _completedResult;
         private GUIStyle _meterLabelStyle;
 
-        public string Status { get; private set; } = "Sit by a campfire to roast";
+        public string Status { get; private set; } = "坐在篝火边，烤一颗棉花糖吧";
         public bool HasMaterializedMarshmallow => _hasMaterializedMarshmallow;
         public bool IsRoasting => _roastSession != null && _roastSession.IsRoasting;
         public bool IsReadyToEat => _roastSession != null && _roastSession.IsReadyToEat;
@@ -57,13 +57,13 @@ namespace DemonViglu.FirePlay.Player
             {
                 _activeRitual = ritual;
                 EndSession(cancelled: true);
-                Status = ritual == null ? "Sit by a campfire to roast" : $"Press Q: materialize marshmallow ({ritual.MaterializeFuelCost:0})";
+                Status = ritual == null ? "坐在篝火边，烤一颗棉花糖吧" : $"消耗 {ritual.MaterializeFuelCost:0} 点余火，取出一颗棉花糖";
             }
 
             if (_activeRitual != null && _hasMaterializedMarshmallow && !_activeRitual.IsCampfireBurning)
             {
                 EndSession(cancelled: true);
-                Status = "The fire went out";
+                Status = "火焰熄灭了，先添一把火吧";
             }
 
             if (_input.EmotePressedThisFrame && _activeRitual != null)
@@ -115,11 +115,11 @@ namespace DemonViglu.FirePlay.Player
             {
                 _completedResult = _activeRitual.CreateResult(_roastSession);
                 ResultReady?.Invoke(_completedResult);
-                Status = $"{GetQualityLabel(_completedResult.Quality)} — Press E to eat (+{_completedResult.FuelRefund:0})";
+                Status = $"{GetQualityLabel(_completedResult.Quality)}，吃掉它可回收 {_completedResult.FuelRefund:0} 点余火";
                 return;
             }
 
-            Status = isPerfect ? "Golden turn" : "A little uneven";
+            Status = isPerfect ? "刚刚好，香甜的颜色出现了" : "还差一点点火候";
         }
 
         private void BeginRoasting()
@@ -129,7 +129,7 @@ namespace DemonViglu.FirePlay.Player
                 _activeRitual.NeedleCyclesPerSecond,
                 _activeRitual.PerfectZoneWidth,
                 _activeRitual.TargetEdgePadding);
-            Status = "Press Q in the golden zone";
+            Status = "等指针进入金色区域，再轻轻翻面";
         }
 
         private void EatMarshmallow()
@@ -145,7 +145,7 @@ namespace DemonViglu.FirePlay.Player
             Eaten?.Invoke(wasPerfect);
             ResultCollected?.Invoke(result);
             EndSession(cancelled: false);
-            Status = wasPerfect ? "A warm, perfect bite" : "A warm bite";
+            Status = wasPerfect ? "暖暖地吃掉了，刚刚好" : "暖暖地吃掉了";
         }
 
         private void EndSession(bool cancelled)
@@ -192,7 +192,7 @@ namespace DemonViglu.FirePlay.Player
             DrawRect(needleRect, new Color(1f, 0.96f, 0.78f, 1f));
 
             GUI.Label(new Rect(x, y - 25f, _meterWidth, 22f),
-                $"Turn {_roastSession.CompletedTurns + 1}/{_roastSession.TurnsRequired} — Press Q in the golden zone",
+                $"第 {_roastSession.CompletedTurns + 1}/{_roastSession.TurnsRequired} 次翻面：等指针进入金色区域",
                 _meterLabelStyle);
         }
 
@@ -223,9 +223,9 @@ namespace DemonViglu.FirePlay.Player
         {
             return quality switch
             {
-                MarshmallowRoastQuality.Perfect => "Perfectly toasted",
-                MarshmallowRoastQuality.Toasted => "Toasted",
-                _ => "A little scorched"
+                MarshmallowRoastQuality.Perfect => "烤得刚刚好",
+                MarshmallowRoastQuality.Toasted => "烤得暖呼呼的",
+                _ => "有一点焦香"
             };
         }
     }

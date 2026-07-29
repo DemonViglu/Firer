@@ -40,6 +40,11 @@ namespace DemonViglu.FirePlay.World
         public float TendFuelCost => _config != null ? _config.TendFuelCost : 0f;
         public float EmergencyWithdrawFuel => _config != null ? _config.EmergencyWithdrawFuel : 0f;
         public float EmergencyWithdrawWarmthCost => _config != null ? _config.EmergencyWithdrawWarmthCost : 0f;
+        public float EstimatedBurnSeconds => IsExtinguished
+            ? 0f
+            : _config == null || _config.WarmthDecayPerSecond <= 0f
+                ? float.PositiveInfinity
+                : _warmth / _config.WarmthDecayPerSecond;
         public string LastUpgradeStatus { get; private set; } = "Ready";
         public bool IsRuntimeCreated => _isRuntimeCreated;
         public bool IsRetired => _isRetired;

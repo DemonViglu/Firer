@@ -17,9 +17,16 @@ namespace DemonViglu.FirePlay.World
         [SerializeField] private SmallFire _smallFirePrefab;
         [SerializeField] private Transform _preview;
         [SerializeField] private PlayerModeController _modeController;
+        [Header("Runtime preview")]
+        [SerializeField] private bool _createPreviewWhenMissing = true;
+        [SerializeField] private Color _validPreviewColor = new(1f, 0.72f, 0.28f, 1f);
+        [SerializeField] private Color _invalidPreviewColor = new(0.9f, 0.18f, 0.08f, 1f);
 
         private Vector2 _screenPoint;
         private RaycastHit _candidate;
+        private bool _ownsRuntimePreview;
+        private Renderer[] _previewRenderers;
+        private MaterialPropertyBlock _previewProperties;
 
         public bool IsPlacing { get; private set; }
         public bool IsPlacementValid { get; private set; }
@@ -52,6 +59,7 @@ namespace DemonViglu.FirePlay.World
                 Debug.LogError("[CampfirePlacement] 缺少余火控制器、小火种配置或小火种 Prefab。", this);
             }
 
+            CreateRuntimePreviewIfNeeded();
             SetPreviewVisible(false);
         }
 
@@ -79,7 +87,7 @@ namespace DemonViglu.FirePlay.World
                 }
             }
 
-            if (IsPlacing && _input != null && _input.PausePressedThisFrame)
+            if (IsPlacing && _input != null && (_input.PausePressedThisFrame || _input.CancelPlacementPressedThisFrame))
             {
                 CancelPlacement();
             }
@@ -194,6 +202,7 @@ namespace DemonViglu.FirePlay.World
             }
 
             _preview.SetPositionAndRotation(hit.point + hit.normal * 0.02f, Quaternion.FromToRotation(Vector3.up, hit.normal));
+            UpdatePreviewColor(IsPlacementValid);
             SetPreviewVisible(true);
         }
 
@@ -222,6 +231,57 @@ namespace DemonViglu.FirePlay.World
             if (_preview != null && _preview.gameObject.activeSelf != visible)
             {
                 _preview.gameObject.SetActive(visible);
+            }
+        }
+
+        private void CreateRuntimePreviewIfNeeded()
+        {
+            if (_preview != null || !_createPreviewWhenMissing || _smallFirePrefab == null)
+            {
+                return;
+            }
+
+            var previewFire = Instantiate(_smallFirePrefab);
+            previewFire.name = "SmallFirePreview (Runtime)";
+            previewFire.enabled = false;
+            foreach (var collider in previewFire.GetComponentsInChildren<Collider>(true))
+            {
+                collider.enabled = false;
+            }
+            foreach (var light in previewFire.GetComponentsInChildren<Light>(true))
+            {
+                light.enabled = false;
+            }
+
+            _preview = previewFire.transform;
+            _previewRenderers = previewFire.GetComponentsInChildren<Renderer>(true);
+            _previewProperties = new MaterialPropertyBlock();
+            _ownsRuntimePreview = true;
+        }
+
+        private void UpdatePreviewColor(bool isValid)
+        {
+            if (_previewRenderers == null)
+            {
+                return;
+            }
+
+            var color = isValid ? _validPreviewColor : _invalidPreviewColor;
+            foreach (var renderer in _previewRenderers)
+            {
+                renderer.GetPropertyBlock(_previewProperties);
+                _previewProperties.SetColor("_FlameColor", color);
+                _previewProperties.SetColor("_CoreColor", Color.Lerp(Color.white, color, 0.35f));
+                _previewProperties.SetFloat("_FlameIntensity", isValid ? 1.8f : 0.55f);
+                renderer.SetPropertyBlock(_previewProperties);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (_ownsRuntimePreview && _preview != null)
+            {
+                Destroy(_preview.gameObject);
             }
         }
 

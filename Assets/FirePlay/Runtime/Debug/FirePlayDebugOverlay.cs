@@ -20,6 +20,7 @@ namespace DemonViglu.FirePlay.Debugging
         [SerializeField] private FlameResourceController _flameResourceController;
         [SerializeField] private RestInteraction _restInteraction;
         [SerializeField] private MarshmallowInteraction _marshmallowInteraction;
+        [SerializeField] private FishingInteraction _fishingInteraction;
         [SerializeField] private bool _visible = true;
         [SerializeField] private Vector2 _screenPosition = new(16f, 16f);
         [SerializeField, Min(240f)] private float _width = 360f;
@@ -85,6 +86,11 @@ namespace DemonViglu.FirePlay.Debugging
             if (_marshmallowInteraction == null)
             {
                 _marshmallowInteraction = FindAnyObjectByType<MarshmallowInteraction>();
+            }
+
+            if (_fishingInteraction == null)
+            {
+                _fishingInteraction = FindAnyObjectByType<FishingInteraction>();
             }
         }
 
@@ -220,6 +226,9 @@ namespace DemonViglu.FirePlay.Debugging
             _text.Append("Marshmallow: ").AppendLine(_marshmallowInteraction == null
                 ? "MISSING COMPONENT"
                 : _marshmallowInteraction.Status);
+            _text.Append("Fishing: ").AppendLine(_fishingInteraction == null
+                ? "MISSING COMPONENT"
+                : _fishingInteraction.Status);
         }
 
         private void EnsureStyle()

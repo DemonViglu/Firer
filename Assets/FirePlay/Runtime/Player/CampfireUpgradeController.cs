@@ -14,6 +14,8 @@ namespace DemonViglu.FirePlay.Player
     {
         [SerializeField] private FlameResourceController _resourceController;
         [SerializeField] private Campfire _campfirePrefab;
+        [Header("Public fire limit")]
+        [SerializeField, Min(1)] private int _maximumActiveRuntimeCampfires = 4;
 
         public bool HasValidSetup
         {
@@ -28,6 +30,9 @@ namespace DemonViglu.FirePlay.Player
         public float TendFuelCost => _campfirePrefab != null && _campfirePrefab.Config != null
             ? _campfirePrefab.Config.TendFuelCost
             : 0f;
+        public int MaximumActiveRuntimeCampfires => _maximumActiveRuntimeCampfires;
+        public int ActiveRuntimeCampfireCount => CountActiveRuntimeCampfires();
+        public bool CanStartPublicFire => ActiveRuntimeCampfireCount < _maximumActiveRuntimeCampfires;
 
         private void Awake()
         {
@@ -51,6 +56,12 @@ namespace DemonViglu.FirePlay.Player
                 return false;
             }
 
+            if (!CanStartPublicFire)
+            {
+                LastUpgradeStatus = $"Public fire limit reached ({ActiveRuntimeCampfireCount}/{_maximumActiveRuntimeCampfires})";
+                return false;
+            }
+
             var instance = Instantiate(_campfirePrefab, smallFire.transform.position, smallFire.transform.rotation);
             var runtimeId = $"campfire.{Guid.NewGuid():N}";
             var sourceId = smallFire.GetComponent<StableSceneId>();
@@ -71,6 +82,25 @@ namespace DemonViglu.FirePlay.Player
             Destroy(smallFire.gameObject);
             LastUpgradeStatus = "Started a public fire";
             return true;
+        }
+
+        private static int CountActiveRuntimeCampfires()
+        {
+            var count = 0;
+            foreach (var campfire in Campfire.ActiveInstances)
+            {
+                if (campfire != null && campfire.IsRuntimeCreated && !campfire.IsRetired)
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
+        private void OnValidate()
+        {
+            _maximumActiveRuntimeCampfires = Mathf.Max(1, _maximumActiveRuntimeCampfires);
         }
     }
 }

@@ -18,6 +18,7 @@ namespace DemonViglu.FirePlay.World
         private Quaternion _cameraLocalRotation;
         private bool _usingExternalCamera;
         private bool _usingStargazingCamera;
+        private bool _usingFishingCamera;
 
         public Transform LookTarget => _lookTarget;
         protected virtual bool RotatePlayerTowardsTarget => false;
@@ -34,7 +35,7 @@ namespace DemonViglu.FirePlay.World
             _interaction = interaction;
             _interaction.GetComponent<PlayerLook>()?.SetLookLocked(true);
 
-            _cameraDirector = UsesExternalCamera || UsesStargazingCamera
+            _cameraDirector = UsesExternalCamera || UsesStargazingCamera || UsesFishingCamera
                 ? Object.FindAnyObjectByType<RitualCameraDirector>()
                 : null;
             if (UsesExternalCamera)
@@ -45,8 +46,12 @@ namespace DemonViglu.FirePlay.World
             {
                 _usingStargazingCamera = _cameraDirector != null && _cameraDirector.TryBeginStargazing(interaction, _lookTarget, StargazingCompanionTarget);
             }
+            else if (UsesFishingCamera)
+            {
+                _usingFishingCamera = _cameraDirector != null && _cameraDirector.TryBeginFishing(interaction, _lookTarget);
+            }
 
-            if (!_usingExternalCamera && !_usingStargazingCamera)
+            if (!_usingExternalCamera && !_usingStargazingCamera && !_usingFishingCamera)
             {
                 _cameraTransform = Camera.main != null ? Camera.main.transform : null;
                 if (_cameraTransform != null)
@@ -71,6 +76,10 @@ namespace DemonViglu.FirePlay.World
             {
                 _cameraDirector?.EndStargazing(interaction);
             }
+            else if (_usingFishingCamera)
+            {
+                _cameraDirector?.EndFishing(interaction);
+            }
             else if (_cameraTransform != null)
             {
                 _cameraTransform.localRotation = _cameraLocalRotation;
@@ -82,6 +91,7 @@ namespace DemonViglu.FirePlay.World
             _cameraTransform = null;
             _usingExternalCamera = false;
             _usingStargazingCamera = false;
+            _usingFishingCamera = false;
         }
 
         private void LateUpdate()
@@ -105,7 +115,7 @@ namespace DemonViglu.FirePlay.World
                 }
             }
 
-            if (!_usingExternalCamera && !_usingStargazingCamera && _cameraTransform != null)
+            if (!_usingExternalCamera && !_usingStargazingCamera && !_usingFishingCamera && _cameraTransform != null)
             {
                 var direction = (_lookTarget.position - _cameraTransform.position).normalized;
                 if (direction.sqrMagnitude >= 0.001f)
@@ -119,6 +129,7 @@ namespace DemonViglu.FirePlay.World
         }
 
         protected virtual bool UsesStargazingCamera => false;
+        protected virtual bool UsesFishingCamera => false;
         protected virtual Transform StargazingCompanionTarget => null;
     }
 }

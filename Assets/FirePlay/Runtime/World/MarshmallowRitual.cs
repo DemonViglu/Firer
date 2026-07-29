@@ -13,14 +13,16 @@ namespace DemonViglu.FirePlay.World
         [SerializeField, Min(0.05f)] private float _needleCyclesPerSecond = 0.35f;
         [SerializeField, Range(0.05f, 0.8f)] private float _perfectZoneWidth = 0.24f;
         [SerializeField, Range(0f, 0.5f)] private float _targetEdgePadding = 0.15f;
-        [SerializeField, Min(0f)] private float _eatFuelRefund = 1f;
+        [Header("Result Rewards")]
+        [SerializeField, Min(0f)] private float _perfectEatFuelRefund = 2f;
+        [SerializeField, Min(0f)] private float _toastedEatFuelRefund = 1f;
+        [SerializeField, Min(0f)] private float _scorchedEatFuelRefund;
 
         public float MaterializeFuelCost => _materializeFuelCost;
         public int TurnsRequired => _turnsRequired;
         public float NeedleCyclesPerSecond => _needleCyclesPerSecond;
         public float PerfectZoneWidth => _perfectZoneWidth;
         public float TargetEdgePadding => _targetEdgePadding;
-        public float EatFuelRefund => _eatFuelRefund;
         public bool IsCampfireBurning => TryGetComponent<Campfire>(out var campfire) && !campfire.IsExtinguished;
 
         protected override bool RotatePlayerTowardsTarget => true;
@@ -44,6 +46,27 @@ namespace DemonViglu.FirePlay.World
             return true;
         }
 
+        public MarshmallowResult CreateResult(MarshmallowRoastSession session)
+        {
+            if (session == null || !session.IsReadyToEat)
+            {
+                return default;
+            }
+
+            var quality = session.IsPerfect
+                ? MarshmallowRoastQuality.Perfect
+                : session.PerfectTurns == 0
+                    ? MarshmallowRoastQuality.Scorched
+                    : MarshmallowRoastQuality.Toasted;
+            var refund = quality switch
+            {
+                MarshmallowRoastQuality.Perfect => _perfectEatFuelRefund,
+                MarshmallowRoastQuality.Toasted => _toastedEatFuelRefund,
+                _ => _scorchedEatFuelRefund
+            };
+            return new MarshmallowResult(quality, session.PerfectTurns, session.TurnsRequired, refund);
+        }
+
         private void OnValidate()
         {
             _materializeFuelCost = Mathf.Max(0f, _materializeFuelCost);
@@ -51,7 +74,33 @@ namespace DemonViglu.FirePlay.World
             _needleCyclesPerSecond = Mathf.Max(0.05f, _needleCyclesPerSecond);
             _perfectZoneWidth = Mathf.Clamp(_perfectZoneWidth, 0.05f, 0.8f);
             _targetEdgePadding = Mathf.Clamp(_targetEdgePadding, 0f, 0.5f - _perfectZoneWidth * 0.5f);
-            _eatFuelRefund = Mathf.Max(0f, _eatFuelRefund);
+            _perfectEatFuelRefund = Mathf.Max(0f, _perfectEatFuelRefund);
+            _toastedEatFuelRefund = Mathf.Max(0f, _toastedEatFuelRefund);
+            _scorchedEatFuelRefund = Mathf.Max(0f, _scorchedEatFuelRefund);
+        }
+    }
+
+    public enum MarshmallowRoastQuality
+    {
+        Scorched,
+        Toasted,
+        Perfect
+    }
+
+    /// <summary>一次完成烤制的不可变结果。当前仅本局使用，未来可供分享或异步赠礼消费。</summary>
+    public readonly struct MarshmallowResult
+    {
+        public MarshmallowRoastQuality Quality { get; }
+        public int PerfectTurns { get; }
+        public int TurnsRequired { get; }
+        public float FuelRefund { get; }
+
+        public MarshmallowResult(MarshmallowRoastQuality quality, int perfectTurns, int turnsRequired, float fuelRefund)
+        {
+            Quality = quality;
+            PerfectTurns = perfectTurns;
+            TurnsRequired = turnsRequired;
+            FuelRefund = fuelRefund;
         }
     }
 

@@ -8,10 +8,34 @@
 - `PlayerMovement.Camera Transform` 可留空：运行时会优先使用 `PlayerLook` 的 `CameraPivot` 作为移动参考方向。不要为了移动而给 Unity Input System 的 `PlayerInput` 组件配置 Camera；本项目输入入口是 `FirePlayPlayerInput`。
 - 火焰：`FlameContractionController`（C 原型）、`FlameResourceVisualBridge`；
 - 小火种：`CampfirePlacement`（F 原型）、`CampfireUpgradeController`，其 `Campfire Prefab` 必须引用 Project 中的 `Assets/FirePlay/Runtime/Prefab/CampFire.prefab`，不可引用 Hierarchy 中对象；
+- 公共篝火数量：`CampfireUpgradeController.Maximum Active Runtime Campfires` 默认是 `4`，限制玩家由小火种创建且尚未退役的公共篝火数量；中心广场等场景预置火堆不计入。低级火熄灭并退役后会腾出名额；满级熄火后留下的可复燃火堆仍占用一个名额。
 - 停留：`RestInteraction`；
 - 烤棉花：`MarshmallowInteraction`，引用 Player 下的手持占位物；Q 用于拟造和在火候区翻面，E 用于收取完成的棉花糖。
+- 钓鱼：在 Player 根物体添加 `FishingInteraction`；可选赋予一个默认关闭的手持鱼竿占位物。Q 用于拟造鱼竿与抛竿，鱼咬钩时 E 收线。未指定鱼竿物体时玩法仍可验证。
+- 烤制表现：将 `MarshmallowVisuals` 挂到该手持棉花糖道具的根物体；它自动读取子 Renderer 与父级的 `MarshmallowInteraction`，以 MaterialPropertyBlock 切换 Raw / Roasting / Perfect / Toasted / Scorched 颜色。不要为此复制或实例化材质；若自动查找失败，再在组件 Inspector 手动指定 Interaction 与 Renderers。可选地在同物体挂一个 AudioSource，并给组件的 Materialize、Perfect、Toasted、Scorched、Eat、Cancel Clip 槽位分别拖入短音效；缺任何引用都会静默跳过。
+- 可选动作：在 Player 根物体添加唯一的 `PlayerRitualAnimationController`，由它引用 Animator 并统一管理所有仪式动作。未添加该组件或 Animator 参数尚未配置时，玩法保持正常且不会报错。
 - 输入模式：Player 挂载 `PlayerModeController`。Exploring / Placing / Resting 由放火与停留自动切换；不要让其他组件自行维护第二套模式状态。
 - 探索交互：无需新增场景组件。E 键目标由 `PlayerInteraction` 统一选择，调试面板的 `Interaction` 行直接显示实际将响应的目标；重叠时优先大树、公共篝火、小火种，最后才是路线燃料节点。
+
+## HUD（SUIFW）
+
+- SUIFW 资源已归入 `Assets/Resources/SUIFW`。`SysDefine` 使用 `SUIFW/...` 路径，`UIFormsConfigInfo.json` 的窗体路径也已同步；项目 TagManager 已注册 `_TagCanvas` 和 `_TagUICamera`。框架可加载 `SUIFW/Canvas` 与其窗体资源。
+- `Resources/SUIFW/Canvas.prefab` 已改为 **Screen Space - Overlay**，其旧版 `UICamera` 已停用。FirePlay 的 Cinemachine 世界相机是唯一的世界渲染相机；不要重新启用该 UICamera，除非将来专门重做多相机 UI。
+- 同一 Canvas 的旧 `StandaloneInputModule` 已停用：项目只启用新 Input System，旧模块会调用 `UnityEngine.Input` 并抛异常。当前 HUD 没有按钮，因此不需要 UI 输入模块；未来做可点击菜单时，在 EventSystem 改用 `InputSystemUIInputModule` 并配置独立 UI Actions，不能重新启用旧模块。
+- 在 `Assets/Resources/SUIFW/Canvas.prefab` 的 `Fixed` 子节点下创建 `FirePlayHUD`，把 `FirePlayHudForm` 挂在该对象。不要在 DemoScene 额外放第二个 Canvas；后续由 SUIFW 的 UIManager 实例化此 Canvas。分别配置 `Fuel Root`、Filled 类型的 `Fuel Fill Image`、可选 Flame Image、Fuel Text、Interaction Prompt Root/Text、Ritual Prompt Root/Text。Player 状态引用可留空，运行时自动查找；明确指定可减少查找。
+- 在 DemoScene 任一常驻空物体（推荐 `GameSystems`）添加 `FirePlayUiBootstrap`。它只在启动时调用 SUIFW `UIManager`，由后者从 `Resources/SUIFW/Canvas` 生成并持久化唯一的 Canvas 根；不应同时手动把该 Canvas 拖进场景。
+- `Fuel Fill Image` 的 Image Type 必须是 `Filled`，Fill Method 推荐 Horizontal。HUD 仅显示余火、探索交互和当前仪式提示，不显示调试状态、背包或任务目标。
+
+### 移动端 UI（M3 当前接入）
+
+- UI 结构固定为五个互不持有玩法状态的根节点：`PersistentHUD`（余火）、`ContextActions`（火堆/火源/大树）、`RitualPanel`（停留后的仪式）、`MobileControls`（摇杆和常用按钮）、`ExpressionWheel`（表情/动作）。它们都置于 SUIFW Canvas 的 `Fixed` 下；不要把按钮写进 Campfire、RestSpot 或 Player Prefab。
+- `FirePlayHudForm` 仍只负责读取余火与文本提示。它会自动寻找名为 `FuelRoot`、`FuelFill`、`FuelText`、`InteractionPromptRoot`、`InteractionPromptText`、`RitualPromptRoot`、`RitualPromptText` 的子节点；`FuelFill` 会在运行时强制设为 Horizontal Filled。当前 Canvas 中的 `RitualPromptText` 必须指向 `RitualPromptRoot` 下的真实 Text，而不是留空。
+- 在 `MobileControls` 根节点添加 `FirePlayMobileInputRouter`。所有普通 UI Button 的 OnClick 直接绑定同一对象：`Interact`（添火/捡余烬/贡献大树）、`Rest`（坐下或起身）、`RitualPrimary`（棉花糖拟造/翻面、钓鱼拟杆/抛竿）、`RitualSecondary`（吃棉花糖/收线）、`WithdrawOrReclaim`（取火/回收小火种）、`PlaceFire`、`CycleTreeLightColor`。按钮不直接调用任何 World 组件。
+- 在左下的摇杆背景对象添加 `FirePlayMobileJoystick`，并填入同一 `FirePlayMobileInputRouter`、自身 RectTransform（`Joystick Area`）和摇杆 Handle。建议 Area 约 `180 × 180`、`Handle Range` 约 `60–72`；它只向 `FirePlayPlayerInput` 写入虚拟 Move，仍由现有 `PlayerMovement` 和 Camera Yaw 决定实际移动方向。
+- `FirePlayUiBootstrap` 会在 SUIFW 实例化 Canvas 后，为 EventSystem 自动添加并配置 `InputSystemUIInputModule`；旧 `StandaloneInputModule` 保持禁用。不要重新启用旧模块，也不需要在 PlayerInput 上指定 UI Camera。
+- 推荐移动端首版布局：左上余火；屏幕中央下方 `ContextActions` 单个主按钮（文字随目标变化）；右下 `Rest` 与表情轮盘入口；进入停留后隐藏探索主按钮、显示 `RitualPanel` 的主/次按钮。火堆和大树各自的详细信息面板留在对应子根节点中，只读取 `PlayerInteraction.CurrentInteractPrompt`、`Campfire` 或 `WorldTreeContribution` 状态，后续添加而不修改移动输入。
+- 当前已提供可直接 Play Mode 验收的 `FirePlayMobileOverlay`：`FirePlayUiBootstrap` 会在 SUIFW Canvas 实例化后的 Start 自动将它生成到 `Fixed` 下，同时隐藏旧的 `FuelRoot`、`InteractionPromptRoot`、`RitualPromptRoot` 占位节点。首版包含余火条、左摇杆、动态场景主互动、Rest/Stand、仪式主/次按钮和四项表情轮盘；美术阶段只需替换其运行时层级中的 Image/Text 样式，逻辑无需重绑。
+- 表情轮盘的 Wave / Thanks / Warmth / Sit 会请求 Player 上 `PlayerRitualAnimationController` 的 `EmoteWave`、`EmoteThanks`、`EmoteWarmth`、`EmoteSit` Trigger。当前 Animator 未配置这些参数时会静默无动作；后续导入动作后只需在该 Controller Inspector 改映射，不改 UI。
 
 ## Prefab 与 ID
 
@@ -40,7 +64,9 @@
 
 - `RestSpot` 可直接挂在 `CampFire.prefab`，R 进入/退出原型停留；
 - `StargazingRitual`：与 RestSpot 同物体，指定场景 `Look Target`（天空目标）与可选 `Companion Frame Target`（朋友/同伴模型胸口处的空物体）。进入时由独立 `CM_Stargaze` 将玩家、朋友和天空目标加入 Target Group；退出时自动清理。天空目标建议放在观星点前上方约 20–40 米处；
-- `MarshmallowRitual`：与 RestSpot 同物体，标记可烤；在篝火火焰中心上方创建空物体 `MarshmallowLookTarget`（建议约高于地面 1.0–1.4m），并赋给仪式的 `Look Target`。停留时玩家会水平转向篝火、锁定常规视角并平滑看向该目标；第一次按 Q 消耗 `Materialize Fuel Cost`（默认 3）拟造棉花糖。随后屏幕底部自动显示火候条：指针单向从左向右循环，每轮随机生成金黄区；在金黄区按 Q 翻面后，下一面会重置指针并生成新金黄区，两轮后按 E 吃掉。`Turns Required`、`Needle Cycles Per Second`、`Perfect Zone Width` 与 `Eat Fuel Refund` 都可在该组件 Inspector 调整。离座或篝火熄灭会取消本次棉花糖，且结果不保存；
+- `MarshmallowRitual`：与 RestSpot 同物体，标记可烤；在篝火火焰中心上方创建空物体 `MarshmallowLookTarget`（建议约高于地面 1.0–1.4m），并赋给仪式的 `Look Target`。停留时玩家会水平转向篝火、锁定常规视角并平滑看向该目标；第一次按 Q 消耗 `Materialize Fuel Cost`（默认 3）拟造棉花糖。随后屏幕底部自动显示火候条：指针单向从左向右循环，每轮随机生成金黄区；在金黄区按 Q 翻面后，下一面会重置指针并生成新金黄区，两轮后按 E 吃掉。两轮全中为 Perfect、命中一轮为 Toasted、零命中为 Scorched；`Perfect / Toasted / Scorched Eat Fuel Refund` 默认是 2 / 1 / 0，可在组件 Inspector 调整。离座或篝火熄灭会取消本次棉花糖，且结果不保存；
+- `FishingRitual`：与湖边的 `RestSpot` 同物体；在水面中央前方创建空物体 `FishingLookTarget` 并赋给其 `Look Target`，人物会朝向水面。场景常驻的 `RitualCameraDirector` 还需配置独立的 `CM_Fishing`、`Fishing Target Group` 与可选 `Fishing Follow Anchor`；进入钓鱼时只将玩家胸口锚点和水面目标加入该 Group，离座恢复探索镜头。将 `CM_Marshmallow` 复制为 `CM_Fishing` 后，把镜头距离 / FOV 调大即可做更宽广的湖景构图，二者互不影响。无需篝火。按 Q 拟造鱼竿（默认消耗 30），再按 Q 抛竿；随机等待后出现咬钩窗口，按 E 收线。默认每条返还 8、每根竿成功钓满 4 条，共返还 32；离座、漏钩或未钓满都不会返还竿成本。`Rod Fuel Cost`、`Catches Per Rod`、`Fuel Per Catch` 与咬钩时间均可在 Inspector 调整。不要与 `MarshmallowRitual` 挂在同一 RestSpot，以免共用 Q/E 输入。
+- 仪式 Animator 参数由 Player 上唯一的 `PlayerRitualAnimationController` 管理；默认包含 Bool `IsResting`、`IsMarshmallowRoasting`、`IsGuitarPlaying`、`IsFishing` 与 Trigger `MarshmallowMaterialize`、`MarshmallowTurn`、`MarshmallowEat`、`MarshmallowCancel`、`RitualOffer`、吉他/钓鱼动作。后续仪式只请求抽象状态或动作，不再持有 Animator 或参数字符串；参数映射仅在该 Controller Inspector 里调整。
 - 需要固定构图的后续仪式继承 `RestLookTargetRitual`；只需指定 `Look Target`，不直接修改 `RestInteraction`。同一 RestSpot 不要同时挂多个会锁定视角的仪式。
 
 ### Cinemachine 烤棉花镜头
@@ -96,6 +122,7 @@
 - 靠近时按 E 消耗 `Contribution Cost`（默认 10）余火；本地玩家仅能贡献一次，状态与颜色会随存档恢复。Demo 不设探索或篝火前置。
 - 可选：在树冠预留一个 Point Light，初始关闭后赋给 `Personal Light`；首次贡献后它会启用，并使用已选择的颜色。Player 挂载 `TreeLightColorSelector` 后，靠近大树按 V 可循环选择原型颜色，按 E 贡献；移动端 UI 直接调用 `SelectPersonalLightColor(Color)`。位置尚未固定为玩法数据，后续可扩展多个锚点。
 - 多光点占位：树上额外挂 `TreePersonalLightVisuals`，赋予一个 Point Light Prefab 与树冠 `Light Root`。它按光点记录生成实例；当前本地仅有一条记录，未来可直接显示同步而来的其他玩家记录。
+- 大树阶段反馈：在与 `WorldTreeContribution` 同物体或其子物体挂 `WorldTreeProgressVisuals`，指定 `Source Tree` 和阶段根节点 `0..N`。每个根可放树冠模型、灯光、粒子、音景或植被；`Stage Contribution Thresholds` 的第 1 项对应阶段 1（默认 `10`，正好对应首次本地贡献）。组件只读取累计贡献、切换表现，不会消耗余火或写存档。当前单人 Demo 至少配置阶段 0（沉静）与阶段 1（苏醒）即可。
 
 ## 已验证
 
@@ -110,5 +137,6 @@
 
 - 取消 `G` 和一次性升级：靠近小火种或公共篝火按 `E`，每次投入 `CampfireConfig.Tend Fuel Cost`（原型为 5）点余火。
 - 首次添火会把临时小火种转换为拥有运行时 Stable ID 的公共火；`CampfireUpgradeController` 名称暂时保留，仅用于兼容 Player Prefab 上已有引用。
+- 同时最多保留 4 座运行时公共篝火（可在 Player 的 `CampfireUpgradeController` 调整）。达到上限时，E 不会扣余火或销毁小火种；交互提示会显示当前数量，仍可按 G 回收小火种。
 - `CampfireConfig_Prototype` 使用累计投入阈值 `0 / 20 / 55 / 110` 自动成长。`Warmth` 最大为 100、每秒衰减 0.1、每次添火恢复 16；已满时不会扣除余火。
 - 中心广场篝火在 Inspector 将 `Level` 设为 3，作为默认满级火堆，只接受续火。火堆模型与火焰模型应保留独立子物体，供后续实现“满级熄火仍留火堆”。

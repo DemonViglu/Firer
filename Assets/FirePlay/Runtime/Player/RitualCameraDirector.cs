@@ -16,6 +16,10 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField] private CinemachineCamera _stargazingCamera;
         [SerializeField] private CinemachineTargetGroup _stargazingTargetGroup;
         [SerializeField] private Transform _stargazingFollowAnchor;
+        [Header("Fishing")]
+        [SerializeField] private CinemachineCamera _fishingCamera;
+        [SerializeField] private CinemachineTargetGroup _fishingTargetGroup;
+        [SerializeField] private Transform _fishingFollowAnchor;
         [Tooltip("仪式镜头的 Follow 锚点。旋转 180° 后可让 Third Person Follow 位于角色正面。")]
         [SerializeField] private Transform _ritualFollowAnchor;
         [Tooltip("Target Group 中代表玩家的构图锚点。建议放在角色胸口高度，而非 Player 根部。")]
@@ -23,11 +27,14 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField] private int _explorePriority = 10;
         [SerializeField] private int _ritualPriority = 20;
         [SerializeField] private int _stargazingPriority = 20;
+        [SerializeField] private int _fishingPriority = 20;
         [SerializeField, Min(0f)] private float _playerTargetRadius = 0.7f;
         [SerializeField, Min(0f)] private float _ritualTargetRadius = 0.3f;
         [SerializeField, Min(0f)] private float _ritualTargetWeight = 1.4f;
         [SerializeField, Min(0f)] private float _stargazingCompanionWeight = 1f;
         [SerializeField, Min(0f)] private float _stargazingSkyWeight = 0.35f;
+        [SerializeField, Min(0f)] private float _fishingPlayerWeight = 0.75f;
+        [SerializeField, Min(0f)] private float _fishingWaterWeight = 1.25f;
 
         private Transform _activePlayerTarget;
         private Transform _activeFollowTarget;
@@ -37,6 +44,9 @@ namespace DemonViglu.FirePlay.Player
         private Transform _stargazingPlayerTarget;
         private Transform _stargazingCompanionTarget;
         private Transform _stargazingSkyTarget;
+        private RestInteraction _fishingInteraction;
+        private Transform _fishingPlayerTarget;
+        private Transform _fishingWaterTarget;
 
         public bool HasValidSetup => _exploreCamera != null && _ritualCamera != null && _ritualTargetGroup != null;
         public bool IsRitualCameraActive => _activeInteraction != null;
@@ -46,12 +56,14 @@ namespace DemonViglu.FirePlay.Player
             ApplyExplorePriority();
             DeactivateRitualCamera();
             DeactivateStargazingCamera();
+            DeactivateFishingCamera();
         }
 
         private void OnDisable()
         {
             EndRitual(_activeInteraction);
             EndStargazing(_stargazingInteraction);
+            EndFishing(_fishingInteraction);
         }
 
         /// <summary>
@@ -100,6 +112,52 @@ namespace DemonViglu.FirePlay.Player
             _stargazingCompanionTarget = null;
             _stargazingSkyTarget = null;
             DeactivateStargazingCamera();
+            ApplyExplorePriority();
+        }
+
+        /// <summary>
+        /// 钓鱼使用独立镜头和 Target Group，因此可拥有比篝火仪式更宽广的湖景构图。
+        /// </summary>
+        public bool TryBeginFishing(RestInteraction interaction, Transform waterTarget)
+        {
+            if (_fishingCamera == null || _fishingTargetGroup == null || interaction == null || waterTarget == null ||
+                _activeInteraction != null || _stargazingInteraction != null)
+            {
+                return false;
+            }
+
+            EndFishing(_fishingInteraction);
+            _fishingInteraction = interaction;
+            _fishingPlayerTarget = _playerFrameTarget != null ? _playerFrameTarget : interaction.transform;
+            _fishingWaterTarget = waterTarget;
+
+            AddMemberIfMissing(_fishingTargetGroup, _fishingPlayerTarget, _fishingPlayerWeight, _playerTargetRadius);
+            AddMemberIfMissing(_fishingTargetGroup, _fishingWaterTarget, _fishingWaterWeight, _ritualTargetRadius);
+
+            _fishingCamera.Follow = _fishingFollowAnchor != null ? _fishingFollowAnchor : interaction.transform;
+            _fishingCamera.LookAt = _fishingTargetGroup.transform;
+            _fishingCamera.Priority = _fishingPriority;
+            ApplyExplorePriority();
+            return true;
+        }
+
+        public void EndFishing(RestInteraction interaction)
+        {
+            if (_fishingInteraction == null || (interaction != null && interaction != _fishingInteraction))
+            {
+                return;
+            }
+
+            if (_fishingTargetGroup != null)
+            {
+                RemoveMemberIfPresent(_fishingTargetGroup, _fishingPlayerTarget);
+                RemoveMemberIfPresent(_fishingTargetGroup, _fishingWaterTarget);
+            }
+
+            _fishingInteraction = null;
+            _fishingPlayerTarget = null;
+            _fishingWaterTarget = null;
+            DeactivateFishingCamera();
             ApplyExplorePriority();
         }
 
@@ -172,6 +230,14 @@ namespace DemonViglu.FirePlay.Player
             }
         }
 
+        private void DeactivateFishingCamera()
+        {
+            if (_fishingCamera != null)
+            {
+                _fishingCamera.Priority = 0;
+            }
+        }
+
         private static void AddMemberIfMissing(CinemachineTargetGroup targetGroup, Transform target, float weight, float radius)
         {
             if (target != null && targetGroup != null && targetGroup.FindMember(target) < 0)
@@ -195,6 +261,8 @@ namespace DemonViglu.FirePlay.Player
             _ritualTargetWeight = Mathf.Max(0f, _ritualTargetWeight);
             _stargazingCompanionWeight = Mathf.Max(0f, _stargazingCompanionWeight);
             _stargazingSkyWeight = Mathf.Max(0f, _stargazingSkyWeight);
+            _fishingPlayerWeight = Mathf.Max(0f, _fishingPlayerWeight);
+            _fishingWaterWeight = Mathf.Max(0f, _fishingWaterWeight);
         }
     }
 }

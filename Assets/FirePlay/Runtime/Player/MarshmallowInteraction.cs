@@ -1,5 +1,6 @@
 using DemonViglu.FirePlay.World;
 using DemonViglu.FirePlay.Flame;
+using System;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.Player
@@ -11,6 +12,7 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField] private FlameResourceController _resourceController;
         [SerializeField] private Transform _marshmallowProp;
         [SerializeField] private float _turnDegrees = 90f;
+        [SerializeField] private PlayerRitualAnimationController _ritualAnimationController;
         [Header("Prototype Meter")]
         [SerializeField] private bool _showPrototypeMeter = true;
         [SerializeField, Min(120f)] private float _meterWidth = 420f;
@@ -20,6 +22,7 @@ namespace DemonViglu.FirePlay.Player
         private MarshmallowRitual _activeRitual;
         private bool _hasMaterializedMarshmallow;
         private MarshmallowRoastSession _roastSession;
+        private MarshmallowResult _completedResult;
         private GUIStyle _meterLabelStyle;
 
         public string Status { get; private set; } = "Sit by a campfire to roast";
@@ -28,12 +31,19 @@ namespace DemonViglu.FirePlay.Player
         public bool IsReadyToEat => _roastSession != null && _roastSession.IsReadyToEat;
         public int CompletedTurns => _roastSession?.CompletedTurns ?? 0;
         public int PerfectTurns => _roastSession?.PerfectTurns ?? 0;
+        public event Action Materialized;
+        public event Action<bool> Turned;
+        public event Action<bool> Eaten;
+        public event Action<MarshmallowResult> ResultReady;
+        public event Action<MarshmallowResult> ResultCollected;
+        public event Action Cancelled;
 
         private void Awake()
         {
             _rest ??= GetComponent<RestInteraction>();
             _input ??= GetComponent<FirePlayPlayerInput>();
             _resourceController ??= GetComponent<FlameResourceController>();
+            _ritualAnimationController ??= GetComponent<PlayerRitualAnimationController>();
             if (_rest == null || _input == null || _resourceController == null || _marshmallowProp == null) { enabled = false; return; }
             _marshmallowProp.gameObject.SetActive(false);
         }
@@ -46,13 +56,13 @@ namespace DemonViglu.FirePlay.Player
             if (ritual != _activeRitual)
             {
                 _activeRitual = ritual;
-                ClearSession();
+                EndSession(cancelled: true);
                 Status = ritual == null ? "Sit by a campfire to roast" : $"Press Q: materialize marshmallow ({ritual.MaterializeFuelCost:0})";
             }
 
             if (_activeRitual != null && _hasMaterializedMarshmallow && !_activeRitual.IsCampfireBurning)
             {
-                ClearSession();
+                EndSession(cancelled: true);
                 Status = "The fire went out";
             }
 
@@ -67,6 +77,7 @@ namespace DemonViglu.FirePlay.Player
             }
 
             _roastSession?.Advance(Time.deltaTime);
+            SyncRitualAnimationState();
 
             if (_marshmallowProp.gameObject.activeSelf != _hasMaterializedMarshmallow)
             {
@@ -83,6 +94,8 @@ namespace DemonViglu.FirePlay.Player
                 if (_hasMaterializedMarshmallow)
                 {
                     BeginRoasting();
+                    _ritualAnimationController?.Play(RitualAnimationCue.Materialize);
+                    Materialized?.Invoke();
                 }
 
                 return;
@@ -95,12 +108,14 @@ namespace DemonViglu.FirePlay.Player
 
             _marshmallowProp.Rotate(Vector3.forward, _turnDegrees, Space.Self);
             var isPerfect = _roastSession.TryTurn();
+            _ritualAnimationController?.Play(RitualAnimationCue.Turn);
+            Turned?.Invoke(isPerfect);
 
             if (IsReadyToEat)
             {
-                Status = _roastSession.IsPerfect
-                    ? "Perfectly toasted — Press E to eat"
-                    : "Toasted — Press E to eat";
+                _completedResult = _activeRitual.CreateResult(_roastSession);
+                ResultReady?.Invoke(_completedResult);
+                Status = $"{GetQualityLabel(_completedResult.Quality)} — Press E to eat (+{_completedResult.FuelRefund:0})";
                 return;
             }
 
@@ -119,21 +134,38 @@ namespace DemonViglu.FirePlay.Player
 
         private void EatMarshmallow()
         {
-            var refund = _activeRitual.EatFuelRefund;
-            if (refund > 0f)
+            if (_completedResult.FuelRefund > 0f)
             {
-                _resourceController.Restore(refund);
+                _resourceController.Restore(_completedResult.FuelRefund);
             }
 
-            var wasPerfect = _roastSession.IsPerfect;
-            ClearSession();
+            var result = _completedResult;
+            var wasPerfect = result.Quality == MarshmallowRoastQuality.Perfect;
+            _ritualAnimationController?.Play(RitualAnimationCue.Eat);
+            Eaten?.Invoke(wasPerfect);
+            ResultCollected?.Invoke(result);
+            EndSession(cancelled: false);
             Status = wasPerfect ? "A warm, perfect bite" : "A warm bite";
         }
 
-        private void ClearSession()
+        private void EndSession(bool cancelled)
         {
+            if (cancelled && _hasMaterializedMarshmallow)
+            {
+                _ritualAnimationController?.Play(RitualAnimationCue.Cancel);
+                Cancelled?.Invoke();
+            }
+
             _hasMaterializedMarshmallow = false;
             _roastSession = null;
+            _completedResult = default;
+            _ritualAnimationController?.SetState(RitualAnimationState.MarshmallowRoasting, false);
+        }
+
+        private void SyncRitualAnimationState()
+        {
+            _ritualAnimationController?.SetState(RitualAnimationState.Resting, _rest != null && _rest.IsResting);
+            _ritualAnimationController?.SetState(RitualAnimationState.MarshmallowRoasting, IsRoasting);
         }
 
         private void OnGUI()
@@ -184,6 +216,16 @@ namespace DemonViglu.FirePlay.Player
                 alignment = TextAnchor.MiddleCenter,
                 fontSize = 16,
                 normal = { textColor = new Color(1f, 0.9f, 0.65f) }
+            };
+        }
+
+        private static string GetQualityLabel(MarshmallowRoastQuality quality)
+        {
+            return quality switch
+            {
+                MarshmallowRoastQuality.Perfect => "Perfectly toasted",
+                MarshmallowRoastQuality.Toasted => "Toasted",
+                _ => "A little scorched"
             };
         }
     }

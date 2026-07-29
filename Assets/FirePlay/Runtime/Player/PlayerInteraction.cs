@@ -197,9 +197,15 @@ namespace DemonViglu.FirePlay.Player
             {
                 CurrentInteractTargetKind = PlayerInteractTargetKind.SmallFire;
                 var tendCost = _campfireUpgradeController != null ? _campfireUpgradeController.TendFuelCost : 0f;
-                CurrentInteractPrompt = tendCost > 0f
-                    ? $"E: begin public fire ({tendCost:0.0}) / G: reclaim"
-                    : "Public fire setup missing";
+                if (tendCost <= 0f)
+                {
+                    CurrentInteractPrompt = "Public fire setup missing";
+                    return;
+                }
+
+                CurrentInteractPrompt = _campfireUpgradeController != null && !_campfireUpgradeController.CanStartPublicFire
+                    ? $"Public fires at limit ({_campfireUpgradeController.ActiveRuntimeCampfireCount}/{_campfireUpgradeController.MaximumActiveRuntimeCampfires}) / G: reclaim"
+                    : $"E: begin public fire ({tendCost:0.0}) / G: reclaim";
                 return;
             }
 

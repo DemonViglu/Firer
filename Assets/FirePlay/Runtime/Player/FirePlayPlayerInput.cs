@@ -25,16 +25,27 @@ namespace DemonViglu.FirePlay.Player
         private InputAction _cycleTreeLightColorAction;
         private InputAction _pauseAction;
 
-        public Vector2 Move => _moveAction?.ReadValue<Vector2>() ?? Vector2.zero;
+        // Virtual controls are intentionally routed through the same input facade as
+        // keyboard/gamepad. Gameplay systems never need to know whether a command
+        // originated from a mobile UI button or a physical device.
+        private Vector2 _virtualMove;
+        private bool _virtualPlaceFirePressed;
+        private bool _virtualRestPressed;
+        private bool _virtualUpgradeCampfirePressed;
+        private bool _virtualInteractPressed;
+        private bool _virtualEmotePressed;
+        private bool _virtualCycleTreeLightColorPressed;
+
+        public Vector2 Move => Vector2.ClampMagnitude((_moveAction?.ReadValue<Vector2>() ?? Vector2.zero) + _virtualMove, 1f);
         public bool SprintHeld => _sprintAction != null && _sprintAction.IsPressed();
         public bool ConstrictFlameHeld => _constrictFlameAction != null && _constrictFlameAction.IsPressed();
-        public bool PlaceFirePressedThisFrame => _placeFireAction != null && _placeFireAction.WasPressedThisFrame();
-        public bool RestPressedThisFrame => _restAction != null && _restAction.WasPressedThisFrame();
-        public bool UpgradeCampfirePressedThisFrame => _upgradeCampfireAction != null && _upgradeCampfireAction.WasPressedThisFrame();
+        public bool PlaceFirePressedThisFrame => ConsumeVirtualPress(ref _virtualPlaceFirePressed) || (_placeFireAction != null && _placeFireAction.WasPressedThisFrame());
+        public bool RestPressedThisFrame => ConsumeVirtualPress(ref _virtualRestPressed) || (_restAction != null && _restAction.WasPressedThisFrame());
+        public bool UpgradeCampfirePressedThisFrame => ConsumeVirtualPress(ref _virtualUpgradeCampfirePressed) || (_upgradeCampfireAction != null && _upgradeCampfireAction.WasPressedThisFrame());
         public Vector2 Look => _lookAction?.ReadValue<Vector2>() ?? Vector2.zero;
-        public bool InteractPressedThisFrame => _interactAction != null && _interactAction.WasPressedThisFrame();
-        public bool EmotePressedThisFrame => _emoteAction != null && _emoteAction.WasPressedThisFrame();
-        public bool CycleTreeLightColorPressedThisFrame => _cycleTreeLightColorAction != null && _cycleTreeLightColorAction.WasPressedThisFrame();
+        public bool InteractPressedThisFrame => ConsumeVirtualPress(ref _virtualInteractPressed) || (_interactAction != null && _interactAction.WasPressedThisFrame());
+        public bool EmotePressedThisFrame => ConsumeVirtualPress(ref _virtualEmotePressed) || (_emoteAction != null && _emoteAction.WasPressedThisFrame());
+        public bool CycleTreeLightColorPressedThisFrame => ConsumeVirtualPress(ref _virtualCycleTreeLightColorPressed) || (_cycleTreeLightColorAction != null && _cycleTreeLightColorAction.WasPressedThisFrame());
         public bool PausePressedThisFrame => _pauseAction != null && _pauseAction.WasPressedThisFrame();
 
         private void Awake()
@@ -86,6 +97,29 @@ namespace DemonViglu.FirePlay.Player
             }
 
             return action;
+        }
+
+        public void SetVirtualMove(Vector2 value)
+        {
+            _virtualMove = Vector2.ClampMagnitude(value, 1f);
+        }
+
+        public void RequestVirtualPlaceFire() => _virtualPlaceFirePressed = true;
+        public void RequestVirtualRest() => _virtualRestPressed = true;
+        public void RequestVirtualUpgradeCampfire() => _virtualUpgradeCampfirePressed = true;
+        public void RequestVirtualInteract() => _virtualInteractPressed = true;
+        public void RequestVirtualEmote() => _virtualEmotePressed = true;
+        public void RequestVirtualCycleTreeLightColor() => _virtualCycleTreeLightColorPressed = true;
+
+        private static bool ConsumeVirtualPress(ref bool pressed)
+        {
+            if (!pressed)
+            {
+                return false;
+            }
+
+            pressed = false;
+            return true;
         }
     }
 }

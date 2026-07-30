@@ -142,6 +142,9 @@ namespace DemonViglu.FirePlay.Player
         {
             target = null;
             if (_registry == null || !_registry.TryResolve(intent.TargetId, out target)) return false;
+            if (intent.HasExpectedTargetVersion &&
+                (!_registry.TryGetCommandVersion(intent.TargetId, out var currentVersion) || currentVersion != intent.ExpectedTargetVersion))
+                return false;
 
             _context.Interaction.GetIntentTarget(intent.Kind, out var currentKind, out var currentId);
             return currentKind == intent.TargetKind && currentId == intent.TargetId;

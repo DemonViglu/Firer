@@ -10,7 +10,7 @@ namespace DemonViglu.FirePlay.World
     /// 临时小火种生命周期。表现组件均为可选，状态不依赖特定素材。
     /// </summary>
     [RequireComponent(typeof(StableSceneId))]
-    public sealed class SmallFire : MonoBehaviour
+    public sealed class SmallFire : MonoBehaviour, IWorldCommandVersioned
     {
         private static readonly List<SmallFire> ActiveFires = new();
 
@@ -36,6 +36,7 @@ namespace DemonViglu.FirePlay.World
 
         public bool IsInitialized => _initialized;
         public float RemainingSeconds => Mathf.Max(0f, _remainingSeconds);
+        public uint CommandVersion => 0;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetActiveFires()

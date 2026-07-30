@@ -2,6 +2,7 @@ using System;
 using DemonViglu.FirePlay.Flame;
 using DemonViglu.FirePlay.World;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace DemonViglu.FirePlay.Player
 {
@@ -22,7 +23,8 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField] private RestInteraction _rest;
         [SerializeField] private FlameResourceController _resourceController;
         [SerializeField] private Transform _fishingRodProp;
-        [SerializeField] private PlayerRitualAnimationController _ritualAnimationController;
+        [FormerlySerializedAs("_ritualAnimationController")]
+        [SerializeField] private PlayerAnimationController _animationController;
 
         private FishingRitual _activeRitual;
         private FishingState _state;
@@ -35,6 +37,7 @@ namespace DemonViglu.FirePlay.Player
         public bool IsFishBiting => _state == FishingState.BiteReady;
         public int Catches => _catches;
         public bool IsActive => _activeRitual != null;
+        public string SharedStateId => HasRod ? PlayerAnimationStateIds.Fishing : PlayerAnimationStateIds.Resting;
         public RitualViewState ViewState => new(
             "fishing",
             Status,
@@ -68,7 +71,7 @@ namespace DemonViglu.FirePlay.Player
         {
             _rest ??= GetComponent<RestInteraction>();
             _resourceController ??= GetComponent<FlameResourceController>();
-            _ritualAnimationController ??= GetComponent<PlayerRitualAnimationController>();
+            _animationController ??= GetComponent<PlayerAnimationController>();
             if (_rest == null || _resourceController == null)
             {
                 enabled = false;
@@ -103,7 +106,6 @@ namespace DemonViglu.FirePlay.Player
             }
 
             AdvanceTiming();
-            _ritualAnimationController?.SetState(RitualAnimationState.Fishing, HasRod);
             if (_fishingRodProp != null && _fishingRodProp.gameObject.activeSelf != HasRod)
             {
                 _fishingRodProp.gameObject.SetActive(HasRod);
@@ -144,7 +146,7 @@ namespace DemonViglu.FirePlay.Player
             _state = FishingState.WaitingForBite;
             _stateEndsAt = Time.time + UnityEngine.Random.Range(_activeRitual.MinimumBiteDelay, _activeRitual.MaximumBiteDelay);
             Status = "鱼线随着水波轻轻漂着……";
-            _ritualAnimationController?.Play(RitualAnimationCue.FishingCast);
+            _animationController?.Play(PlayerAnimationCueIds.FishingCast);
             LineCast?.Invoke();
         }
 
@@ -175,7 +177,7 @@ namespace DemonViglu.FirePlay.Player
                 _resourceController.Restore(result.FuelRefund);
             }
 
-            _ritualAnimationController?.Play(RitualAnimationCue.FishingReel);
+            _animationController?.Play(PlayerAnimationCueIds.FishingReel);
             FishCaught?.Invoke(result);
             if (_catches >= _activeRitual.CatchesPerRod)
             {
@@ -198,7 +200,6 @@ namespace DemonViglu.FirePlay.Player
             _state = FishingState.None;
             _catches = 0;
             _stateEndsAt = 0f;
-            _ritualAnimationController?.SetState(RitualAnimationState.Fishing, false);
         }
     }
 }

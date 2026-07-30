@@ -13,7 +13,7 @@ namespace DemonViglu.FirePlay.World
     /// 不参与余火扣除或等级计算。
     /// </summary>
     [RequireComponent(typeof(StableSceneId))]
-    public sealed class Campfire : MonoBehaviour
+    public sealed class Campfire : MonoBehaviour, IWorldCommandVersioned
     {
         private static readonly List<Campfire> ActiveCampfires = new();
         private static readonly Dictionary<string, int> RetiredSourceStages = new();
@@ -26,29 +26,28 @@ namespace DemonViglu.FirePlay.World
         [SerializeField] private bool _isRuntimeCreated;
         [SerializeField] private bool _isRetired;
         [SerializeField] private string _sourceSmallFireId;
+        private uint _commandVersion;
+        private CampfireAuthorityState _authorityState;
 
         public string CampfireId => GetComponent<StableSceneId>().Value;
-        public int Level => _level;
-        public float TotalContribution => _totalContribution;
-        public float Warmth => _warmth;
-        public float NormalizedWarmth => _config == null ? 0f : Mathf.Clamp01(_warmth / _config.MaximumWarmth);
-        public bool IsExtinguished => _warmth <= 0.001f;
-        public bool NeedsTending => _config != null && _warmth < _config.MaximumWarmth - 0.001f;
+        public int Level => _authorityState?.Level ?? _level;
+        public float TotalContribution => _authorityState?.TotalContribution ?? _totalContribution;
+        public float Warmth => _authorityState?.Warmth ?? _warmth;
+        public float NormalizedWarmth => _config == null ? 0f : Mathf.Clamp01(Warmth / _config.MaximumWarmth);
+        public bool IsExtinguished => _authorityState?.IsExtinguished ?? _warmth <= 0.001f;
+        public bool NeedsTending => _authorityState?.NeedsTending ?? (_config != null && _warmth < _config.MaximumWarmth - 0.001f);
         public CampfireConfig Config => _config;
         public bool HasValidSetup => _config != null && GetComponent<StableSceneId>().IsValid;
-        public bool IsMaxLevel => _config != null && _level >= _config.MaximumLevel;
+        public bool IsMaxLevel => _authorityState?.IsMaxLevel ?? (_config != null && _level >= _config.MaximumLevel);
         public float TendFuelCost => _config != null ? _config.TendFuelCost : 0f;
         public float EmergencyWithdrawFuel => _config != null ? _config.EmergencyWithdrawFuel : 0f;
         public float EmergencyWithdrawWarmthCost => _config != null ? _config.EmergencyWithdrawWarmthCost : 0f;
-        public float EstimatedBurnSeconds => IsExtinguished
-            ? 0f
-            : _config == null || _config.WarmthDecayPerSecond <= 0f
-                ? float.PositiveInfinity
-                : _warmth / _config.WarmthDecayPerSecond;
+        public float EstimatedBurnSeconds => _authorityState?.EstimatedBurnSeconds ?? 0f;
         public string LastUpgradeStatus { get; private set; } = "Ready";
         public bool IsRuntimeCreated => _isRuntimeCreated;
         public bool IsRetired => _isRetired;
         public string SourceSmallFireId => _sourceSmallFireId;
+        public uint CommandVersion => _commandVersion;
         public static IReadOnlyList<Campfire> ActiveInstances => ActiveCampfires;
         public static event Action<Campfire> StateChanged;
         public static event Action<Campfire> Retired;
@@ -156,14 +155,13 @@ namespace DemonViglu.FirePlay.World
                 _warmth = _config.InitialWarmth;
                 _warmthInitialized = true;
             }
+            if (_config != null) CreateAuthorityState();
         }
 
         private void Update()
         {
-            if (_config != null && _warmth > 0f)
-            {
-                _warmth = Mathf.Max(0f, _warmth - _config.WarmthDecayPerSecond * Time.deltaTime);
-            }
+            _authorityState?.Tick(Time.deltaTime);
+            SyncSerializedState();
 
             RetireIfExpired();
         }
@@ -189,6 +187,8 @@ namespace DemonViglu.FirePlay.World
             // Pre-placed campfires keep their inspector-configured initial warmth instead.
             _warmth = 0f;
             _warmthInitialized = true;
+            CreateAuthorityState();
+            _commandVersion = 0;
             return true;
         }
 
@@ -199,9 +199,9 @@ namespace DemonViglu.FirePlay.World
                 id = CampfireId,
                 position = transform.position,
                 rotation = transform.rotation,
-                level = _level,
-                totalContribution = _totalContribution,
-                warmth = _warmth,
+                level = Level,
+                totalContribution = TotalContribution,
+                warmth = Warmth,
                 warmthInitialized = _warmthInitialized,
                 runtimeCreated = _isRuntimeCreated,
                 retired = _isRetired,
@@ -216,10 +216,10 @@ namespace DemonViglu.FirePlay.World
                 return false;
             }
 
-            _level = Mathf.Clamp(record.level, 0, _config.MaximumLevel);
-            _totalContribution = Mathf.Max(0f, record.totalContribution);
             RestoreWarmth(record);
+            RestoreAuthorityState(record);
             LastUpgradeStatus = IsMaxLevel ? "Maximum level" : "Restored";
+            _commandVersion++;
             return true;
         }
 
@@ -230,10 +230,10 @@ namespace DemonViglu.FirePlay.World
                 return;
             }
 
-            _level = Mathf.Clamp(record.level, 0, _config.MaximumLevel);
-            _totalContribution = Mathf.Max(0f, record.totalContribution);
             RestoreWarmth(record);
+            RestoreAuthorityState(record);
             LastUpgradeStatus = IsMaxLevel ? "Maximum level" : "Restored";
+            _commandVersion++;
         }
 
         public bool TryTend(FlameResourceController resourceController)
@@ -244,14 +244,14 @@ namespace DemonViglu.FirePlay.World
                 return false;
             }
 
-            if (!NeedsTending)
+            if (_authorityState == null || !NeedsTending)
             {
                 LastUpgradeStatus = "Already warm";
                 return false;
             }
 
             var cost = TendFuelCost;
-            if (resourceController == null || resourceController.State == null || resourceController.State.CurrentFuel < cost)
+            if (resourceController == null || resourceController.State == null || !_authorityState.CanTend(resourceController.State.CurrentFuel))
             {
                 LastUpgradeStatus = "Not enough fuel";
                 return false;
@@ -263,12 +263,11 @@ namespace DemonViglu.FirePlay.World
                 return false;
             }
 
-            _totalContribution += cost;
-            _warmth = Mathf.Min(_config.MaximumWarmth, _warmth + _config.WarmthPerTend);
+            var levelIncreased = _authorityState.ApplyTend();
             _warmthInitialized = true;
-            var previousLevel = _level;
-            _level = Mathf.Max(_level, _config.GetLevelForContribution(_totalContribution));
-            LastUpgradeStatus = _level > previousLevel ? $"Fire grew to level {_level}" : "Tended";
+            SyncSerializedState();
+            LastUpgradeStatus = levelIncreased ? $"Fire grew to level {Level}" : "Tended";
+            _commandVersion++;
             Upgraded?.Invoke(this);
             StateChanged?.Invoke(this);
             return true;
@@ -276,7 +275,7 @@ namespace DemonViglu.FirePlay.World
 
         public bool TryWithdrawEmergencyFuel(FlameResourceController resourceController)
         {
-            if (!HasValidSetup || IsExtinguished)
+            if (!HasValidSetup || _authorityState == null || IsExtinguished)
             {
                 LastUpgradeStatus = "Fire is out";
                 return false;
@@ -291,7 +290,7 @@ namespace DemonViglu.FirePlay.World
                 return false;
             }
 
-            if (_warmth < warmthCost)
+            if (Warmth < warmthCost || !_authorityState.CanWithdraw(resourceController.State.CurrentFuel, resourceController.State.MaxFuel))
             {
                 LastUpgradeStatus = "Not enough warmth";
                 return false;
@@ -303,8 +302,10 @@ namespace DemonViglu.FirePlay.World
                 return false;
             }
 
-            _warmth = Mathf.Max(0f, _warmth - warmthCost);
+            if (!_authorityState.ApplyWithdraw()) return false;
+            SyncSerializedState();
             LastUpgradeStatus = $"Drew {amount:0} fuel from the fire";
+            _commandVersion++;
             StateChanged?.Invoke(this);
             RetireIfExpired();
             return true;
@@ -332,6 +333,38 @@ namespace DemonViglu.FirePlay.World
                 ? Mathf.Clamp(record.warmth, 0f, _config.MaximumWarmth)
                 : _config.InitialWarmth;
             _warmthInitialized = true;
+        }
+
+        private void CreateAuthorityState()
+        {
+            _authorityState = new CampfireAuthorityState(
+                _config.CreateLevelThresholdSnapshot(),
+                _config.MaximumWarmth,
+                _config.WarmthDecayPerSecond,
+                _config.WarmthPerTend,
+                _config.TendFuelCost,
+                _config.EmergencyWithdrawFuel,
+                _config.EmergencyWithdrawWarmthCost,
+                new CampfireAuthoritySnapshot(_level, _totalContribution, _warmth));
+            SyncSerializedState();
+        }
+
+        private void RestoreAuthorityState(CampfireRecord record)
+        {
+            _authorityState ??= new CampfireAuthorityState(
+                _config.CreateLevelThresholdSnapshot(), _config.MaximumWarmth, _config.WarmthDecayPerSecond,
+                _config.WarmthPerTend, _config.TendFuelCost, _config.EmergencyWithdrawFuel,
+                _config.EmergencyWithdrawWarmthCost, default);
+            _authorityState.Restore(new CampfireAuthoritySnapshot(record.level, record.totalContribution, _warmth));
+            SyncSerializedState();
+        }
+
+        private void SyncSerializedState()
+        {
+            if (_authorityState == null) return;
+            _level = _authorityState.Level;
+            _totalContribution = _authorityState.TotalContribution;
+            _warmth = _authorityState.Warmth;
         }
 
         private void OnValidate()

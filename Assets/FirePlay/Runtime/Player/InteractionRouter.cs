@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DemonViglu.FirePlay.Core;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.Player
@@ -16,6 +17,7 @@ namespace DemonViglu.FirePlay.Player
         private LocalPlayerContext _context;
         private PlayerModeController _mode;
         private IEventPublisher _events;
+        private IWorldObjectRegistry _registry;
         private readonly Queue<RawPlayerInput> _pendingInputs = new();
 
         public void Initialize(LocalPlayerContext context)
@@ -23,6 +25,7 @@ namespace DemonViglu.FirePlay.Player
             _context = context;
             _mode = GetComponent<PlayerModeController>();
             _events ??= GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
+            _registry ??= GameInstanceSubsystem.GetOrCreate<IWorldObjectRegistry>(() => new StableIdWorldObjectRegistry());
             var registered = GameInstanceSubsystem.TryGet<IInteractionRouter>();
             if (registered == null)
             {
@@ -80,7 +83,10 @@ namespace DemonViglu.FirePlay.Player
             var targetKind = PlayerInteractTargetKind.None;
             var targetId = string.Empty;
             _context.Interaction?.GetIntentTarget(kind, out targetKind, out targetId);
-            _events.Publish(new PlayerIntentRequested(_context.PlayerId, kind, mode, targetKind, targetId));
+            var expectedVersion = _registry != null && _registry.TryGetCommandVersion(targetId, out var version)
+                ? version
+                : -1L;
+            _events.Publish(new PlayerIntentRequested(_context.PlayerId, kind, mode, targetKind, targetId, expectedVersion));
         }
 
         private static PlayerIntentKind ResolveIntent(RawPlayerInput input, PlayerMode mode)

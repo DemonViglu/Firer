@@ -16,7 +16,7 @@ namespace DemonViglu.FirePlay.Player
         public Camera LocalCamera => _localCamera;
         public FirePlayPlayerInput Input { get; private set; }
         public PlayerInteraction Interaction { get; private set; }
-        public PlayerRitualAnimationController RitualAnimation { get; private set; }
+        public PlayerAnimationController Animation { get; private set; }
         public RestInteraction RestInteraction { get; private set; }
         public MarshmallowInteraction MarshmallowInteraction { get; private set; }
         public FishingInteraction FishingInteraction { get; private set; }
@@ -25,6 +25,8 @@ namespace DemonViglu.FirePlay.Player
         public InteractionRouter InteractionRouter { get; private set; }
         public WorldCommandExecutor CommandExecutor { get; private set; }
         public RitualInteractionCoordinator RitualCoordinator { get; private set; }
+        public PlayerSharedStateAdapter SharedStateAdapter { get; private set; }
+        public PlayerExpressionController Expressions { get; private set; }
 
         public static LocalPlayerContext EnsureFor(Component component)
         {
@@ -57,7 +59,7 @@ namespace DemonViglu.FirePlay.Player
             _localCamera ??= GetComponentInChildren<Camera>(true);
             Input = GetComponent<FirePlayPlayerInput>();
             Interaction = GetComponent<PlayerInteraction>();
-            RitualAnimation = GetComponent<PlayerRitualAnimationController>();
+            Animation = GetComponent<PlayerAnimationController>();
             RestInteraction = GetComponent<RestInteraction>();
             MarshmallowInteraction = GetComponent<MarshmallowInteraction>();
             FishingInteraction = GetComponent<FishingInteraction>();
@@ -71,6 +73,10 @@ namespace DemonViglu.FirePlay.Player
             GameInstanceSubsystem.GetOrCreate<IWorldObjectRegistry>(() => new StableIdWorldObjectRegistry());
             RitualCoordinator = GetComponent<RitualInteractionCoordinator>() ?? gameObject.AddComponent<RitualInteractionCoordinator>();
             RitualCoordinator.Initialize(this);
+            SharedStateAdapter = GetComponent<PlayerSharedStateAdapter>() ?? gameObject.AddComponent<PlayerSharedStateAdapter>();
+            SharedStateAdapter.Initialize(this);
+            Expressions = GetComponent<PlayerExpressionController>() ?? gameObject.AddComponent<PlayerExpressionController>();
+            Expressions.Initialize(this);
             CommandExecutor = GetComponent<WorldCommandExecutor>() ?? gameObject.AddComponent<WorldCommandExecutor>();
             CommandExecutor.Initialize(this);
             InteractionRouter = GetComponent<InteractionRouter>() ?? gameObject.AddComponent<InteractionRouter>();

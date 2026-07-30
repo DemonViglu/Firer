@@ -29,14 +29,18 @@ namespace DemonViglu.FirePlay.Player
         public PlayerMode Mode { get; }
         public PlayerInteractTargetKind TargetKind { get; }
         public string TargetId { get; }
+        public bool HasExpectedTargetVersion { get; }
+        public uint ExpectedTargetVersion { get; }
 
-        public PlayerIntentRequested(string playerId, PlayerIntentKind kind, PlayerMode mode, PlayerInteractTargetKind targetKind, string targetId)
+        public PlayerIntentRequested(string playerId, PlayerIntentKind kind, PlayerMode mode, PlayerInteractTargetKind targetKind, string targetId, long expectedTargetVersion = -1)
         {
             PlayerId = playerId;
             Kind = kind;
             Mode = mode;
             TargetKind = targetKind;
             TargetId = targetId;
+            HasExpectedTargetVersion = expectedTargetVersion >= 0;
+            ExpectedTargetVersion = HasExpectedTargetVersion ? (uint)expectedTargetVersion : 0;
         }
     }
 }

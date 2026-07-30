@@ -13,7 +13,7 @@ namespace DemonViglu.FirePlay.World
     /// </summary>
     [RequireComponent(typeof(Collider))]
     [RequireComponent(typeof(StableSceneId))]
-    public sealed class WorldTreeContribution : MonoBehaviour
+    public sealed class WorldTreeContribution : MonoBehaviour, IWorldCommandVersioned
     {
         [SerializeField, Min(0.1f)] private float _contributionCost = 10f;
         [SerializeField, Min(0f)] private float _totalContribution;
@@ -31,6 +31,7 @@ namespace DemonViglu.FirePlay.World
         public bool HasLocalContribution => HasContribution(ResolveLocalPlayerId());
         public IReadOnlyList<TreePersonalLightRecord> PersonalLights => _personalLights;
         public string LastContributionStatus { get; private set; } = "Ready";
+        public uint CommandVersion { get; private set; }
 
         public event Action<WorldTreeContribution, Color> Contributed;
 
@@ -86,6 +87,7 @@ namespace DemonViglu.FirePlay.World
             _personalLights.Add(new TreePersonalLightRecord { playerId = actorId, color = _selectedLightColor, positionSeed = CreatePositionSeed(actorId) });
             _hasLocalContribution = HasLocalContribution;
             LastContributionStatus = "Contributed";
+            CommandVersion++;
             ApplyPersonalLightVisuals();
             Contributed?.Invoke(this, _selectedLightColor);
             return true;
@@ -123,6 +125,7 @@ namespace DemonViglu.FirePlay.World
             }
             _hasLocalContribution = HasLocalContribution;
             LastContributionStatus = _hasLocalContribution ? "Restored" : "Ready";
+            CommandVersion++;
             ApplyPersonalLightVisuals();
         }
 

@@ -1705,6 +1705,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3824715613925192560, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: _lightRoot
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 7102734036486377281, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
       propertyPath: m_Name
       value: Tree

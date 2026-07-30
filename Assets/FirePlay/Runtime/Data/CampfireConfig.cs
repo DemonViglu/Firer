@@ -33,6 +33,9 @@ namespace DemonViglu.FirePlay.Data
         public float NearbyComfortRadius => _nearbyComfortRadius;
         public float EmergencyWithdrawFuel => _emergencyWithdrawFuel;
         public float EmergencyWithdrawWarmthCost => _emergencyWithdrawWarmthCost;
+        public float[] CreateLevelThresholdSnapshot() => _levelContributionThresholds != null
+            ? (float[])_levelContributionThresholds.Clone()
+            : new[] { 0f };
 
         public float GetUpgradeCost(int currentLevel)
         {

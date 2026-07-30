@@ -28,6 +28,7 @@ namespace DemonViglu.FirePlay.Player
     public interface IRitualInteraction
     {
         bool IsActive { get; }
+        string SharedStateId { get; }
         RitualViewState ViewState { get; }
         bool TryPrimaryAction();
         bool TrySecondaryAction();

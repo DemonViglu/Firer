@@ -2,6 +2,7 @@ using DemonViglu.FirePlay.World;
 using DemonViglu.FirePlay.Flame;
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace DemonViglu.FirePlay.Player
 {
@@ -11,7 +12,8 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField] private FlameResourceController _resourceController;
         [SerializeField] private Transform _marshmallowProp;
         [SerializeField] private float _turnDegrees = 90f;
-        [SerializeField] private PlayerRitualAnimationController _ritualAnimationController;
+        [FormerlySerializedAs("_ritualAnimationController")]
+        [SerializeField] private PlayerAnimationController _animationController;
         [Header("Prototype Meter")]
         [SerializeField] private bool _showPrototypeMeter = true;
         [SerializeField, Min(120f)] private float _meterWidth = 420f;
@@ -31,6 +33,7 @@ namespace DemonViglu.FirePlay.Player
         public int CompletedTurns => _roastSession?.CompletedTurns ?? 0;
         public int PerfectTurns => _roastSession?.PerfectTurns ?? 0;
         public bool IsActive => _activeRitual != null;
+        public string SharedStateId => IsRoasting ? PlayerAnimationStateIds.MarshmallowRoasting : PlayerAnimationStateIds.Resting;
         public RitualViewState ViewState => new(
             "marshmallow",
             Status,
@@ -47,7 +50,7 @@ namespace DemonViglu.FirePlay.Player
         {
             _rest ??= GetComponent<RestInteraction>();
             _resourceController ??= GetComponent<FlameResourceController>();
-            _ritualAnimationController ??= GetComponent<PlayerRitualAnimationController>();
+            _animationController ??= GetComponent<PlayerAnimationController>();
             if (_rest == null || _resourceController == null || _marshmallowProp == null) { enabled = false; return; }
             _marshmallowProp.gameObject.SetActive(false);
         }
@@ -76,8 +79,6 @@ namespace DemonViglu.FirePlay.Player
             }
 
             _roastSession?.Advance(Time.deltaTime);
-            SyncRitualAnimationState();
-
             if (_marshmallowProp.gameObject.activeSelf != _hasMaterializedMarshmallow)
             {
                 _marshmallowProp.gameObject.SetActive(_hasMaterializedMarshmallow);
@@ -108,7 +109,7 @@ namespace DemonViglu.FirePlay.Player
                 if (_hasMaterializedMarshmallow)
                 {
                     BeginRoasting();
-                    _ritualAnimationController?.Play(RitualAnimationCue.Materialize);
+                    _animationController?.Play(PlayerAnimationCueIds.MarshmallowMaterialize);
                     Materialized?.Invoke();
                 }
 
@@ -122,7 +123,7 @@ namespace DemonViglu.FirePlay.Player
 
             _marshmallowProp.Rotate(Vector3.forward, _turnDegrees, Space.Self);
             var isPerfect = _roastSession.TryTurn();
-            _ritualAnimationController?.Play(RitualAnimationCue.Turn);
+            _animationController?.Play(PlayerAnimationCueIds.MarshmallowTurn);
             Turned?.Invoke(isPerfect);
 
             if (IsReadyToEat)
@@ -155,7 +156,7 @@ namespace DemonViglu.FirePlay.Player
 
             var result = _completedResult;
             var wasPerfect = result.Quality == MarshmallowRoastQuality.Perfect;
-            _ritualAnimationController?.Play(RitualAnimationCue.Eat);
+            _animationController?.Play(PlayerAnimationCueIds.MarshmallowEat);
             Eaten?.Invoke(wasPerfect);
             ResultCollected?.Invoke(result);
             EndSession(cancelled: false);
@@ -166,20 +167,13 @@ namespace DemonViglu.FirePlay.Player
         {
             if (cancelled && _hasMaterializedMarshmallow)
             {
-                _ritualAnimationController?.Play(RitualAnimationCue.Cancel);
+                _animationController?.Play(PlayerAnimationCueIds.MarshmallowCancel);
                 Cancelled?.Invoke();
             }
 
             _hasMaterializedMarshmallow = false;
             _roastSession = null;
             _completedResult = default;
-            _ritualAnimationController?.SetState(RitualAnimationState.MarshmallowRoasting, false);
-        }
-
-        private void SyncRitualAnimationState()
-        {
-            _ritualAnimationController?.SetState(RitualAnimationState.Resting, _rest != null && _rest.IsResting);
-            _ritualAnimationController?.SetState(RitualAnimationState.MarshmallowRoasting, IsRoasting);
         }
 
         private void OnGUI()

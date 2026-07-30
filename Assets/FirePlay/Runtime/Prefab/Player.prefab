@@ -866,6 +866,7 @@ GameObject:
   - component: {fileID: 2759977987356437026}
   - component: {fileID: 8662161886728232265}
   - component: {fileID: 8916949396252110027}
+  - component: {fileID: 2884395103448089037}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -993,7 +994,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerInteraction
   _flameController: {fileID: 1088538406894554522}
-  _input: {fileID: 0}
   _flameResourceController: {fileID: 0}
   _campfireUpgradeController: {fileID: 0}
   _interactionLayers:
@@ -1061,12 +1061,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.CampfirePlacement
   _resourceController: {fileID: 0}
-  _input: {fileID: 0}
   _placementCamera: {fileID: 0}
   _config: {fileID: 11400000, guid: d24ad6320c394959bd02f4f26a87211e, type: 2}
   _smallFirePrefab: {fileID: 8542682576192916304, guid: 6820af6efa36512438d65dc4e8d4567e, type: 3}
   _preview: {fileID: 0}
   _modeController: {fileID: 0}
+  _createPreviewWhenMissing: 1
+  _validPreviewColor: {r: 1, g: 0.72, b: 0.28, a: 1}
+  _invalidPreviewColor: {r: 0.9, g: 0.18, b: 0.08, a: 1}
 --- !u!114 &1743969675154280312
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1079,7 +1081,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 291ea573c36b4607b6e94e75b9e22942, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.RestInteraction
-  _input: {fileID: 0}
   _movement: {fileID: 0}
   _look: {fileID: 0}
   _modeController: {fileID: 0}
@@ -1113,11 +1114,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.MarshmallowInteraction
   _rest: {fileID: 0}
-  _input: {fileID: 0}
   _resourceController: {fileID: 0}
   _marshmallowProp: {fileID: 6623862794109983138}
   _turnDegrees: 90
-  _ritualAnimationController: {fileID: 0}
+  _animationController: {fileID: 0}
   _showPrototypeMeter: 1
   _meterWidth: 420
   _meterHeight: 28
@@ -1134,7 +1134,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b861ca7ffb2c4fc6aab6bc5cfdab1e84, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.TreeLightColorSelector
-  _input: {fileID: 0}
   _interaction: {fileID: 0}
   _modeController: {fileID: 0}
   _availableColors:
@@ -1188,10 +1187,58 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.FishingInteraction
   _rest: {fileID: 0}
-  _input: {fileID: 0}
   _resourceController: {fileID: 0}
   _fishingRodProp: {fileID: 943385649231640846}
-  _ritualAnimationController: {fileID: 0}
+  _animationController: {fileID: 0}
+--- !u!114 &2884395103448089037
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5546368970521514861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6aadbcd9a8644b14baadfb8e93e5ee8c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerAnimationController
+  _animator: {fileID: 0}
+  _boolBindings:
+  - stateId: resting
+    parameterName: IsResting
+  - stateId: marshmallow.roasting
+    parameterName: IsMarshmallowRoasting
+  - stateId: guitar.playing
+    parameterName: IsGuitarPlaying
+  - stateId: fishing
+    parameterName: IsFishing
+  _triggerBindings:
+  - cueId: marshmallow.materialize
+    parameterName: MarshmallowMaterialize
+  - cueId: marshmallow.turn
+    parameterName: MarshmallowTurn
+  - cueId: marshmallow.eat
+    parameterName: MarshmallowEat
+  - cueId: marshmallow.cancel
+    parameterName: MarshmallowCancel
+  - cueId: ritual.offer
+    parameterName: RitualOffer
+  - cueId: guitar.begin
+    parameterName: GuitarBegin
+  - cueId: guitar.play
+    parameterName: GuitarPlay
+  - cueId: fishing.cast
+    parameterName: FishingCast
+  - cueId: fishing.reel
+    parameterName: FishingReel
+  - cueId: expression.wave
+    parameterName: EmoteWave
+  - cueId: expression.thanks
+    parameterName: EmoteThanks
+  - cueId: expression.warmth
+    parameterName: EmoteWarmth
+  - cueId: expression.sit
+    parameterName: EmoteSit
 --- !u!1 &6885646609970973548
 GameObject:
   m_ObjectHideFlags: 0

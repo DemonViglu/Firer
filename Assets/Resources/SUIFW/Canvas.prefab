@@ -1216,7 +1216,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.FirePlayMobileInputRouter
   _playerInput: {fileID: 0}
-  _ritualAnimation: {fileID: 0}
   _rest: {fileID: 0}
   _marshmallow: {fileID: 0}
   _fishing: {fileID: 0}
@@ -2546,14 +2545,14 @@ MonoBehaviour:
       - m_Target: {fileID: 7696146763000996723}
         m_TargetAssemblyTypeName: DemonViglu.FirePlay.UI.FirePlayMobileInputRouter,
           Assembly-CSharp
-        m_MethodName: ExpressionThanks
-        m_Mode: 1
+        m_MethodName: RequestExpression
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: thanks
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!1 &5439434742300028113

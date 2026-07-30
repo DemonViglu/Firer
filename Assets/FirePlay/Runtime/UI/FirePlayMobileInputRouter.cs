@@ -11,9 +11,9 @@ namespace DemonViglu.FirePlay.UI
     public sealed class FirePlayMobileInputRouter : MonoBehaviour
     {
         [SerializeField] private FirePlayPlayerInput _playerInput;
-        [SerializeField] private PlayerRitualAnimationController _ritualAnimation;
         [SerializeField] private RestInteraction _rest;
         [SerializeField] private LocalPlayerContext _localPlayer;
+        private IEventPublisher _events;
 
         private void Awake()
         {
@@ -73,10 +73,12 @@ namespace DemonViglu.FirePlay.UI
         [System.Obsolete("Use DrawFire or ReclaimSmallFire so the button label matches its context.")]
         public void WithdrawOrReclaim() => DrawFire();
         public void CycleTreeLightColor() => Request(input => input.RequestVirtualCycleTreeLightColor());
-        public void ExpressionWave() => PlayExpression(RitualAnimationCue.ExpressionWave);
-        public void ExpressionThanks() => PlayExpression(RitualAnimationCue.ExpressionThanks);
-        public void ExpressionWarmth() => PlayExpression(RitualAnimationCue.ExpressionWarmth);
-        public void ExpressionSit() => PlayExpression(RitualAnimationCue.ExpressionSit);
+        public void RequestExpression(string expressionId)
+        {
+            ResolvePlayerInput();
+            if (_localPlayer != null && !string.IsNullOrWhiteSpace(expressionId))
+                _events?.Publish(new ExpressionRequested(_localPlayer.PlayerId, expressionId));
+        }
 
         private void Request(System.Action<FirePlayPlayerInput> request)
         {
@@ -91,15 +93,9 @@ namespace DemonViglu.FirePlay.UI
         {
             _localPlayer ??= LocalPlayerContext.Current;
             if (_localPlayer == null) return;
+            _events ??= GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
             _playerInput ??= _localPlayer.Input;
-            _ritualAnimation ??= _localPlayer.RitualAnimation;
             _rest ??= _localPlayer.RestInteraction;
-        }
-
-        private void PlayExpression(RitualAnimationCue cue)
-        {
-            ResolvePlayerInput();
-            _ritualAnimation?.Play(cue);
         }
     }
 }

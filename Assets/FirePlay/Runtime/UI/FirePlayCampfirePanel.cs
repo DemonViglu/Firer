@@ -8,6 +8,7 @@ namespace DemonViglu.FirePlay.UI
     public sealed class FirePlayCampfirePanel : MonoBehaviour
     {
         [SerializeField] private PlayerInteraction _interaction;
+        [SerializeField] private LocalPlayerContext _localPlayer;
         [SerializeField] private GameObject _panelRoot;
         [SerializeField] private Text _warmthText;
         [SerializeField] private Text _remainingTimeText;
@@ -17,7 +18,8 @@ namespace DemonViglu.FirePlay.UI
 
         private void Update()
         {
-            _interaction ??= FindAnyObjectByType<PlayerInteraction>();
+            _localPlayer ??= LocalPlayerContext.Current;
+            _interaction ??= _localPlayer != null ? _localPlayer.Interaction : null;
             var campfire = _interaction != null ? _interaction.NearestCampfire : null;
             var visible = campfire != null;
             if (_panelRoot.activeSelf != visible) _panelRoot.SetActive(visible);

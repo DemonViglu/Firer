@@ -11,7 +11,6 @@ namespace DemonViglu.FirePlay.Player
     /// </summary>
     public sealed class RestInteraction : MonoBehaviour
     {
-        [SerializeField] private FirePlayPlayerInput _input;
         [SerializeField] private PlayerMovement _movement;
         [SerializeField] private PlayerLook _look;
         [SerializeField] private PlayerModeController _modeController;
@@ -21,6 +20,7 @@ namespace DemonViglu.FirePlay.Player
         private Transform _cameraPivot;
         private Vector3 _standingPivotLocalPosition;
         private FlameResourceController _restRecoveryController;
+        private IEventPublisher _events;
 
         public bool IsResting { get; private set; }
         public RestSpot NearestRestSpot { get; private set; }
@@ -31,13 +31,12 @@ namespace DemonViglu.FirePlay.Player
 
         private void Awake()
         {
-            _input ??= GetComponent<FirePlayPlayerInput>();
             _movement ??= GetComponent<PlayerMovement>();
             _look ??= GetComponent<PlayerLook>();
             _modeController ??= GetComponent<PlayerModeController>();
             _cameraPivot = _look != null ? _look.CameraPivot : null;
 
-            if (_input == null || _movement == null || _cameraPivot == null || _modeController == null)
+            if (_movement == null || _cameraPivot == null || _modeController == null)
             {
                 Debug.LogError("[RestInteraction] 缺少输入、移动组件或 Camera Pivot。", this);
                 enabled = false;
@@ -47,22 +46,25 @@ namespace DemonViglu.FirePlay.Player
             _standingPivotLocalPosition = _cameraPivot.localPosition;
         }
 
+        private void OnEnable()
+        {
+            _events = GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
+            _events.Subscribe<PlayerIntentRequested>(OnIntentRequested);
+        }
+
         private void Update()
         {
             NearestRestSpot = RestSpot.FindNearest(transform.position);
 
-            if (_input.RestPressedThisFrame)
-            {
-                if (IsResting)
-                {
-                    EndRest();
-                }
-                else
-                {
-                    TryBeginRest();
-                }
-            }
+        }
 
+        private void OnIntentRequested(PlayerIntentRequested intent)
+        {
+            var local = LocalPlayerContext.Current;
+            if (local == null || local.gameObject != gameObject || intent.PlayerId != local.PlayerId) return;
+            if (intent.Kind != PlayerIntentKind.Rest) return;
+            if (IsResting) EndRest();
+            else TryBeginRest();
         }
 
         private void LateUpdate()
@@ -117,6 +119,7 @@ namespace DemonViglu.FirePlay.Player
 
         private void OnDisable()
         {
+            _events?.Unsubscribe<PlayerIntentRequested>(OnIntentRequested);
             EndRest();
             if (_cameraPivot != null)
             {

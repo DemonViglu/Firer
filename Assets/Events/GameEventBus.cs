@@ -14,6 +14,7 @@ using UnityEngine;
 /// </summary>
 public class GameEventBus : IEventPublisher
 {
+    public bool VerboseLogging { get; set; }
     private class EventSubscriptions
     {
         public Delegate combinedDelegate;
@@ -102,7 +103,10 @@ public class GameEventBus : IEventPublisher
         }
 
         var invocationList = subscription.combinedDelegate.GetInvocationList();
-        Debug.Log($"[EventBus] 发布 {type.Name}，将通知 {invocationList.Length} 个订阅者");
+        if (VerboseLogging)
+        {
+            Debug.Log($"[EventBus] 发布 {type.Name}，将通知 {invocationList.Length} 个订阅者");
+        }
 
         foreach (var invocation in invocationList)
         {

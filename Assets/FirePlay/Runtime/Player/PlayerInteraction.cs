@@ -22,7 +22,6 @@ namespace DemonViglu.FirePlay.Player
         private const int MaxDetectedColliders = 8;
 
         [SerializeField] private PlayerFlameController _flameController;
-        [SerializeField] private FirePlayPlayerInput _input;
         [SerializeField] private FlameResourceController _flameResourceController;
         [SerializeField] private CampfireUpgradeController _campfireUpgradeController;
         [SerializeField] private LayerMask _interactionLayers = ~0;
@@ -38,17 +37,53 @@ namespace DemonViglu.FirePlay.Player
         public CampfireUpgradeController CampfireUpgradeController => _campfireUpgradeController;
         public PlayerInteractTargetKind CurrentInteractTargetKind { get; private set; }
         public string CurrentInteractPrompt { get; private set; } = string.Empty;
+        public string CurrentTargetId => CurrentInteractTargetKind switch
+        {
+            PlayerInteractTargetKind.Campfire => NearestCampfire != null ? NearestCampfire.CampfireId : string.Empty,
+            PlayerInteractTargetKind.FlameSource => NearestFlameSource != null ? NearestFlameSource.SourceId : string.Empty,
+            PlayerInteractTargetKind.SmallFire => ReadStableId(NearestSmallFire),
+            PlayerInteractTargetKind.WorldTree => ReadStableId(NearestWorldTree),
+            _ => string.Empty
+        };
+
+        public void GetIntentTarget(PlayerIntentKind intent, out PlayerInteractTargetKind kind, out string stableId)
+        {
+            kind = CurrentInteractTargetKind;
+            stableId = CurrentTargetId;
+
+            switch (intent)
+            {
+                case PlayerIntentKind.AddFire:
+                    if (NearestCampfire != null) SetTarget(PlayerInteractTargetKind.Campfire, NearestCampfire, out kind, out stableId);
+                    else SetTarget(PlayerInteractTargetKind.SmallFire, NearestSmallFire, out kind, out stableId);
+                    break;
+                case PlayerIntentKind.TendFire:
+                case PlayerIntentKind.DrawFire:
+                    SetTarget(PlayerInteractTargetKind.Campfire, NearestCampfire, out kind, out stableId);
+                    break;
+                case PlayerIntentKind.GatherEmber:
+                    SetTarget(PlayerInteractTargetKind.FlameSource, NearestFlameSource, out kind, out stableId);
+                    break;
+                case PlayerIntentKind.StartPublicFire:
+                case PlayerIntentKind.ReclaimSmallFire:
+                    SetTarget(PlayerInteractTargetKind.SmallFire, NearestSmallFire, out kind, out stableId);
+                    break;
+                case PlayerIntentKind.ContributeWorldTree:
+                    SetTarget(PlayerInteractTargetKind.WorldTree, NearestWorldTree, out kind, out stableId);
+                    break;
+                case PlayerIntentKind.LegacyWithdrawOrReclaim:
+                    if (NearestCampfire != null) SetTarget(PlayerInteractTargetKind.Campfire, NearestCampfire, out kind, out stableId);
+                    else SetTarget(PlayerInteractTargetKind.SmallFire, NearestSmallFire, out kind, out stableId);
+                    break;
+            }
+        }
 
         private void Awake()
         {
+            LocalPlayerContext.EnsureFor(this);
             if (_flameController == null)
             {
                 _flameController = GetComponent<PlayerFlameController>();
-            }
-
-            if (_input == null)
-            {
-                _input = GetComponent<FirePlayPlayerInput>();
             }
 
             if (_flameResourceController == null)
@@ -62,7 +97,7 @@ namespace DemonViglu.FirePlay.Player
             }
             _modeController ??= GetComponent<PlayerModeController>();
 
-            if (_flameController == null || _input == null || _flameResourceController == null)
+            if (_flameController == null || _flameResourceController == null)
             {
                 Debug.LogError("[PlayerInteraction] 缺少 PlayerFlameController、输入或余火控制器。", this);
                 enabled = false;
@@ -103,7 +138,6 @@ namespace DemonViglu.FirePlay.Player
             var nearestRestSpot = RestSpot.FindNearest(transform.position);
             WorldTreeContribution nearestWorldTree = null;
             var nearestWorldTreeDistance = float.PositiveInfinity;
-            var interactPressed = _input.InteractPressedThisFrame;
 
             for (var index = 0; index < count; index++)
             {
@@ -151,57 +185,6 @@ namespace DemonViglu.FirePlay.Player
             NearestRestSpot = nearestRestSpot;
             SelectCurrentInteractTarget(nearestSmallFire, nearestSmallFireDistance, nearestFlameSource, nearestFlameSourceDistance, nearestWorldTree, nearestWorldTreeDistance, nearestRestSpot);
 
-            if (interactPressed)
-            {
-                InteractWithCurrentTarget(activeFlame);
-            }
-
-            // Touch controls use explicit verbs. Unlike the legacy E/G prototype,
-            // a "Tend" button can never withdraw, and a "Draw" button can never tend.
-            if (_input.AddFirePressedThisFrame)
-            {
-                if (NearestCampfire != null)
-                {
-                    NearestCampfire.TryTend(_flameResourceController);
-                }
-                else
-                {
-                    _campfireUpgradeController?.TryTendSmallFire(NearestSmallFire);
-                }
-            }
-            if (_input.TendFirePressedThisFrame)
-            {
-                NearestCampfire?.TryTend(_flameResourceController);
-            }
-            if (_input.GatherEmberPressedThisFrame)
-            {
-                NearestFlameSource?.TryRestore(_flameResourceController);
-            }
-            if (_input.StartPublicFirePressedThisFrame)
-            {
-                _campfireUpgradeController?.TryTendSmallFire(NearestSmallFire);
-            }
-            if (_input.DrawFirePressedThisFrame)
-            {
-                NearestCampfire?.TryWithdrawEmergencyFuel(_flameResourceController);
-            }
-            if (_input.ReclaimSmallFirePressedThisFrame)
-            {
-                NearestSmallFire?.TryReclaim(_flameResourceController);
-            }
-            if (_input.ContributeWorldTreePressedThisFrame)
-            {
-                NearestWorldTree?.TryContribute(_flameResourceController, activeFlame);
-            }
-
-            if (_input.UpgradeCampfirePressedThisFrame && CurrentInteractTargetKind == PlayerInteractTargetKind.Campfire)
-            {
-                NearestCampfire?.TryWithdrawEmergencyFuel(_flameResourceController);
-            }
-            else if (_input.UpgradeCampfirePressedThisFrame && nearestSmallFire != null)
-            {
-                nearestSmallFire.TryReclaim(_flameResourceController);
-            }
         }
 
         private void SelectCurrentInteractTarget(
@@ -267,35 +250,22 @@ namespace DemonViglu.FirePlay.Player
             }
         }
 
-        private void InteractWithCurrentTarget(FlameBrush activeFlame)
+        private static string ReadStableId(Component target)
         {
-            switch (CurrentInteractTargetKind)
-            {
-                case PlayerInteractTargetKind.WorldTree:
-                    NearestWorldTree?.TryContribute(_flameResourceController, activeFlame);
-                    break;
-                case PlayerInteractTargetKind.FlameSource:
-                    NearestFlameSource?.TryRestore(_flameResourceController);
-                    break;
-                case PlayerInteractTargetKind.Campfire:
-                    NearestCampfire?.TryTend(_flameResourceController);
-                    break;
-                case PlayerInteractTargetKind.SmallFire:
-                    _campfireUpgradeController?.TryTendSmallFire(NearestSmallFire);
-                    break;
-            }
+            var stableId = target != null ? target.GetComponent<DemonViglu.FirePlay.Core.StableSceneId>() : null;
+            return stableId != null && stableId.IsValid ? stableId.Value : string.Empty;
+        }
+
+        private static void SetTarget(PlayerInteractTargetKind targetKind, Component target, out PlayerInteractTargetKind kind, out string stableId)
+        {
+            kind = target != null ? targetKind : PlayerInteractTargetKind.None;
+            stableId = ReadStableId(target);
         }
 
         private static string GetRestHint(RestSpot restSpot, bool shortForm)
         {
             if (restSpot == null) return string.Empty;
-            if (restSpot.GetComponent<MarshmallowRitual>() != null)
-                return shortForm ? " · 这里可以坐下烤棉花糖" : "这里可以坐下，烤一颗棉花糖";
-            if (restSpot.GetComponent<FishingRitual>() != null)
-                return shortForm ? " · 这里可以坐下钓鱼" : "这里适合坐下来，静静钓一会儿鱼";
-            if (restSpot.GetComponent<StargazingRitual>() != null)
-                return shortForm ? " · 这里可以坐下看星星" : "这里可以坐下，抬头看看星星";
-            return shortForm ? " · 这里可以坐下歇一会儿" : "这里可以坐下，安静歇一会儿";
+            return restSpot.GetRestHint(shortForm);
         }
 
         private void ClearNearbyTargets()

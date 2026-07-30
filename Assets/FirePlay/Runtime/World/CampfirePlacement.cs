@@ -1,4 +1,6 @@
+using System;
 using DemonViglu.FirePlay.Data;
+using DemonViglu.FirePlay.Core;
 using DemonViglu.FirePlay.Flame;
 using DemonViglu.FirePlay.Player;
 using UnityEngine;
@@ -11,7 +13,6 @@ namespace DemonViglu.FirePlay.World
     public sealed class CampfirePlacement : MonoBehaviour
     {
         [SerializeField] private FlameResourceController _resourceController;
-        [SerializeField] private FirePlayPlayerInput _input;
         [SerializeField] private Camera _placementCamera;
         [SerializeField] private SmallFireConfig _config;
         [SerializeField] private SmallFire _smallFirePrefab;
@@ -27,6 +28,7 @@ namespace DemonViglu.FirePlay.World
         private bool _ownsRuntimePreview;
         private Renderer[] _previewRenderers;
         private MaterialPropertyBlock _previewProperties;
+        private IEventPublisher _events;
 
         public bool IsPlacing { get; private set; }
         public bool IsPlacementValid { get; private set; }
@@ -42,10 +44,6 @@ namespace DemonViglu.FirePlay.World
                 _resourceController = GetComponent<FlameResourceController>();
             }
 
-            if (_input == null)
-            {
-                _input = GetComponent<FirePlayPlayerInput>();
-            }
             _modeController ??= GetComponent<PlayerModeController>();
 
             if (_placementCamera == null)
@@ -63,6 +61,18 @@ namespace DemonViglu.FirePlay.World
             SetPreviewVisible(false);
         }
 
+        private void OnEnable()
+        {
+            _events = GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
+            _events.Subscribe<PlayerIntentRequested>(OnIntentRequested);
+        }
+
+        private void OnDisable()
+        {
+            _events?.Unsubscribe<PlayerIntentRequested>(OnIntentRequested);
+            if (IsPlacing) CancelPlacement();
+        }
+
         private void Update()
         {
             if (!IsPlacing && _config != null && PlacementStatus != "Missing setup")
@@ -72,29 +82,27 @@ namespace DemonViglu.FirePlay.World
                     : "Ready";
             }
 
-            if (_input != null && _input.PlaceFirePressedThisFrame && (_modeController == null || _modeController.IsExploring || IsPlacing))
-            {
-                if (IsPlacing)
-                {
-                    if (!ConfirmPlacement())
-                    {
-                        CancelPlacement();
-                    }
-                }
-                else
-                {
-                    BeginPlacement();
-                }
-            }
-
-            if (IsPlacing && _input != null && (_input.PausePressedThisFrame || _input.CancelPlacementPressedThisFrame))
-            {
-                CancelPlacement();
-            }
-
             if (IsPlacing && _placementCamera != null)
             {
                 UpdatePlacement(new Vector2(Screen.width * 0.5f, Screen.height * 0.5f));
+            }
+        }
+
+        private void OnIntentRequested(PlayerIntentRequested intent)
+        {
+            var local = LocalPlayerContext.Current;
+            if (local == null || local.gameObject != gameObject || intent.PlayerId != local.PlayerId) return;
+            if (intent.Kind == PlayerIntentKind.PlaceFire && (_modeController == null || _modeController.IsExploring || IsPlacing))
+            {
+                if (IsPlacing)
+                {
+                    if (!ConfirmPlacement()) CancelPlacement();
+                }
+                else BeginPlacement();
+            }
+            else if (IsPlacing && intent.Kind is PlayerIntentKind.Pause or PlayerIntentKind.CancelPlacement)
+            {
+                CancelPlacement();
             }
         }
 
@@ -170,10 +178,21 @@ namespace DemonViglu.FirePlay.World
                 return false;
             }
 
-            // 已确认余额足够；TryConsume 仍负责最终写入状态。
-            _resourceController.TryConsume(_config.FuelCost);
-
             var instance = Instantiate(_smallFirePrefab, _candidate.point, Quaternion.identity);
+            var stableId = instance.GetComponent<StableSceneId>() ?? instance.gameObject.AddComponent<StableSceneId>();
+            if (!stableId.TryAssignRuntimeSpawnValue($"smallfire.{Guid.NewGuid():N}"))
+            {
+                Destroy(instance.gameObject);
+                PlacementStatus = "Stable ID assignment failed";
+                return false;
+            }
+            // Stable ID 已就绪后才写入资源，避免生成失败却扣除余火。
+            if (!_resourceController.TryConsume(_config.FuelCost))
+            {
+                Destroy(instance.gameObject);
+                PlacementStatus = "Not enough fuel";
+                return false;
+            }
             instance.AlignToSurface(_candidate.point, _candidate.normal);
             instance.Initialize(_config);
 

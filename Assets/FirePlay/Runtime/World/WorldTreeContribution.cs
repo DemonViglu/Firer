@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using DemonViglu.FirePlay.Flame;
 using DemonViglu.FirePlay.Save;
+using DemonViglu.FirePlay.Core;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.World
@@ -11,6 +12,7 @@ namespace DemonViglu.FirePlay.World
     /// 仅管理余火消耗与累计值；光点、树冠表现、存档与最终解锁条件由独立模块读取该状态。
     /// </summary>
     [RequireComponent(typeof(Collider))]
+    [RequireComponent(typeof(StableSceneId))]
     public sealed class WorldTreeContribution : MonoBehaviour
     {
         [SerializeField, Min(0.1f)] private float _contributionCost = 10f;
@@ -26,7 +28,7 @@ namespace DemonViglu.FirePlay.World
         public float TotalContribution => _totalContribution;
         public int ContributionCount => _contributionCount;
         public Color SelectedLightColor => _selectedLightColor;
-        public bool HasLocalContribution => _hasLocalContribution;
+        public bool HasLocalContribution => HasContribution(ResolveLocalPlayerId());
         public IReadOnlyList<TreePersonalLightRecord> PersonalLights => _personalLights;
         public string LastContributionStatus { get; private set; } = "Ready";
 
@@ -34,12 +36,17 @@ namespace DemonViglu.FirePlay.World
 
         private void Awake()
         {
+            var stableId = GetComponent<StableSceneId>() ?? gameObject.AddComponent<StableSceneId>();
+            if (!stableId.IsValid)
+            {
+                stableId.TryAssignRuntimeSpawnValue("world.tree.main");
+            }
             ApplyPersonalLightVisuals();
         }
 
         public void SelectPersonalLightColor(Color color)
         {
-            if (_hasLocalContribution)
+            if (HasLocalContribution)
             {
                 return;
             }
@@ -47,15 +54,15 @@ namespace DemonViglu.FirePlay.World
             _selectedLightColor = color;
         }
 
-        public bool TryContribute(FlameResourceController resourceController, FlameBrush flame)
+        public bool TryContribute(string actorId, FlameResourceController resourceController, FlameBrush flame)
         {
-            if (resourceController == null || resourceController.State == null || flame == null)
+            if (string.IsNullOrWhiteSpace(actorId) || resourceController == null || resourceController.State == null || flame == null)
             {
                 LastContributionStatus = "Missing setup";
                 return false;
             }
 
-            if (_hasLocalContribution)
+            if (HasContribution(actorId))
             {
                 LastContributionStatus = "Already contributed";
                 return false;
@@ -75,9 +82,9 @@ namespace DemonViglu.FirePlay.World
 
             _totalContribution += _contributionCost;
             _contributionCount++;
-            _hasLocalContribution = true;
-            _personalLights.RemoveAll(record => record.playerId == "local.player");
-            _personalLights.Add(new TreePersonalLightRecord { playerId = "local.player", color = _selectedLightColor, positionSeed = 0.37f });
+            _personalLights.RemoveAll(record => record.playerId == actorId);
+            _personalLights.Add(new TreePersonalLightRecord { playerId = actorId, color = _selectedLightColor, positionSeed = CreatePositionSeed(actorId) });
+            _hasLocalContribution = HasLocalContribution;
             LastContributionStatus = "Contributed";
             ApplyPersonalLightVisuals();
             Contributed?.Invoke(this, _selectedLightColor);
@@ -86,7 +93,7 @@ namespace DemonViglu.FirePlay.World
 
         public TreeProgressData CreateRecord() => new()
         {
-            hasContributed = _hasLocalContribution,
+            hasContributed = HasLocalContribution,
             totalContribution = _totalContribution,
             contributionCount = _contributionCount,
             personalLightColor = _selectedLightColor,
@@ -111,8 +118,10 @@ namespace DemonViglu.FirePlay.World
             }
             if (_hasLocalContribution && _personalLights.Count == 0)
             {
-                _personalLights.Add(new TreePersonalLightRecord { playerId = "local.player", color = _selectedLightColor, positionSeed = 0.37f });
+                var localPlayerId = ResolveLocalPlayerId();
+                _personalLights.Add(new TreePersonalLightRecord { playerId = localPlayerId, color = _selectedLightColor, positionSeed = CreatePositionSeed(localPlayerId) });
             }
+            _hasLocalContribution = HasLocalContribution;
             LastContributionStatus = _hasLocalContribution ? "Restored" : "Ready";
             ApplyPersonalLightVisuals();
         }
@@ -121,7 +130,7 @@ namespace DemonViglu.FirePlay.World
         {
             if (_personalLight != null)
             {
-                _personalLight.enabled = _hasLocalContribution;
+                _personalLight.enabled = HasLocalContribution;
                 _personalLight.color = _selectedLightColor;
             }
 
@@ -133,6 +142,33 @@ namespace DemonViglu.FirePlay.World
             _contributionCost = Mathf.Max(0.1f, _contributionCost);
             _totalContribution = Mathf.Max(0f, _totalContribution);
             _contributionCount = Mathf.Max(0, _contributionCount);
+        }
+
+        private bool HasContribution(string playerId)
+        {
+            if (string.IsNullOrWhiteSpace(playerId)) return false;
+            return _personalLights.Exists(record => record != null && record.playerId == playerId)
+                || (_hasLocalContribution && _personalLights.Count == 0 && playerId == ResolveLocalPlayerId());
+        }
+
+        private static string ResolveLocalPlayerId()
+        {
+            return GameInstanceSubsystem.TryGet<DemonViglu.FirePlay.Player.IPlayerIdentityService>()?.LocalPlayerId
+                ?? "local.player";
+        }
+
+        private static float CreatePositionSeed(string playerId)
+        {
+            unchecked
+            {
+                uint hash = 2166136261;
+                foreach (var character in playerId)
+                {
+                    hash ^= character;
+                    hash *= 16777619;
+                }
+                return (hash & 0x00FFFFFF) / 16777215f;
+            }
         }
     }
 }

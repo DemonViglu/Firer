@@ -35,6 +35,19 @@ namespace DemonViglu.FirePlay.Flame
 
         public bool TryConsume(float amount)
         {
+            if (amount < 0f || CurrentFuel + 0.0001f < amount)
+            {
+                return false;
+            }
+
+            if (amount == 0f) return true;
+            SetFuel(CurrentFuel - amount);
+            return true;
+        }
+
+        /// <summary>用于夜间衰减、冲刺等连续消耗；余额不足时消耗至零。</summary>
+        public bool ConsumeUpTo(float amount)
+        {
             if (amount <= 0f || CurrentFuel <= 0f)
             {
                 return false;

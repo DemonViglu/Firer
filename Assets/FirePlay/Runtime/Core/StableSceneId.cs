@@ -31,7 +31,18 @@ namespace DemonViglu.FirePlay.Core
         /// </summary>
         public bool TryAssignRuntimeValue(string value)
         {
-            if (!_allowRuntimeAssignment || IsValid || string.IsNullOrWhiteSpace(value))
+            if (!_allowRuntimeAssignment)
+            {
+                return false;
+            }
+
+            return TryAssignRuntimeSpawnValue(value);
+        }
+
+        /// <summary>仅供明确的运行时生成流程在 Instantiate 后分配命令携带的稳定 ID。</summary>
+        public bool TryAssignRuntimeSpawnValue(string value)
+        {
+            if (IsValid || string.IsNullOrWhiteSpace(value))
             {
                 return false;
             }
@@ -62,10 +73,6 @@ namespace DemonViglu.FirePlay.Core
         {
             if (!IsValid)
             {
-                if (!_allowRuntimeAssignment)
-                {
-                    Debug.LogWarning("[StableSceneId] 未配置稳定 ID。", this);
-                }
                 return;
             }
 
@@ -76,6 +83,16 @@ namespace DemonViglu.FirePlay.Core
             }
 
             ActiveIds[_value] = this;
+        }
+
+        private void Start()
+        {
+            // Runtime spawners assign immediately after Instantiate; defer the
+            // authoring warning so valid spawned objects do not report a false error.
+            if (!IsValid && !_allowRuntimeAssignment)
+            {
+                Debug.LogWarning("[StableSceneId] 未配置稳定 ID。", this);
+            }
         }
 
         private void OnDisable()

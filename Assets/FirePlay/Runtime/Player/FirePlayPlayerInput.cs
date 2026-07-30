@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -30,35 +31,11 @@ namespace DemonViglu.FirePlay.Player
         // originated from a mobile UI button or a physical device.
         private Vector2 _virtualMove;
         private Vector2 _virtualLook;
-        private bool _virtualPlaceFirePressed;
-        private bool _virtualCancelPlacementPressed;
-        private bool _virtualRestPressed;
-        private bool _virtualUpgradeCampfirePressed;
-        private bool _virtualTendFirePressed;
-        private bool _virtualAddFirePressed;
-        private bool _virtualGatherEmberPressed;
-        private bool _virtualStartPublicFirePressed;
-        private bool _virtualDrawFirePressed;
-        private bool _virtualReclaimSmallFirePressed;
-        private bool _virtualContributeWorldTreePressed;
-        private bool _virtualInteractPressed;
-        private bool _virtualEmotePressed;
-        private bool _virtualCycleTreeLightColorPressed;
+        public event Action<RawPlayerInput> RawInputPerformed;
 
         public Vector2 Move => Vector2.ClampMagnitude((_moveAction?.ReadValue<Vector2>() ?? Vector2.zero) + _virtualMove, 1f);
         public bool SprintHeld => _sprintAction != null && _sprintAction.IsPressed();
         public bool ConstrictFlameHeld => _constrictFlameAction != null && _constrictFlameAction.IsPressed();
-        public bool PlaceFirePressedThisFrame => ConsumeVirtualPress(ref _virtualPlaceFirePressed) || (_placeFireAction != null && _placeFireAction.WasPressedThisFrame());
-        public bool CancelPlacementPressedThisFrame => ConsumeVirtualPress(ref _virtualCancelPlacementPressed);
-        public bool RestPressedThisFrame => ConsumeVirtualPress(ref _virtualRestPressed) || (_restAction != null && _restAction.WasPressedThisFrame());
-        public bool UpgradeCampfirePressedThisFrame => ConsumeVirtualPress(ref _virtualUpgradeCampfirePressed) || (_upgradeCampfireAction != null && _upgradeCampfireAction.WasPressedThisFrame());
-        public bool TendFirePressedThisFrame => ConsumeVirtualPress(ref _virtualTendFirePressed);
-        public bool AddFirePressedThisFrame => ConsumeVirtualPress(ref _virtualAddFirePressed);
-        public bool GatherEmberPressedThisFrame => ConsumeVirtualPress(ref _virtualGatherEmberPressed);
-        public bool StartPublicFirePressedThisFrame => ConsumeVirtualPress(ref _virtualStartPublicFirePressed);
-        public bool DrawFirePressedThisFrame => ConsumeVirtualPress(ref _virtualDrawFirePressed);
-        public bool ReclaimSmallFirePressedThisFrame => ConsumeVirtualPress(ref _virtualReclaimSmallFirePressed);
-        public bool ContributeWorldTreePressedThisFrame => ConsumeVirtualPress(ref _virtualContributeWorldTreePressed);
         public Vector2 Look
         {
             get
@@ -68,10 +45,6 @@ namespace DemonViglu.FirePlay.Player
                 return look;
             }
         }
-        public bool InteractPressedThisFrame => ConsumeVirtualPress(ref _virtualInteractPressed) || (_interactAction != null && _interactAction.WasPressedThisFrame());
-        public bool EmotePressedThisFrame => ConsumeVirtualPress(ref _virtualEmotePressed) || (_emoteAction != null && _emoteAction.WasPressedThisFrame());
-        public bool CycleTreeLightColorPressedThisFrame => ConsumeVirtualPress(ref _virtualCycleTreeLightColorPressed) || (_cycleTreeLightColorAction != null && _cycleTreeLightColorAction.WasPressedThisFrame());
-        public bool PausePressedThisFrame => _pauseAction != null && _pauseAction.WasPressedThisFrame();
 
         private void Awake()
         {
@@ -105,12 +78,14 @@ namespace DemonViglu.FirePlay.Player
 
         private void OnEnable()
         {
+            SubscribePerformedCallbacks();
             _playerMap?.Enable();
         }
 
         private void OnDisable()
         {
             _playerMap?.Disable();
+            UnsubscribePerformedCallbacks();
         }
 
         private InputAction FindRequiredAction(string actionName)
@@ -134,30 +109,69 @@ namespace DemonViglu.FirePlay.Player
             _virtualLook += delta;
         }
 
-        public void RequestVirtualPlaceFire() => _virtualPlaceFirePressed = true;
-        public void RequestVirtualCancelPlacement() => _virtualCancelPlacementPressed = true;
-        public void RequestVirtualRest() => _virtualRestPressed = true;
-        public void RequestVirtualUpgradeCampfire() => _virtualUpgradeCampfirePressed = true;
-        public void RequestVirtualTendFire() => _virtualTendFirePressed = true;
-        public void RequestVirtualAddFire() => _virtualAddFirePressed = true;
-        public void RequestVirtualGatherEmber() => _virtualGatherEmberPressed = true;
-        public void RequestVirtualStartPublicFire() => _virtualStartPublicFirePressed = true;
-        public void RequestVirtualDrawFire() => _virtualDrawFirePressed = true;
-        public void RequestVirtualReclaimSmallFire() => _virtualReclaimSmallFirePressed = true;
-        public void RequestVirtualContributeWorldTree() => _virtualContributeWorldTreePressed = true;
-        public void RequestVirtualInteract() => _virtualInteractPressed = true;
-        public void RequestVirtualEmote() => _virtualEmotePressed = true;
-        public void RequestVirtualCycleTreeLightColor() => _virtualCycleTreeLightColorPressed = true;
+        public void RequestVirtualPlaceFire() => Queue(RawPlayerInput.PlaceFire);
+        public void RequestVirtualCancelPlacement() => Queue(RawPlayerInput.CancelPlacement);
+        public void RequestVirtualRest() => Queue(RawPlayerInput.Rest);
+        public void RequestVirtualUpgradeCampfire() => Queue(RawPlayerInput.UpgradeCampfire);
+        public void RequestVirtualTendFire() => Queue(RawPlayerInput.TendFire);
+        public void RequestVirtualAddFire() => Queue(RawPlayerInput.AddFire);
+        public void RequestVirtualGatherEmber() => Queue(RawPlayerInput.GatherEmber);
+        public void RequestVirtualStartPublicFire() => Queue(RawPlayerInput.StartPublicFire);
+        public void RequestVirtualDrawFire() => Queue(RawPlayerInput.DrawFire);
+        public void RequestVirtualReclaimSmallFire() => Queue(RawPlayerInput.ReclaimSmallFire);
+        public void RequestVirtualContributeWorldTree() => Queue(RawPlayerInput.ContributeWorldTree);
+        public void RequestVirtualInteract() => Queue(RawPlayerInput.Interact);
+        public void RequestVirtualEmote() => Queue(RawPlayerInput.Emote);
+        public void RequestVirtualCycleTreeLightColor() => Queue(RawPlayerInput.CycleTreeLightColor);
 
-        private static bool ConsumeVirtualPress(ref bool pressed)
+        private void SubscribePerformedCallbacks()
         {
-            if (!pressed)
-            {
-                return false;
-            }
+            Subscribe(_placeFireAction);
+            Subscribe(_restAction);
+            Subscribe(_upgradeCampfireAction);
+            Subscribe(_interactAction);
+            Subscribe(_emoteAction);
+            Subscribe(_cycleTreeLightColorAction);
+            Subscribe(_pauseAction);
+        }
 
-            pressed = false;
-            return true;
+        private void UnsubscribePerformedCallbacks()
+        {
+            Unsubscribe(_placeFireAction);
+            Unsubscribe(_restAction);
+            Unsubscribe(_upgradeCampfireAction);
+            Unsubscribe(_interactAction);
+            Unsubscribe(_emoteAction);
+            Unsubscribe(_cycleTreeLightColorAction);
+            Unsubscribe(_pauseAction);
+        }
+
+        private void Subscribe(InputAction action)
+        {
+            if (action == null) return;
+            action.performed += OnDiscreteActionPerformed;
+        }
+
+        private void Unsubscribe(InputAction action)
+        {
+            if (action != null) action.performed -= OnDiscreteActionPerformed;
+        }
+
+        private void OnDiscreteActionPerformed(InputAction.CallbackContext context)
+        {
+            var action = context.action;
+            if (action == _placeFireAction) Queue(RawPlayerInput.PlaceFire);
+            else if (action == _restAction) Queue(RawPlayerInput.Rest);
+            else if (action == _upgradeCampfireAction) Queue(RawPlayerInput.UpgradeCampfire);
+            else if (action == _interactAction) Queue(RawPlayerInput.Interact);
+            else if (action == _emoteAction) Queue(RawPlayerInput.Emote);
+            else if (action == _cycleTreeLightColorAction) Queue(RawPlayerInput.CycleTreeLightColor);
+            else if (action == _pauseAction) Queue(RawPlayerInput.Pause);
+        }
+
+        private void Queue(RawPlayerInput input)
+        {
+            RawInputPerformed?.Invoke(input);
         }
     }
 }

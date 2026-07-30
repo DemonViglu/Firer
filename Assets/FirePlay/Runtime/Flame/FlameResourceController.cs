@@ -58,7 +58,7 @@ namespace DemonViglu.FirePlay.Flame
                 CurrentCampfireDrainMultiplier = GetCampfireDrainMultiplier();
                 if (_nightDrainActive)
                 {
-                    State.TryConsume(_config.NightDrainPerSecond * CurrentCampfireDrainMultiplier * Time.deltaTime);
+                    State.ConsumeUpTo(_config.NightDrainPerSecond * CurrentCampfireDrainMultiplier * Time.deltaTime);
                 }
             }
         }
@@ -73,6 +73,7 @@ namespace DemonViglu.FirePlay.Flame
         }
 
         public bool TryConsume(float amount) => State != null && State.TryConsume(amount);
+        public bool ConsumeUpTo(float amount) => State != null && State.ConsumeUpTo(amount);
         public bool Restore(float amount) => State != null && State.Restore(amount);
         public void SetNightDrainActive(bool active) => _nightDrainActive = active;
         public void SetReceiverOverride(bool active) => State?.SetReceiverOverride(active && IsInSafeZone);

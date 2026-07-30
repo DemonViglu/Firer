@@ -5,10 +5,9 @@ using UnityEngine;
 
 namespace DemonViglu.FirePlay.Player
 {
-    public sealed class MarshmallowInteraction : MonoBehaviour
+    public sealed class MarshmallowInteraction : MonoBehaviour, IRitualInteraction
     {
         [SerializeField] private RestInteraction _rest;
-        [SerializeField] private FirePlayPlayerInput _input;
         [SerializeField] private FlameResourceController _resourceController;
         [SerializeField] private Transform _marshmallowProp;
         [SerializeField] private float _turnDegrees = 90f;
@@ -31,6 +30,12 @@ namespace DemonViglu.FirePlay.Player
         public bool IsReadyToEat => _roastSession != null && _roastSession.IsReadyToEat;
         public int CompletedTurns => _roastSession?.CompletedTurns ?? 0;
         public int PerfectTurns => _roastSession?.PerfectTurns ?? 0;
+        public bool IsActive => _activeRitual != null;
+        public RitualViewState ViewState => new(
+            "marshmallow",
+            Status,
+            IsReadyToEat ? "烤好了" : IsRoasting ? "轻轻翻面" : "取出棉花糖",
+            IsReadyToEat ? "吃一口" : "先去走走");
         public event Action Materialized;
         public event Action<bool> Turned;
         public event Action<bool> Eaten;
@@ -41,11 +46,15 @@ namespace DemonViglu.FirePlay.Player
         private void Awake()
         {
             _rest ??= GetComponent<RestInteraction>();
-            _input ??= GetComponent<FirePlayPlayerInput>();
             _resourceController ??= GetComponent<FlameResourceController>();
             _ritualAnimationController ??= GetComponent<PlayerRitualAnimationController>();
-            if (_rest == null || _input == null || _resourceController == null || _marshmallowProp == null) { enabled = false; return; }
+            if (_rest == null || _resourceController == null || _marshmallowProp == null) { enabled = false; return; }
             _marshmallowProp.gameObject.SetActive(false);
+        }
+
+        private void OnDisable()
+        {
+            EndSession(cancelled: true);
         }
 
         private void Update()
@@ -66,16 +75,6 @@ namespace DemonViglu.FirePlay.Player
                 Status = "火焰熄灭了，先添一把火吧";
             }
 
-            if (_input.EmotePressedThisFrame && _activeRitual != null)
-            {
-                HandleEmotePressed();
-            }
-
-            if (_input.InteractPressedThisFrame && IsReadyToEat)
-            {
-                EatMarshmallow();
-            }
-
             _roastSession?.Advance(Time.deltaTime);
             SyncRitualAnimationState();
 
@@ -83,6 +82,21 @@ namespace DemonViglu.FirePlay.Player
             {
                 _marshmallowProp.gameObject.SetActive(_hasMaterializedMarshmallow);
             }
+        }
+
+        public bool TryPrimaryAction()
+        {
+            if (_activeRitual == null) return false;
+            HandleEmotePressed();
+            return true;
+        }
+
+        public bool TrySecondaryAction()
+        {
+            if (_activeRitual == null) return false;
+            if (IsReadyToEat) EatMarshmallow();
+            else _rest.EndRest();
+            return true;
         }
 
         private void HandleEmotePressed()

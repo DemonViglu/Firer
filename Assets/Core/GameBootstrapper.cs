@@ -43,8 +43,10 @@ public class GameBootstrapper : MonoBehaviour
     private void InitializeCoreSystems()
     { 
         // 1. 注册事件系统
-        var eventBus = new GameEventBus();
-        GameInstanceSubsystem.Register<IEventPublisher>(eventBus);
+        if (!GameInstanceSubsystem.IsRegistered<IEventPublisher>())
+        {
+            GameInstanceSubsystem.Register<IEventPublisher>(new GameEventBus());
+        }
         //Debug.Log("[GameBootstrapper] ✓ 事件系统初始化");
 
 

@@ -97,7 +97,7 @@ namespace DemonViglu.FirePlay.Player
             }
 
             var sprintCost = config.SprintDrainPerSecond * Time.deltaTime;
-            return sprintCost <= 0f || _flameResourceController.TryConsume(sprintCost);
+            return sprintCost <= 0f || _flameResourceController.ConsumeUpTo(sprintCost);
         }
 
         private void OnValidate()

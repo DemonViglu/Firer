@@ -75,6 +75,13 @@ namespace DemonViglu.FirePlay.World
             }
         }
 
+        public string GetRestHint(bool shortForm)
+        {
+            var rituals = GetComponents<RestSpotRitual>();
+            if (rituals.Length == 0) return shortForm ? " · 这里可以坐下歇一会儿" : "这里可以坐下，安静歇一会儿";
+            return shortForm ? rituals[0].ShortRestHint : rituals[0].RestHint;
+        }
+
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = new Color(0.4f, 0.7f, 1f, 0.25f);

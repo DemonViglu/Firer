@@ -10,6 +10,9 @@ namespace DemonViglu.FirePlay.World
     /// </summary>
     public abstract class RestSpotRitual : MonoBehaviour
     {
+        public virtual string RestHint => "这里可以坐下，安静歇一会儿";
+        public virtual string ShortRestHint => " · 这里可以坐下歇一会儿";
+
         public virtual void OnRestStarted(RestInteraction interaction)
         {
         }

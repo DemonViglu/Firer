@@ -1,5 +1,4 @@
 using DemonViglu.FirePlay.Player;
-using DemonViglu.FirePlay.World;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.UI
@@ -14,8 +13,7 @@ namespace DemonViglu.FirePlay.UI
         [SerializeField] private FirePlayPlayerInput _playerInput;
         [SerializeField] private PlayerRitualAnimationController _ritualAnimation;
         [SerializeField] private RestInteraction _rest;
-        [SerializeField] private MarshmallowInteraction _marshmallow;
-        [SerializeField] private FishingInteraction _fishing;
+        [SerializeField] private LocalPlayerContext _localPlayer;
 
         private void Awake()
         {
@@ -39,34 +37,11 @@ namespace DemonViglu.FirePlay.UI
         public void RitualPrimary()
         {
             ResolvePlayerInput();
-            var isFishingSpot = _rest != null
-                && _rest.IsResting
-                && _rest.ActiveRestSpot != null
-                && _rest.ActiveRestSpot.GetComponent<FishingRitual>() != null;
-            if (isFishingSpot && _fishing != null)
-            {
-                _fishing.TryPrimaryAction();
-                return;
-            }
-
             _playerInput?.RequestVirtualEmote();
         }
         public void RitualSecondary()
         {
             ResolvePlayerInput();
-
-            // During an unfinished marshmallow roast, the secondary button is an
-            // explicit leave action. Once it is ready, that same slot collects it.
-            // Fishing keeps its existing secondary interaction (wait / reel in).
-            var isMarshmallowSpot = _rest != null
-                && _rest.IsResting
-                && _rest.ActiveRestSpot != null
-                && _rest.ActiveRestSpot.GetComponent<MarshmallowRitual>() != null;
-            if (isMarshmallowSpot && (_marshmallow == null || !_marshmallow.IsReadyToEat))
-            {
-                _playerInput?.RequestVirtualRest();
-                return;
-            }
 
             _playerInput?.RequestVirtualInteract();
         }
@@ -114,11 +89,11 @@ namespace DemonViglu.FirePlay.UI
 
         private void ResolvePlayerInput()
         {
-            _playerInput ??= FindAnyObjectByType<FirePlayPlayerInput>();
-            _ritualAnimation ??= FindAnyObjectByType<PlayerRitualAnimationController>();
-            _rest ??= FindAnyObjectByType<RestInteraction>();
-            _marshmallow ??= FindAnyObjectByType<MarshmallowInteraction>();
-            _fishing ??= FindAnyObjectByType<FishingInteraction>();
+            _localPlayer ??= LocalPlayerContext.Current;
+            if (_localPlayer == null) return;
+            _playerInput ??= _localPlayer.Input;
+            _ritualAnimation ??= _localPlayer.RitualAnimation;
+            _rest ??= _localPlayer.RestInteraction;
         }
 
         private void PlayExpression(RitualAnimationCue cue)

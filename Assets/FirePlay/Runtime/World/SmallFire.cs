@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using DemonViglu.FirePlay.Data;
 using DemonViglu.FirePlay.Flame;
+using DemonViglu.FirePlay.Core;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.World
@@ -8,6 +9,7 @@ namespace DemonViglu.FirePlay.World
     /// <summary>
     /// 临时小火种生命周期。表现组件均为可选，状态不依赖特定素材。
     /// </summary>
+    [RequireComponent(typeof(StableSceneId))]
     public sealed class SmallFire : MonoBehaviour
     {
         private static readonly List<SmallFire> ActiveFires = new();

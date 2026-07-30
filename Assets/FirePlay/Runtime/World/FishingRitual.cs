@@ -26,6 +26,8 @@ namespace DemonViglu.FirePlay.World
         public float MinimumBiteDelay => _minimumBiteDelay;
         public float MaximumBiteDelay => _maximumBiteDelay;
         public float HookWindowSeconds => _hookWindowSeconds;
+        public override string RestHint => "这里适合坐下来，静静钓一会儿鱼";
+        public override string ShortRestHint => " · 这里可以坐下钓鱼";
 
         protected override bool RotatePlayerTowardsTarget => true;
         protected override bool UsesFishingCamera => true;

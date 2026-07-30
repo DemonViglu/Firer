@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using DemonViglu.FirePlay.World;
+using DemonViglu.FirePlay.Player;
 
 namespace DemonViglu.FirePlay.UI
 {
@@ -11,6 +12,7 @@ namespace DemonViglu.FirePlay.UI
         [SerializeField] private FirePlayMobileInputRouter _inputRouter;
         [SerializeField, Min(0.01f)] private float _dragSensitivity = 1f;
         [SerializeField] private CampfirePlacement _placement;
+        [SerializeField] private LocalPlayerContext _localPlayer;
 
         private Graphic _graphic;
 
@@ -21,7 +23,8 @@ namespace DemonViglu.FirePlay.UI
 
         private void Update()
         {
-            _placement ??= FindAnyObjectByType<CampfirePlacement>();
+            _localPlayer ??= LocalPlayerContext.Current;
+            _placement ??= _localPlayer != null ? _localPlayer.CampfirePlacement : null;
             // The full-screen placement overlay owns blank-space taps while
             // placing. Otherwise this transparent graphic would swallow those
             // taps before the overlay Button can cancel the placement.

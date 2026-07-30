@@ -1,6 +1,5 @@
 using DemonViglu.FirePlay.Flame;
 using DemonViglu.FirePlay.Player;
-using DemonViglu.FirePlay.World;
 using SUIFW;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,8 +17,8 @@ namespace DemonViglu.FirePlay.UI
         [SerializeField] private FlameResourceController _flameResource;
         [SerializeField] private PlayerInteraction _playerInteraction;
         [SerializeField] private RestInteraction _restInteraction;
-        [SerializeField] private MarshmallowInteraction _marshmallowInteraction;
-        [SerializeField] private FishingInteraction _fishingInteraction;
+        [SerializeField] private LocalPlayerContext _localPlayer;
+        private RitualInteractionCoordinator _ritualCoordinator;
 
         [Header("Fuel")]
         [SerializeField] private GameObject _fuelRoot;
@@ -60,11 +59,12 @@ namespace DemonViglu.FirePlay.UI
 
         private void ResolveReferences()
         {
-            _flameResource ??= FindAnyObjectByType<FlameResourceController>();
-            _playerInteraction ??= FindAnyObjectByType<PlayerInteraction>();
-            _restInteraction ??= FindAnyObjectByType<RestInteraction>();
-            _marshmallowInteraction ??= FindAnyObjectByType<MarshmallowInteraction>();
-            _fishingInteraction ??= FindAnyObjectByType<FishingInteraction>();
+            _localPlayer ??= LocalPlayerContext.Current;
+            if (_localPlayer == null) return;
+            _flameResource ??= _localPlayer.FlameResource;
+            _playerInteraction ??= _localPlayer.Interaction;
+            _restInteraction ??= _localPlayer.RestInteraction;
+            _ritualCoordinator ??= _localPlayer.RitualCoordinator;
         }
 
         private void ResolveUiReferences()
@@ -137,30 +137,14 @@ namespace DemonViglu.FirePlay.UI
                 return;
             }
 
-            var activeSpot = _restInteraction != null && _restInteraction.IsResting
-                ? _restInteraction.ActiveRestSpot
-                : null;
-            if (activeSpot == null)
+            var view = _ritualCoordinator != null ? _ritualCoordinator.ViewState : default;
+            if (!view.IsVisible)
             {
                 SetActive(_ritualPromptRoot, false);
                 return;
             }
 
-            string status = null;
-            var fishingRitual = activeSpot.GetComponent<FishingRitual>();
-            var marshmallowRitual = activeSpot.GetComponent<MarshmallowRitual>();
-            if (fishingRitual != null && _fishingInteraction != null)
-            {
-                status = _fishingInteraction.Status;
-            }
-            else if (marshmallowRitual != null && _marshmallowInteraction != null)
-            {
-                status = _marshmallowInteraction.Status;
-            }
-
-            // Rest is itself a mobile action. Showing it as a fallback prevents a
-            // silent panel when a site has no ritual component yet.
-            status ??= "Resting — choose a ritual or stand up";
+            var status = view.Status;
 
             var shouldShow = !string.IsNullOrWhiteSpace(status);
             SetActive(_ritualPromptRoot, shouldShow);

@@ -9,7 +9,7 @@ namespace DemonViglu.FirePlay.Player
     /// 玩家侧钓鱼原型。Q 用于拟造/抛竿，E 只在上钩窗口收线。
     /// 没有背包与存档：每根竿钓满后本局结束，结果通过事件提供给未来分享或物品系统。
     /// </summary>
-    public sealed class FishingInteraction : MonoBehaviour
+    public sealed class FishingInteraction : MonoBehaviour, IRitualInteraction
     {
         private enum FishingState
         {
@@ -20,7 +20,6 @@ namespace DemonViglu.FirePlay.Player
         }
 
         [SerializeField] private RestInteraction _rest;
-        [SerializeField] private FirePlayPlayerInput _input;
         [SerializeField] private FlameResourceController _resourceController;
         [SerializeField] private Transform _fishingRodProp;
         [SerializeField] private PlayerRitualAnimationController _ritualAnimationController;
@@ -35,6 +34,14 @@ namespace DemonViglu.FirePlay.Player
         public bool IsLineCast => _state == FishingState.WaitingForBite || _state == FishingState.BiteReady;
         public bool IsFishBiting => _state == FishingState.BiteReady;
         public int Catches => _catches;
+        public bool IsActive => _activeRitual != null;
+        public RitualViewState ViewState => new(
+            "fishing",
+            Status,
+            !HasRod ? "拟造鱼竿" : IsLineCast ? "静候鱼儿" : "抛出鱼线",
+            IsFishBiting ? "收起鱼线" : "耐心等候",
+            primaryAvailable: !IsLineCast,
+            secondaryAvailable: IsFishBiting);
         public event Action RodMaterialized;
         public event Action LineCast;
         public event Action FishBit;
@@ -60,10 +67,9 @@ namespace DemonViglu.FirePlay.Player
         private void Awake()
         {
             _rest ??= GetComponent<RestInteraction>();
-            _input ??= GetComponent<FirePlayPlayerInput>();
             _resourceController ??= GetComponent<FlameResourceController>();
             _ritualAnimationController ??= GetComponent<PlayerRitualAnimationController>();
-            if (_rest == null || _input == null || _resourceController == null)
+            if (_rest == null || _resourceController == null)
             {
                 enabled = false;
                 return;
@@ -73,6 +79,11 @@ namespace DemonViglu.FirePlay.Player
             {
                 _fishingRodProp.gameObject.SetActive(false);
             }
+        }
+
+        private void OnDisable()
+        {
+            EndSession(cancelled: true);
         }
 
         private void Update()
@@ -91,22 +102,19 @@ namespace DemonViglu.FirePlay.Player
                 Status = ritual == null ? "坐到湖边，静静钓一会儿吧" : $"消耗 {ritual.RodFuelCost:0} 点余火，拟造一根鱼竿";
             }
 
-            if (_activeRitual != null && _input.EmotePressedThisFrame)
-            {
-                TryPrimaryAction();
-            }
-
-            if (_activeRitual != null && _input.InteractPressedThisFrame && IsFishBiting)
-            {
-                ReelFish();
-            }
-
             AdvanceTiming();
             _ritualAnimationController?.SetState(RitualAnimationState.Fishing, HasRod);
             if (_fishingRodProp != null && _fishingRodProp.gameObject.activeSelf != HasRod)
             {
                 _fishingRodProp.gameObject.SetActive(HasRod);
             }
+        }
+
+        public bool TrySecondaryAction()
+        {
+            if (_activeRitual == null || !IsFishBiting) return false;
+            ReelFish();
+            return true;
         }
 
         private void HandleEmotePressed()

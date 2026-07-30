@@ -1,4 +1,5 @@
 using DemonViglu.FirePlay.World;
+using DemonViglu.FirePlay.Player;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,6 +12,7 @@ namespace DemonViglu.FirePlay.UI
     public sealed class FirePlayPlacementPanel : MonoBehaviour
     {
         [SerializeField] private CampfirePlacement _placement;
+        [SerializeField] private LocalPlayerContext _localPlayer;
         [SerializeField] private GameObject _panelRoot;
         [SerializeField] private Text _statusText;
 
@@ -18,7 +20,8 @@ namespace DemonViglu.FirePlay.UI
 
         private void Update()
         {
-            _placement ??= FindAnyObjectByType<CampfirePlacement>();
+            _localPlayer ??= LocalPlayerContext.Current;
+            _placement ??= _localPlayer != null ? _localPlayer.CampfirePlacement : null;
             var visible = _placement != null && _placement.IsPlacing;
             if (_panelRoot.activeSelf != visible)
             {

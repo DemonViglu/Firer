@@ -9,7 +9,6 @@ namespace DemonViglu.FirePlay.Player
     /// </summary>
     public sealed class TreeLightColorSelector : MonoBehaviour
     {
-        [SerializeField] private FirePlayPlayerInput _input;
         [SerializeField] private PlayerInteraction _interaction;
         [SerializeField] private PlayerModeController _modeController;
         [SerializeField] private Color[] _availableColors =
@@ -21,21 +20,32 @@ namespace DemonViglu.FirePlay.Player
         };
 
         private int _selectedIndex;
+        private IEventPublisher _events;
 
         private void Awake()
         {
-            _input ??= GetComponent<FirePlayPlayerInput>();
             _interaction ??= GetComponent<PlayerInteraction>();
             _modeController ??= GetComponent<PlayerModeController>();
         }
 
-        private void Update()
+        private void OnEnable()
         {
+            _events = GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
+            _events.Subscribe<PlayerIntentRequested>(OnIntentRequested);
+        }
+
+        private void OnDisable()
+        {
+            _events?.Unsubscribe<PlayerIntentRequested>(OnIntentRequested);
+        }
+
+        private void OnIntentRequested(PlayerIntentRequested intent)
+        {
+            var local = LocalPlayerContext.Current;
+            if (local == null || local.gameObject != gameObject || intent.PlayerId != local.PlayerId) return;
+            if (intent.Kind != PlayerIntentKind.CycleTreeLightColor || (_modeController != null && !_modeController.IsExploring)) return;
             var worldTree = _interaction != null ? _interaction.NearestWorldTree : null;
-            if (_input == null || (_modeController != null && !_modeController.IsExploring) || worldTree == null || worldTree.HasLocalContribution || !_input.CycleTreeLightColorPressedThisFrame)
-            {
-                return;
-            }
+            if (worldTree == null || worldTree.HasLocalContribution) return;
 
             if (_availableColors == null || _availableColors.Length == 0)
             {

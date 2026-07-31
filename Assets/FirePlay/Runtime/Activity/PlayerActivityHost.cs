@@ -156,11 +156,16 @@ namespace DemonViglu.FirePlay.Activity
             IActivityContext context,
             IEnumerable<IActivityRuleProvider> ruleProviders = null)
         {
+            var previous = ActiveSession;
             var result = _runtime == null
                 ? ActivityStartResult.Reject("PlayerActivityHost is not ready")
                 : _runtime.TryStart(activityId, context, ruleProviders);
             if (result.Success)
+            {
+                if (previous != null && previous != result.Session)
+                    RequestPresentationClose(previous);
                 RequestPresentationOpen(result.Session);
+            }
             return result;
         }
 
@@ -169,11 +174,16 @@ namespace DemonViglu.FirePlay.Activity
             IActivityContext context,
             IEnumerable<IActivityRuleProvider> ruleProviders = null)
         {
+            var previous = ActiveSession;
             var result = _runtime == null
                 ? ActivityStartResult.Reject("PlayerActivityHost is not ready")
                 : _runtime.TryStart(definition, context, ruleProviders);
             if (result.Success)
+            {
+                if (previous != null && previous != result.Session)
+                    RequestPresentationClose(previous);
                 RequestPresentationOpen(result.Session);
+            }
             return result;
         }
 
@@ -207,7 +217,7 @@ namespace DemonViglu.FirePlay.Activity
         {
             if (_runtime == null || string.IsNullOrWhiteSpace(_playerId)) return false;
             if (_runtime.System.TryGetSession(_playerId, out var session))
-                RequestPresentationClose(session);
+                RequestPresentationClose(session, reason);
             return _runtime.End(_playerId, reason);
         }
 
@@ -279,6 +289,8 @@ namespace DemonViglu.FirePlay.Activity
         private void RequestPresentationOpen(ActivitySession session)
         {
             if (_presentation == null || session == null) return;
+            if (session.Logic is IActivityPresentationLifecycle lifecycle)
+                lifecycle.OnPresentationStarted(session.Context, session.Revision);
             _presentation.RequestUi(new ActivityUiRequest(
                 ActivityUiRequestKind.Open,
                 session.Context.PlayerId,
@@ -294,9 +306,14 @@ namespace DemonViglu.FirePlay.Activity
                 session.Revision));
         }
 
-        private void RequestPresentationClose(ActivitySession session)
+        private void RequestPresentationClose(ActivitySession session, ActivityEndReason? reasonOverride = null)
         {
             if (_presentation == null || session == null) return;
+            if (session.Logic is IActivityPresentationLifecycle lifecycle)
+                lifecycle.OnPresentationEnded(
+                    session.Context,
+                    session.Revision,
+                    reasonOverride ?? session.EndReason ?? ActivityEndReason.Requested);
             _presentation.RequestUi(new ActivityUiRequest(
                 ActivityUiRequestKind.Close,
                 session.Context.PlayerId,

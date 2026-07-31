@@ -57,6 +57,8 @@ namespace DemonViglu.FirePlay.Player
         private string _activeActivityProfileId;
         private uint _activeActivityRevision;
         private PlayerLook _playerLook;
+        private bool _activityLookLockCaptured;
+        private bool _previousActivityLookLocked;
 
         public bool HasValidSetup => _exploreCamera != null && _ritualCamera != null && _ritualTargetGroup != null;
         public bool IsRitualCameraActive => _activeInteraction != null;
@@ -132,6 +134,11 @@ namespace DemonViglu.FirePlay.Player
             _activeActivityLookTarget = lookTarget;
             _activeActivityProfileId = request.CameraProfileId;
             _activeActivityRevision = request.SessionRevision;
+            if (_playerLook != null)
+            {
+                _previousActivityLookLocked = _playerLook.LookLocked;
+                _activityLookLockCaptured = true;
+            }
             _playerLook?.SetLookLocked(true);
             return true;
         }
@@ -164,7 +171,12 @@ namespace DemonViglu.FirePlay.Player
             _activeActivityLookTarget = null;
             _activeActivityProfileId = string.Empty;
             _activeActivityRevision = 0;
-            _playerLook?.SetLookLocked(false);
+            if (_playerLook != null)
+            {
+                _playerLook.SetLookLocked(_activityLookLockCaptured && _previousActivityLookLocked);
+                _activityLookLockCaptured = false;
+                _previousActivityLookLocked = false;
+            }
             ApplyExplorePriority();
             return true;
         }

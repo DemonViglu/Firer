@@ -25,6 +25,13 @@ namespace DemonViglu.FirePlay.UI
         private string _shownActivityId;
         private string _shownUiKey;
         private uint _shownRevision;
+        private string _playerRequestActivityId;
+        private uint _playerRequestRevision;
+        private bool _hasPlayerRequestSession;
+        private bool _movementLockRequested;
+        private bool _lookLockRequested;
+        private bool _previousMovementLocked;
+        private bool _previousLookLocked;
 
         private void Awake()
         {
@@ -70,6 +77,7 @@ namespace DemonViglu.FirePlay.UI
                 return false;
             }
 
+            BeginPlayerRequestSession(request);
             return Execute(request);
         }
 
@@ -79,20 +87,42 @@ namespace DemonViglu.FirePlay.UI
             {
                 case ActivityPlayerRequestKind.MovementLock:
                     if (_movement == null) return false;
-                    _movement.SetMovementLocked(request.Active);
+                    if (request.Active)
+                    {
+                        if (!_movementLockRequested)
+                        {
+                            _previousMovementLocked = _movement.MovementLocked;
+                            _movementLockRequested = true;
+                        }
+                        _movement.SetMovementLocked(true);
+                    }
+                    else if (_movementLockRequested)
+                    {
+                        _movement.SetMovementLocked(_previousMovementLocked);
+                        _movementLockRequested = false;
+                    }
                     return true;
 
                 case ActivityPlayerRequestKind.LookTarget:
                     if (_look == null) return false;
                     if (!request.Active)
                     {
-                        _look.SetLookLocked(false);
+                        if (_lookLockRequested)
+                        {
+                            _look.SetLookLocked(_previousLookLocked);
+                            _lookLockRequested = false;
+                        }
                         return true;
                     }
 
                     var anchor = ActivityAnchorNode.FindById(request.TargetId);
                     if (anchor == null || !_look.TryFaceTarget(anchor.transform))
                         return false;
+                    if (!_lookLockRequested)
+                    {
+                        _previousLookLocked = _look.LookLocked;
+                        _lookLockRequested = true;
+                    }
                     _look.SetLookLocked(true);
                     return true;
 
@@ -128,6 +158,22 @@ namespace DemonViglu.FirePlay.UI
             _shownUiKey = request.UiPrefabKey;
             _shownRevision = request.SessionRevision;
             return true;
+        }
+
+        private void BeginPlayerRequestSession(ActivityPlayerRequest request)
+        {
+            if (_hasPlayerRequestSession
+                && _playerRequestActivityId == request.ActivityId
+                && _playerRequestRevision == request.SessionRevision)
+            {
+                return;
+            }
+
+            _playerRequestActivityId = request.ActivityId;
+            _playerRequestRevision = request.SessionRevision;
+            _hasPlayerRequestSession = true;
+            _movementLockRequested = false;
+            _lookLockRequested = false;
         }
 
         private bool CloseUi(ActivityUiRequest request)

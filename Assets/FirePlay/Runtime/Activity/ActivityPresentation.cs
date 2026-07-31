@@ -122,4 +122,16 @@ namespace DemonViglu.FirePlay.Activity
     {
         bool Execute(ActivityPlayerRequest request);
     }
+
+    /// <summary>
+    /// Optional per-activity presentation policy. The host invokes these
+    /// callbacks only after a Session is committed and before/when its
+    /// presentation is released. The policy may submit semantic Player
+    /// requests, but never touches Unity components directly.
+    /// </summary>
+    public interface IActivityPresentationLifecycle
+    {
+        void OnPresentationStarted(IActivityContext context, uint sessionRevision);
+        void OnPresentationEnded(IActivityContext context, uint sessionRevision, ActivityEndReason reason);
+    }
 }

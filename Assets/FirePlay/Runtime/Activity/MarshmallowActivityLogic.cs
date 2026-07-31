@@ -7,7 +7,7 @@ namespace DemonViglu.FirePlay.Activity
     /// the marshmallow prop, animation and dedicated UI belong to the
     /// presentation layer that receives this state from the activity host.
     /// </summary>
-    public sealed class MarshmallowActivityLogic : IActivityLogic, IActivityTickable
+    public sealed class MarshmallowActivityLogic : IActivityLogic, IActivityTickable, IActivityPresentationLifecycle
     {
         public const string ActivityId = "marshmallow";
 
@@ -99,6 +99,54 @@ namespace DemonViglu.FirePlay.Activity
         public void End(IActivityContext context, ActivityEndReason reason)
         {
             ResetState();
+        }
+
+        public void OnPresentationStarted(IActivityContext context, uint sessionRevision)
+        {
+            if (context?.Presentation == null) return;
+
+            context.Presentation.RequestPlayer(new ActivityPlayerRequest(
+                ActivityPlayerRequestKind.MovementLock,
+                context.PlayerId,
+                ActivityId,
+                string.Empty,
+                string.Empty,
+                active: true,
+                sessionRevision));
+
+            if (!string.IsNullOrWhiteSpace(context.AnchorId))
+            {
+                context.Presentation.RequestPlayer(new ActivityPlayerRequest(
+                    ActivityPlayerRequestKind.LookTarget,
+                    context.PlayerId,
+                    ActivityId,
+                    context.AnchorId,
+                    string.Empty,
+                    active: true,
+                    sessionRevision));
+            }
+        }
+
+        public void OnPresentationEnded(IActivityContext context, uint sessionRevision, ActivityEndReason reason)
+        {
+            if (context?.Presentation == null) return;
+
+            context.Presentation.RequestPlayer(new ActivityPlayerRequest(
+                ActivityPlayerRequestKind.LookTarget,
+                context.PlayerId,
+                ActivityId,
+                context.AnchorId,
+                string.Empty,
+                active: false,
+                sessionRevision));
+            context.Presentation.RequestPlayer(new ActivityPlayerRequest(
+                ActivityPlayerRequestKind.MovementLock,
+                context.PlayerId,
+                ActivityId,
+                string.Empty,
+                string.Empty,
+                active: false,
+                sessionRevision));
         }
 
         private ActivityActionResult Materialize(IActivityContext context)

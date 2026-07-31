@@ -6,7 +6,7 @@ namespace DemonViglu.FirePlay.Activity
     /// Pure fishing activity state. The activity is anchored, but its rules and
     /// resource transaction are independent from RestInteraction and scene objects.
     /// </summary>
-    public sealed class FishingActivityLogic : IActivityLogic, IActivityTickable
+    public sealed class FishingActivityLogic : IActivityLogic, IActivityTickable, IActivityPresentationLifecycle
     {
         public const string ActivityId = "fishing";
 
@@ -119,6 +119,34 @@ namespace DemonViglu.FirePlay.Activity
         public void End(IActivityContext context, ActivityEndReason reason)
         {
             ResetState();
+        }
+
+        public void OnPresentationStarted(IActivityContext context, uint sessionRevision)
+        {
+            if (context?.Presentation == null) return;
+
+            context.Presentation.RequestPlayer(new ActivityPlayerRequest(
+                ActivityPlayerRequestKind.MovementLock,
+                context.PlayerId,
+                ActivityId,
+                string.Empty,
+                string.Empty,
+                active: true,
+                sessionRevision: sessionRevision));
+        }
+
+        public void OnPresentationEnded(IActivityContext context, uint sessionRevision, ActivityEndReason reason)
+        {
+            if (context?.Presentation == null) return;
+
+            context.Presentation.RequestPlayer(new ActivityPlayerRequest(
+                ActivityPlayerRequestKind.MovementLock,
+                context.PlayerId,
+                ActivityId,
+                string.Empty,
+                string.Empty,
+                active: false,
+                sessionRevision: sessionRevision));
         }
 
         private ActivityActionResult HandlePrimary(IActivityContext context)

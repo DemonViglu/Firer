@@ -65,6 +65,7 @@ namespace DemonViglu.FirePlay.Player
             var ritual = _rest.IsResting && _rest.ActiveRestSpot != null
                 ? _rest.ActiveRestSpot.GetComponent<MarshmallowRitual>()
                 : null;
+            if (ritual != null && !ritual.IsSelectedFor(_rest)) ritual = null;
             if (ritual != _activeRitual)
             {
                 _activeRitual = ritual;

@@ -26,6 +26,7 @@ namespace DemonViglu.FirePlay.World
 
         public override void OnRestStarted(RestInteraction interaction)
         {
+            if (!IsSelectedFor(interaction)) return;
             if (_lookTarget == null)
             {
                 Debug.LogWarning($"[{GetType().Name}] 未指定 Look Target；本次停留不会锁定视角。", this);
@@ -96,6 +97,7 @@ namespace DemonViglu.FirePlay.World
 
         private void LateUpdate()
         {
+            SyncSelectedActivityState();
             if (_interaction == null || _lookTarget == null || _interaction.ActiveRestSpot != GetComponent<RestSpot>())
             {
                 return;
@@ -125,6 +127,26 @@ namespace DemonViglu.FirePlay.World
                         Quaternion.LookRotation(direction),
                         blend);
                 }
+            }
+        }
+
+        private void SyncSelectedActivityState()
+        {
+            var interaction = _interaction != null
+                ? _interaction
+                : LocalPlayerContext.Current != null ? LocalPlayerContext.Current.RestInteraction : null;
+            var shouldBeActive = interaction != null
+                && interaction.IsResting
+                && interaction.ActiveRestSpot == GetComponent<RestSpot>()
+                && IsSelectedFor(interaction);
+
+            if (shouldBeActive && _interaction == null)
+            {
+                OnRestStarted(interaction);
+            }
+            else if (!shouldBeActive && _interaction != null)
+            {
+                OnRestEnded(_interaction);
             }
         }
 

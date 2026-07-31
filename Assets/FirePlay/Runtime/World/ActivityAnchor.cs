@@ -46,6 +46,40 @@ namespace DemonViglu.FirePlay.World
         public RestSpot RestSpot => _restSpot;
         public IReadOnlyList<ActivityOfferDescriptor> Offers => _offers;
 
+        public bool TryGetOffer(string activityId, out ActivityOfferDescriptor offer)
+        {
+            offer = null;
+            if (string.IsNullOrWhiteSpace(activityId)) return false;
+
+            foreach (var candidate in _offers)
+            {
+                if (candidate != null && candidate.enabled && candidate.activityId == activityId)
+                {
+                    offer = candidate;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool IsSingleLegacyActivity(string activityId)
+        {
+            if (string.IsNullOrWhiteSpace(activityId)) return false;
+
+            var nonRestCount = 0;
+            var onlyActivityId = string.Empty;
+            foreach (var offer in _offers)
+            {
+                if (offer == null || !offer.enabled || string.IsNullOrWhiteSpace(offer.activityId) || offer.activityId == "rest")
+                    continue;
+                nonRestCount++;
+                onlyActivityId = offer.activityId;
+            }
+
+            return nonRestCount == 1 && onlyActivityId == activityId;
+        }
+
         public void Initialize(RestSpot restSpot)
         {
             _restSpot = restSpot != null ? restSpot : GetComponent<RestSpot>();

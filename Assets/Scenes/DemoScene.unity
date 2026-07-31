@@ -3068,6 +3068,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.x
       value: 26.01
       objectReference: {fileID: 0}
+    - target: {fileID: 1743969675154280312, guid: eec6e1aec17847342866ab072f314136, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1842617405757612812, guid: eec6e1aec17847342866ab072f314136, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.692
@@ -3103,6 +3107,14 @@ PrefabInstance:
     - target: {fileID: 5546368970521514861, guid: eec6e1aec17847342866ab072f314136, type: 3}
       propertyPath: m_Name
       value: Player
+      objectReference: {fileID: 0}
+    - target: {fileID: 5920864436569382322, guid: eec6e1aec17847342866ab072f314136, type: 3}
+      propertyPath: _firstKey
+      value: 29
+      objectReference: {fileID: 0}
+    - target: {fileID: 5920864436569382322, guid: eec6e1aec17847342866ab072f314136, type: 3}
+      propertyPath: _secondKey
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 7824119972009465243, guid: eec6e1aec17847342866ab072f314136, type: 3}
       propertyPath: m_LocalPosition.y
@@ -4298,7 +4310,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5893462792062315505, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1760664793}
   m_SourcePrefab: {fileID: 100100000, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
 --- !u!4 &1383786747 stripped
 Transform:
@@ -4672,6 +4687,11 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!4 &1420301639 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4090978562897588483, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
+  m_PrefabInstance: {fileID: 1383786746}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1441593352
 GameObject:
   m_ObjectHideFlags: 0
@@ -5490,6 +5510,31 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 400000, guid: 73ef0b63ffe19f94ab35e4475b345d70, type: 3}
   m_PrefabInstance: {fileID: 1738256646}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1760664786 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5893462792062315505, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
+  m_PrefabInstance: {fileID: 1383786746}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1760664793
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1760664786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5af3a147c42f4d068c64c303880ca4e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.FishingRitual
+  _lookTarget: {fileID: 1420301639}
+  _turnSpeed: 2.5
+  _rodFuelCost: 30
+  _catchesPerRod: 4
+  _fuelPerCatch: 8
+  _minimumBiteDelay: 1.5
+  _maximumBiteDelay: 4
+  _hookWindowSeconds: 2
 --- !u!1001 &1811612084
 PrefabInstance:
   m_ObjectHideFlags: 0

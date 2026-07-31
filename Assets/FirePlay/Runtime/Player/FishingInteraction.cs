@@ -94,6 +94,7 @@ namespace DemonViglu.FirePlay.Player
             var ritual = _rest.IsResting && _rest.ActiveRestSpot != null
                 ? _rest.ActiveRestSpot.GetComponent<FishingRitual>()
                 : null;
+            if (ritual != null && !ritual.IsSelectedFor(_rest)) ritual = null;
             if (ritual != _activeRitual)
             {
                 if (HasRod)

@@ -1,0 +1,149 @@
+using System;
+using DemonViglu.FirePlay.Core;
+using DemonViglu.FirePlay.World;
+using UnityEngine;
+
+namespace DemonViglu.FirePlay.Player
+{
+    /// <summary>
+    /// 玩家级活动会话入口。当前通过 RestInteraction 做兼容同步，后续逐步接管坐姿与活动选择。
+    /// </summary>
+    [DefaultExecutionOrder(55)]
+    [DisallowMultipleComponent]
+    public sealed class PlayerActivityController : MonoBehaviour
+    {
+        private LocalPlayerContext _context;
+        private IEventPublisher _events;
+        private PlayerRestPoseController _restPose;
+        private PlayerCampfireComfortController _campfireComfort;
+
+        public ActivitySession Session { get; } = new();
+        public ActivityAnchor NearestAnchor { get; private set; }
+        public ActivityAnchor ActiveAnchor { get; private set; }
+        public event Action<ActivitySessionSnapshot> SessionChanged;
+
+        public void Initialize(LocalPlayerContext context)
+        {
+            _context = context;
+            _restPose ??= GetComponent<PlayerRestPoseController>();
+            _campfireComfort ??= GetComponent<PlayerCampfireComfortController>();
+        }
+
+        private void Awake() => Initialize(GetComponent<LocalPlayerContext>());
+
+        private void OnEnable()
+        {
+            _events = GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
+            _events.Subscribe<ActivitySelectionRequested>(OnActivitySelectionRequested);
+        }
+
+        private void Update()
+        {
+            var spot = RestSpot.FindNearest(transform.position);
+            NearestAnchor = spot != null ? spot.ActivityAnchor : null;
+        }
+
+        /// <summary>开始一个已发现的活动；当前不替换旧坐姿流程，只建立 Session 事实。</summary>
+        public bool TryBeginActivity(ActivityAnchor anchor, string activityId)
+        {
+            if (_context == null || anchor == null || !anchor.TryGetOffer(activityId, out var offer)) return false;
+            if (!Session.TryBegin(_context.PlayerId, anchor.AnchorId, offer.activityId, offer.presentationId)) return false;
+
+            ActiveAnchor = anchor;
+            SessionChanged?.Invoke(Session.Snapshot);
+            return true;
+        }
+
+        public bool TryBeginNearestActivity(string activityId) => TryBeginActivity(NearestAnchor, activityId);
+
+        public void InitializeRestSupport(
+            PlayerMovement movement,
+            PlayerLook look,
+            PlayerModeController modeController,
+            float cameraDrop,
+            float cameraTransitionSpeed,
+            Vector3 standingPivotLocalPosition)
+        {
+            _restPose ??= GetComponent<PlayerRestPoseController>() ?? gameObject.AddComponent<PlayerRestPoseController>();
+            _restPose.Initialize(movement, look, modeController, cameraDrop, cameraTransitionSpeed, standingPivotLocalPosition);
+            _campfireComfort ??= GetComponent<PlayerCampfireComfortController>() ?? gameObject.AddComponent<PlayerCampfireComfortController>();
+            _campfireComfort.Initialize();
+        }
+
+        public bool TryBeginLegacyRest(RestSpot spot)
+        {
+            var anchor = spot != null ? spot.ActivityAnchor : null;
+            if (_context == null || anchor == null || !anchor.TryGetOffer("rest", out var offer)) return false;
+            if (!Session.TryBegin(_context.PlayerId, anchor.AnchorId, offer.activityId, offer.presentationId)) return false;
+
+            _restPose ??= GetComponent<PlayerRestPoseController>();
+            if (_restPose == null || !_restPose.TryEnter())
+            {
+                Session.End();
+                return false;
+            }
+
+            _campfireComfort ??= GetComponent<PlayerCampfireComfortController>();
+            _campfireComfort?.TryBegin(spot);
+            ActiveAnchor = anchor;
+            SessionChanged?.Invoke(Session.Snapshot);
+            return true;
+        }
+
+        public void EndLegacyRest(RestSpot spot)
+        {
+            _restPose?.Exit();
+            _campfireComfort?.End();
+            if (Session.IsActive && ActiveAnchor != null && (spot == null || spot.ActivityAnchor == ActiveAnchor))
+                EndActivity();
+        }
+
+        public bool TrySelectActivity(ActivityAnchor anchor, string activityId)
+        {
+            if (_context == null || anchor == null || !anchor.TryGetOffer(activityId, out var offer)) return false;
+            if (!Session.IsActive && (_restPose == null || !_restPose.IsActive)) return false;
+            if (Session.IsActive && ActiveAnchor != anchor) return false;
+            if (!Session.TrySwitch(_context.PlayerId, anchor.AnchorId, offer.activityId, offer.presentationId)) return false;
+
+            ActiveAnchor = anchor;
+            SessionChanged?.Invoke(Session.Snapshot);
+            return true;
+        }
+
+        public bool TrySelectNearestActivity(string activityId) => TrySelectActivity(NearestAnchor, activityId);
+
+        public bool EndActivity()
+        {
+            if (!Session.End()) return false;
+
+            ActiveAnchor = null;
+            SessionChanged?.Invoke(Session.Snapshot);
+            return true;
+        }
+
+        private void OnActivitySelectionRequested(ActivitySelectionRequested request)
+        {
+            if (_context == null || request == null || request.PlayerId != _context.PlayerId) return;
+
+            var anchor = ResolveAnchor(request.AnchorId);
+            if (anchor != null) TrySelectActivity(anchor, request.ActivityId);
+        }
+
+        private ActivityAnchor ResolveAnchor(string anchorId)
+        {
+            if (string.IsNullOrWhiteSpace(anchorId)) return ActiveAnchor ?? NearestAnchor;
+            if (ActiveAnchor != null && ActiveAnchor.AnchorId == anchorId) return ActiveAnchor;
+            if (NearestAnchor != null && NearestAnchor.AnchorId == anchorId) return NearestAnchor;
+            return null;
+        }
+
+        private void OnDisable()
+        {
+            _events?.Unsubscribe<ActivitySelectionRequested>(OnActivitySelectionRequested);
+            _restPose?.Exit();
+            _campfireComfort?.End();
+            Session.End();
+            ActiveAnchor = null;
+        }
+    }
+}

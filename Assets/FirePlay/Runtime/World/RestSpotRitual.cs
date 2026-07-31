@@ -19,6 +19,21 @@ namespace DemonViglu.FirePlay.World
         public ActivityOfferDescriptor CreateActivityOffer() =>
             string.IsNullOrWhiteSpace(ActivityId) ? null : new ActivityOfferDescriptor(ActivityId, ActivityDisplayName, ActivityPresentationId);
 
+        public bool IsSelectedFor(RestInteraction interaction)
+        {
+            if (interaction == null) return false;
+
+            var controller = interaction.GetComponent<PlayerActivityController>();
+            if (controller == null || !controller.Session.IsActive) return true;
+
+            var selectedActivityId = controller.Session.Snapshot.ActivityId;
+            if (selectedActivityId == ActivityId) return true;
+            if (selectedActivityId != "rest") return false;
+
+            var anchor = GetComponent<RestSpot>()?.ActivityAnchor;
+            return anchor != null && anchor.IsSingleLegacyActivity(ActivityId);
+        }
+
         public virtual void OnRestStarted(RestInteraction interaction)
         {
         }

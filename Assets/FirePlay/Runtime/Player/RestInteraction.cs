@@ -1,5 +1,4 @@
 using DemonViglu.FirePlay.World;
-using DemonViglu.FirePlay.Flame;
 using System;
 using UnityEngine;
 
@@ -19,7 +18,7 @@ namespace DemonViglu.FirePlay.Player
 
         private Transform _cameraPivot;
         private Vector3 _standingPivotLocalPosition;
-        private FlameResourceController _restRecoveryController;
+        private PlayerActivityController _activities;
         private IEventPublisher _events;
 
         public bool IsResting { get; private set; }
@@ -34,6 +33,7 @@ namespace DemonViglu.FirePlay.Player
             _movement ??= GetComponent<PlayerMovement>();
             _look ??= GetComponent<PlayerLook>();
             _modeController ??= GetComponent<PlayerModeController>();
+            _activities ??= GetComponent<PlayerActivityController>();
             _cameraPivot = _look != null ? _look.CameraPivot : null;
 
             if (_movement == null || _cameraPivot == null || _modeController == null)
@@ -43,7 +43,20 @@ namespace DemonViglu.FirePlay.Player
                 return;
             }
 
+            InitializeActivitySupport();
+        }
+
+        public void InitializeActivitySupport()
+        {
+            _movement ??= GetComponent<PlayerMovement>();
+            _look ??= GetComponent<PlayerLook>();
+            _modeController ??= GetComponent<PlayerModeController>();
+            _activities ??= GetComponent<PlayerActivityController>();
+            _cameraPivot = _look != null ? _look.CameraPivot : null;
+            if (_movement == null || _cameraPivot == null || _modeController == null || _activities == null) return;
+
             _standingPivotLocalPosition = _cameraPivot.localPosition;
+            _activities.InitializeRestSupport(_movement, _look, _modeController, _cameraDrop, _cameraTransitionSpeed, _standingPivotLocalPosition);
         }
 
         private void OnEnable()
@@ -67,31 +80,16 @@ namespace DemonViglu.FirePlay.Player
             else TryBeginRest();
         }
 
-        private void LateUpdate()
-        {
-            if (_cameraPivot == null)
-            {
-                return;
-            }
-
-            var target = IsResting
-                ? _standingPivotLocalPosition + Vector3.down * _cameraDrop
-                : _standingPivotLocalPosition;
-            var blend = 1f - Mathf.Exp(-_cameraTransitionSpeed * Time.deltaTime);
-            _cameraPivot.localPosition = Vector3.Lerp(_cameraPivot.localPosition, target, blend);
-        }
-
         public bool TryBeginRest()
         {
-            if (IsResting || NearestRestSpot == null || !_modeController.TryEnter(PlayerMode.Resting))
+            _activities ??= GetComponent<PlayerActivityController>();
+            if (IsResting || NearestRestSpot == null || _activities == null || !_activities.TryBeginLegacyRest(NearestRestSpot))
             {
                 return false;
             }
 
             IsResting = true;
             ActiveRestSpot = NearestRestSpot;
-            _movement.SetMovementLocked(true);
-            BeginCampfireComfort(ActiveRestSpot);
             ActiveRestSpot.NotifyRestStarted(this);
             RestStarted?.Invoke(ActiveRestSpot);
             return true;
@@ -106,10 +104,8 @@ namespace DemonViglu.FirePlay.Player
 
             var completedSpot = ActiveRestSpot;
             IsResting = false;
-            _modeController?.Exit(PlayerMode.Resting);
             ActiveRestSpot = null;
-            _movement.SetMovementLocked(false);
-            EndCampfireComfort();
+            _activities?.EndLegacyRest(completedSpot);
             if (completedSpot != null)
             {
                 completedSpot.NotifyRestEnded(this);
@@ -121,31 +117,7 @@ namespace DemonViglu.FirePlay.Player
         {
             _events?.Unsubscribe<PlayerIntentRequested>(OnIntentRequested);
             EndRest();
-            if (_cameraPivot != null)
-            {
-                _cameraPivot.localPosition = _standingPivotLocalPosition;
-            }
         }
 
-        private void BeginCampfireComfort(RestSpot spot)
-        {
-            var campfire = spot != null ? spot.GetComponent<Campfire>() : null;
-            if (campfire == null || campfire.IsExtinguished || campfire.Config == null)
-            {
-                return;
-            }
-
-            _restRecoveryController = GetComponent<FlameResourceController>();
-            _restRecoveryController?.EnterCampfireRest(campfire);
-        }
-
-        private void EndCampfireComfort()
-        {
-            if (_restRecoveryController != null)
-            {
-                _restRecoveryController.ExitCampfireRest();
-                _restRecoveryController = null;
-            }
-        }
     }
 }

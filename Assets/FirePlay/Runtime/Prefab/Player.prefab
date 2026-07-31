@@ -867,6 +867,7 @@ GameObject:
   - component: {fileID: 8662161886728232265}
   - component: {fileID: 8916949396252110027}
   - component: {fileID: 2884395103448089037}
+  - component: {fileID: 5920864436569382322}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1200,7 +1201,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6aadbcd9a8644b14baadfb8e93e5ee8c, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerAnimationController
   _animator: {fileID: 0}
   _boolBindings:
@@ -1239,6 +1240,25 @@ MonoBehaviour:
     parameterName: EmoteWarmth
   - cueId: expression.sit
     parameterName: EmoteSit
+--- !u!114 &5920864436569382322
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5546368970521514861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d90b27a2cd54fc9b7bb193bcebde320, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Debugging.ActivitySelectionProbe
+  _localPlayer: {fileID: 0}
+  _anchor: {fileID: 0}
+  _firstActivityId: marshmallow
+  _secondActivityId: fishing
+  _firstKey: 41
+  _secondKey: 42
+  _enabled: 1
 --- !u!1 &6885646609970973548
 GameObject:
   m_ObjectHideFlags: 0

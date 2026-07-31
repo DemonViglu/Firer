@@ -163,9 +163,10 @@ Requested
 ### 6.1 开始与切换
 
 1. **Preflight**：收集 Player、Anchor、目标、参与者、规则和资源快照；不创建 Session，不扣余火，不打开 UI；
-2. **Commit**：规则全部通过后创建 Session。需要余火的活动在此阶段执行 `TryConsume`，失败则整个开始失败；
-3. **Running**：活动逻辑处理自己的动作和状态；
-4. 切换活动时先对新活动执行 Preflight。新活动通过后，旧 Session 以 `Switched` 原因结束，再提交新 Session；新活动预检失败时旧 Session 保持不变。
+2. **Prepare**：活动返回一个无副作用的开始操作；切换时旧 Session 进入可恢复的 `Switching` 阶段；
+3. **Commit**：规则全部通过后执行开始操作。需要余火的活动在此阶段执行 `TryConsume`，失败则回滚操作并恢复旧 Session；
+4. **Running**：活动逻辑处理自己的动作和状态；
+5. 切换活动时先对新活动执行 Preflight/Prepare。Commit 成功后旧 Session 以 `Switched` 原因结束，再创建新 Session；新活动预检或 Commit 失败时旧 Session 保持不变。
 
 ### 6.2 中断与结束
 
@@ -208,7 +209,9 @@ Requested
     -> PlayerCameraSystem 恢复 Camera
 ```
 
-活动逻辑只能发布 `ActivityUIRequest` 和 `ActivityCameraRequest`，不能直接调用 `UIManager`、`Button`、`Camera.main` 或 Cinemachine 组件。Player 侧的 PresentationSystem 和 CameraSystem 是唯一执行者，并以只读结果回报请求是否成功。
+活动逻辑只能发布 `ActivityUIRequest`、`ActivityCameraRequest` 和 `ActivityPlayerRequest`，不能直接调用 `UIManager`、`Button`、`Camera.main`、Cinemachine、Animator 或移动组件。Player 侧的 PresentationSystem、CameraSystem 和 Player capability executor 是唯一执行者，并以只读结果回报请求是否成功。
+
+`ActivityPlayerRequest` 只表达语义能力：MovementLock、LookTarget、AnimationState、AnimationCue、VfxCue。活动通过稳定 ID、cue 和当前 Session revision 提交请求；Player 侧负责解析目标、处理组件缺失和释放请求。是否锁移动、是否朝向某个目标不是活动类型的固有属性，而是该活动在当前规则/状态下的表现策略。
 
 火焰资源采用独立链路：
 
@@ -268,3 +271,10 @@ EventBus 只承载跨模块语义：
 6. 活动余火消耗和失败回滚；
 7. 两名玩家同时选择同一地点的不同活动；
 8. 活动语义事件进入实时联机 Host 权威链路。
+
+## 12. 当前重构进度
+
+- 已建立无 Unity 依赖的 `ActivityDefinition`、`ActivityContext`、`ActivityRuleResolver`、`ActivitySession`、`ActivitySystem` 和 `ActivityCatalog`；
+- 已建立活动专属 UI／Camera 请求契约，活动逻辑不直接访问 UI 控件或相机组件；
+- 已建立唯一 UI Prefab 元数据入口 `ActivityDefinitionAsset`，后续不再制作棉花糖与钓鱼共用的通用活动窗体；
+- 当前旧 Ritual 链仍处于待迁移状态，本阶段没有接管旧场景运行路径；待新垂直切片通过后整体删除，不增加兼容适配。

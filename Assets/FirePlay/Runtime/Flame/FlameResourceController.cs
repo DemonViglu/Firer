@@ -1,5 +1,6 @@
 using DemonViglu.FirePlay.Data;
 using DemonViglu.FirePlay.World;
+using DemonViglu.FirePlay.Activity;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.Flame
@@ -8,7 +9,7 @@ namespace DemonViglu.FirePlay.Flame
     /// Player 上的余火入口。负责固定夜间消耗、恢复区域计数，
     /// 并向后续冲刺、自然火源和篝火提供显式消耗/恢复接口。
     /// </summary>
-    public sealed class FlameResourceController : MonoBehaviour
+    public sealed class FlameResourceController : MonoBehaviour, IActivityFlameResource
     {
         [SerializeField] private FlameResourceConfig _config;
         [SerializeField] private bool _nightDrainActive = true;
@@ -20,6 +21,7 @@ namespace DemonViglu.FirePlay.Flame
 
         public FlameResourceState State { get; private set; }
         public FlameResourceConfig Config => _config;
+        public float CurrentFuel => State?.CurrentFuel ?? 0f;
         public bool NightDrainActive => _nightDrainActive;
         public bool IsRecovering => _activeRecoverySources > 0;
         public bool IsInSafeZone => _activeSafeZones > 0;

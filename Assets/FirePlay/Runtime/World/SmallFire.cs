@@ -121,7 +121,7 @@ namespace DemonViglu.FirePlay.World
                 _initialLightIntensity = _fireLight.intensity;
             }
 
-            _fireVfx?.Play(true);
+            if(_fireVfx != null)_fireVfx?.Play(true);
             ApplyVisualReadability();
         }
 

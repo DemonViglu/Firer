@@ -88,6 +88,18 @@ namespace DemonViglu.FirePlay.Player
 
         public void SetLookLocked(bool locked) => LookLocked = locked;
 
+        public bool TryFaceTarget(Transform target)
+        {
+            if (target == null) return false;
+
+            var direction = target.position - transform.position;
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f) return false;
+
+            transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+            return true;
+        }
+
         public void SetCursorCaptured(bool captured)
         {
             _cursorCaptured = captured;

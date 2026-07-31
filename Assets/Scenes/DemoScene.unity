@@ -1472,7 +1472,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 375593628}
-  - component: {fileID: 375593629}
   - component: {fileID: 375593630}
   - component: {fileID: 375593631}
   m_Layer: 0
@@ -1497,29 +1496,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &375593629
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 375593627}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6b080418ff2944bb87c3ca9b77eefc36, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Debugging.FirePlayDebugOverlay
-  _playerFlameController: {fileID: 0}
-  _playerMovement: {fileID: 0}
-  _playerInteraction: {fileID: 0}
-  _campfirePlacement: {fileID: 0}
-  _flameResourceController: {fileID: 0}
-  _restInteraction: {fileID: 0}
-  _marshmallowInteraction: {fileID: 0}
-  _fishingInteraction: {fileID: 0}
-  _visible: 1
-  _screenPosition: {x: 16, y: 16}
-  _width: 360
 --- !u!114 &375593630
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1869,11 +1845,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: d73a49bb076a1cc47b75fc24749daa21, type: 3}
   m_PrefabInstance: {fileID: 518071946}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &525657459 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5986995585998082832, guid: 22ae408d89196034a80e5eabe672f7d4, type: 3}
-  m_PrefabInstance: {fileID: 1383993738}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &547033133
 GameObject:
   m_ObjectHideFlags: 0
@@ -2221,6 +2192,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1842617405757612812, guid: eec6e1aec17847342866ab072f314136, type: 3}
   m_PrefabInstance: {fileID: 948333775}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &698776882 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5546368970521514861, guid: eec6e1aec17847342866ab072f314136, type: 3}
+  m_PrefabInstance: {fileID: 948333775}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &727792751
 GameObject:
   m_ObjectHideFlags: 0
@@ -2312,6 +2288,60 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8922695638565747190, guid: eec6e1aec17847342866ab072f314136, type: 3}
   m_PrefabInstance: {fileID: 948333775}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &733872015 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2759977987356437026, guid: eec6e1aec17847342866ab072f314136, type: 3}
+  m_PrefabInstance: {fileID: 948333775}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 698776882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bc2cda1ec9b4abe938b4455c3ef190d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerModeController
+--- !u!114 &733872023 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1518005239310531485, guid: eec6e1aec17847342866ab072f314136, type: 3}
+  m_PrefabInstance: {fileID: 948333775}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 698776882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e52401429fae45bb9048d39c6158031e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Flame.FlameResourceController
+--- !u!114 &733872031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 698776882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d3e2a1f8b7c4e6a9d5f0c2b1a7e8d33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.PlayerActivityPresentationHost
+  _cameraExecutorBehaviour: {fileID: 1412847011}
+--- !u!114 &733872032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 698776882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ef8d6c02f7e4c2abddf5cb2e2b4e8a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.PlayerActivityHost
+  _playerId: local.player
+  _catalogAsset: {fileID: 11400000, guid: 1a9e7c5b3d2f0e8a6c4b2d1f9e7a5c30, type: 2}
+  _logicFactoryBehaviour: {fileID: 971497443}
+  _presentationBehaviour: {fileID: 733872031}
+  _flameBehaviour: {fileID: 733872023}
+  _playerStateBehaviour: {fileID: 733872015}
+  _nearestAnchorDistance: 3
 --- !u!1001 &748311838
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3025,6 +3055,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1646655474}
     m_Modifications:
+    - target: {fileID: 647466909312235555, guid: eec6e1aec17847342866ab072f314136, type: 3}
+      propertyPath: _activityHost
+      value: 
+      objectReference: {fileID: 733872032}
     - target: {fileID: 892983363202825488, guid: eec6e1aec17847342866ab072f314136, type: 3}
       propertyPath: m_LocalScale.z
       value: 1.87
@@ -3117,22 +3151,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
-    - target: {fileID: 5920864436569382322, guid: eec6e1aec17847342866ab072f314136, type: 3}
-      propertyPath: _firstKey
-      value: 29
-      objectReference: {fileID: 0}
-    - target: {fileID: 5920864436569382322, guid: eec6e1aec17847342866ab072f314136, type: 3}
-      propertyPath: _secondKey
-      value: 30
-      objectReference: {fileID: 0}
     - target: {fileID: 7824119972009465243, guid: eec6e1aec17847342866ab072f314136, type: 3}
       propertyPath: m_LocalPosition.y
       value: 1.2
       objectReference: {fileID: 0}
-    - target: {fileID: 8916949396252110027, guid: eec6e1aec17847342866ab072f314136, type: 3}
-      propertyPath: _fishingRodProp
-      value: 
-      objectReference: {fileID: 1277033680}
     - target: {fileID: 8922695638565747190, guid: eec6e1aec17847342866ab072f314136, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -3173,11 +3195,108 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9016949396252110027, guid: eec6e1aec17847342866ab072f314136, type: 3}
+      propertyPath: _fishingRodProp
+      value: 
+      objectReference: {fileID: 1277033680}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5546368970521514861, guid: eec6e1aec17847342866ab072f314136, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 733872032}
+    - targetCorrespondingSourceObject: {fileID: 5546368970521514861, guid: eec6e1aec17847342866ab072f314136, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 733872031}
   m_SourcePrefab: {fileID: 100100000, guid: eec6e1aec17847342866ab072f314136, type: 3}
+--- !u!1 &971497439
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 971497440}
+  - component: {fileID: 971497442}
+  - component: {fileID: 971497443}
+  - component: {fileID: 971497444}
+  m_Layer: 0
+  m_Name: TST
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &971497440
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 971497439}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &971497442
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 971497439}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e4c2a9f1b6d48a3c5f0e8d2b7a1c639, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.MarshmallowActivityLogicFactory
+  _materializeFuelCost: 3
+  _turnsRequired: 2
+  _needleCyclesPerSecond: 0.35
+  _perfectZoneWidth: 0.24
+  _targetEdgePadding: 0.15
+  _perfectEatFuelRefund: 2
+  _toastedEatFuelRefund: 1
+  _scorchedEatFuelRefund: 0
+--- !u!114 &971497443
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 971497439}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b3c9a6e1d5f4a28b0e7c2d9f6a13485, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.ActivityLogicRegistryBehaviour
+  _factories:
+  - {fileID: 971497442}
+  - {fileID: 971497444}
+--- !u!114 &971497444
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 971497439}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c1f3f0c4dca4b64a8b7f29e8d33b6a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.FishingActivityLogicFactory
+  _rodFuelCost: 30
+  _catchesPerRod: 4
+  _fuelPerCatch: 8
+  _minimumBiteDelay: 1.5
+  _maximumBiteDelay: 4
+  _hookWindowSeconds: 2
 --- !u!1 &979459601
 GameObject:
   m_ObjectHideFlags: 0
@@ -4261,10 +4380,6 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1586079873786013634, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
-      propertyPath: _activityDefinitions.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1586079873786013634, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
       propertyPath: _offers.Array.data[0].activityId
       value: rest
       objectReference: {fileID: 0}
@@ -4288,10 +4403,6 @@ PrefabInstance:
       propertyPath: _offers.Array.data[2].displayName
       value: "\u9493\u9C7C"
       objectReference: {fileID: 0}
-    - target: {fileID: 1586079873786013634, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
-      propertyPath: '_activityDefinitions.Array.data[0]'
-      value: 
-      objectReference: {fileID: 11400000, guid: e8d0d36a1641e3f47b0dd1d981066e5c, type: 2}
     - target: {fileID: 1586079873786013634, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
       propertyPath: _legacyOffers.Array.data[0].enabled
       value: 1
@@ -4616,6 +4727,10 @@ PrefabInstance:
       propertyPath: _level
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 7626016204111590211, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8758424894588847466, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
       propertyPath: _value
       value: center.campfire
@@ -4625,7 +4740,7 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 5893462792062315505, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
-      insertIndex: 7
+      insertIndex: -1
       addedObject: {fileID: 1760664793}
   m_SourcePrefab: {fileID: 100100000, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
 --- !u!4 &1383786747 stripped
@@ -4697,9 +4812,6 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 5986995585998082832, guid: 22ae408d89196034a80e5eabe672f7d4, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1383993746}
     - targetCorrespondingSourceObject: {fileID: 5534865083872869911, guid: 22ae408d89196034a80e5eabe672f7d4, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1383993741}
@@ -4743,23 +4855,6 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
---- !u!114 &1383993746
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 525657459}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6e52e74acbd74336b21c995f7c35f71b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.ActivityAnchor
-  _anchorId: anchor.star
-  _activityDefinitions: []
-  _offers: []
-  _legacyOffers: []
-  _additionalOffers: []
 --- !u!1001 &1393203323
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4893,6 +4988,27 @@ MonoBehaviour:
   _stargazingSkyWeight: 0.35
   _fishingPlayerWeight: 0.75
   _fishingWaterWeight: 1.25
+  _activityCameraProfiles:
+  - _profileId: activity.ritual
+    _camera: {fileID: 146968241}
+    _targetGroup: {fileID: 1165691988}
+    _followAnchor: {fileID: 163541243}
+    _lookTarget: {fileID: 0}
+    _priority: 20
+    _playerWeight: 1
+    _playerRadius: 0.7
+    _lookTargetWeight: 1.4
+    _lookTargetRadius: 0.3
+  - _profileId: custom.fishing
+    _camera: {fileID: 131168081}
+    _targetGroup: {fileID: 979459603}
+    _followAnchor: {fileID: 163541243}
+    _lookTarget: {fileID: 0}
+    _priority: 20
+    _playerWeight: 0.75
+    _playerRadius: 0.7
+    _lookTargetWeight: 1.25
+    _lookTargetRadius: 0.3
 --- !u!1 &1415170326
 GameObject:
   m_ObjectHideFlags: 0
@@ -5020,11 +5136,6 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
---- !u!4 &1420301639 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4090978562897588483, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
-  m_PrefabInstance: {fileID: 1383786746}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1441593352
 GameObject:
   m_ObjectHideFlags: 0
@@ -5857,17 +5968,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 1760664786}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5af3a147c42f4d068c64c303880ca4e5, type: 3}
+  m_Script: {fileID: 11500000, guid: 97e8a7bd4f7c4eb7a2f9c3df01a9e001, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.FishingRitual
-  _lookTarget: {fileID: 1420301639}
-  _turnSpeed: 2.5
-  _rodFuelCost: 30
-  _catchesPerRod: 4
-  _fuelPerCatch: 8
-  _minimumBiteDelay: 1.5
-  _maximumBiteDelay: 4
-  _hookWindowSeconds: 2
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.ActivityAnchorNode
+  _anchorId: campfire.main
+  _regionId: 
+  _tags: []
+  _activities:
+  - {fileID: 11400000, guid: 6d5a4f3e2c1b0a9876543210fedcba98, type: 2}
+  _ruleProviderBehaviours: []
 --- !u!1001 &1811612084
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8704,3 +8813,4 @@ SceneRoots:
   - {fileID: 1101955441}
   - {fileID: 175905987}
   - {fileID: 834687284}
+  - {fileID: 971497440}

@@ -59,8 +59,6 @@ namespace DemonViglu.FirePlay.World
     public sealed class ActivityAnchor : MonoBehaviour
     {
         [SerializeField] private string _anchorId;
-        [Tooltip("引用可复用的活动定义。玩法配置只存在于 ActivityDefinition 资产中，地点只决定是否提供该玩法。")]
-        [SerializeField] private ActivityDefinition[] _activityDefinitions = Array.Empty<ActivityDefinition>();
         [Tooltip("兼容现有场景的内嵌 Offer；新内容请优先使用 ActivityDefinition。")]
         [SerializeField] private ActivityOfferDescriptor[] _offers = Array.Empty<ActivityOfferDescriptor>();
         [HideInInspector, SerializeField] private ActivityOfferDescriptor[] _legacyOffers = Array.Empty<ActivityOfferDescriptor>();
@@ -146,15 +144,6 @@ namespace DemonViglu.FirePlay.World
             _runtimeOffers.Clear();
             // 兼容未配置 Anchor 的旧 RestSpot：基础坐下仍可用；其它玩法必须显式配置。
             AddOffer(new ActivityOfferDescriptor("rest", "坐下", "none"));
-            if (_activityDefinitions != null)
-            {
-                foreach (var definition in _activityDefinitions)
-                {
-                    if (definition == null) continue;
-                    AddOffer(definition.CreateOffer());
-                }
-            }
-
             AddOffers(_offers);
             AddOffers(_legacyOffers);
             AddOffers(_additionalOffers);

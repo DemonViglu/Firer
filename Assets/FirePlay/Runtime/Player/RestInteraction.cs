@@ -18,7 +18,8 @@ namespace DemonViglu.FirePlay.Player
 
         private Transform _cameraPivot;
         private Vector3 _standingPivotLocalPosition;
-        private PlayerActivityController _activities;
+        private PlayerRestPoseController _restPose;
+        private PlayerCampfireComfortController _campfireComfort;
         private IEventPublisher _events;
 
         public bool IsResting { get; private set; }
@@ -33,7 +34,6 @@ namespace DemonViglu.FirePlay.Player
             _movement ??= GetComponent<PlayerMovement>();
             _look ??= GetComponent<PlayerLook>();
             _modeController ??= GetComponent<PlayerModeController>();
-            _activities ??= GetComponent<PlayerActivityController>();
             _cameraPivot = _look != null ? _look.CameraPivot : null;
 
             if (_movement == null || _cameraPivot == null || _modeController == null)
@@ -51,12 +51,14 @@ namespace DemonViglu.FirePlay.Player
             _movement ??= GetComponent<PlayerMovement>();
             _look ??= GetComponent<PlayerLook>();
             _modeController ??= GetComponent<PlayerModeController>();
-            _activities ??= GetComponent<PlayerActivityController>();
+            _restPose ??= GetComponent<PlayerRestPoseController>();
+            _campfireComfort ??= GetComponent<PlayerCampfireComfortController>();
             _cameraPivot = _look != null ? _look.CameraPivot : null;
-            if (_movement == null || _cameraPivot == null || _modeController == null || _activities == null) return;
+            if (_movement == null || _cameraPivot == null || _modeController == null || _restPose == null) return;
 
             _standingPivotLocalPosition = _cameraPivot.localPosition;
-            _activities.InitializeRestSupport(_movement, _look, _modeController, _cameraDrop, _cameraTransitionSpeed, _standingPivotLocalPosition);
+            _restPose.Initialize(_movement, _look, _modeController, _cameraDrop, _cameraTransitionSpeed, _standingPivotLocalPosition);
+            _campfireComfort?.Initialize();
         }
 
         private void OnEnable()
@@ -82,14 +84,24 @@ namespace DemonViglu.FirePlay.Player
 
         public bool TryBeginRest()
         {
-            _activities ??= GetComponent<PlayerActivityController>();
-            if (IsResting || NearestRestSpot == null || _activities == null || !_activities.TryBeginLegacyRest(NearestRestSpot))
+            var spot = NearestRestSpot;
+            var anchor = spot != null ? spot.ActivityAnchor : null;
+            if (IsResting || spot == null || anchor == null || !anchor.TryGetOffer("rest", out _))
             {
                 return false;
             }
 
+            _restPose ??= GetComponent<PlayerRestPoseController>();
+            if (_restPose == null || !_restPose.TryEnter())
+            {
+                return false;
+            }
+
+            _campfireComfort ??= GetComponent<PlayerCampfireComfortController>();
+            _campfireComfort?.TryBegin(spot);
             IsResting = true;
-            ActiveRestSpot = NearestRestSpot;
+            ActiveRestSpot = spot;
+            ApplyRestLookLock(true);
             ActiveRestSpot.NotifyRestStarted(this);
             RestStarted?.Invoke(ActiveRestSpot);
             return true;
@@ -105,12 +117,24 @@ namespace DemonViglu.FirePlay.Player
             var completedSpot = ActiveRestSpot;
             IsResting = false;
             ActiveRestSpot = null;
-            _activities?.EndLegacyRest(completedSpot);
+            _restPose?.Exit();
+            _campfireComfort?.End();
+            ApplyRestLookLock(false, completedSpot);
             if (completedSpot != null)
             {
                 completedSpot.NotifyRestEnded(this);
                 RestEnded?.Invoke(completedSpot);
             }
+        }
+
+        private void ApplyRestLookLock(bool active, RestSpot spot = null)
+        {
+            var anchor = (spot ?? ActiveRestSpot)?.ActivityAnchor;
+            var shouldLock = active
+                && anchor != null
+                && anchor.TryGetSingleLegacyActivityOffer(out var offer)
+                && offer.locksLookInput;
+            _look?.SetLookLocked(shouldLock);
         }
 
         private void OnDisable()

@@ -1,3 +1,5 @@
+using System;
+using DemonViglu.FirePlay.Activity;
 using Unity.Cinemachine;
 using UnityEngine;
 
@@ -7,7 +9,7 @@ namespace DemonViglu.FirePlay.Player
     /// 管理本地玩家的仪式镜头。动态篝火在进入仪式时传入自己的 Look Target，
     /// 本类将玩家和目标临时加入 Target Group，并提高仪式镜头优先级。
     /// </summary>
-    public sealed class RitualCameraDirector : MonoBehaviour
+    public sealed class RitualCameraDirector : MonoBehaviour, IActivityCameraRequestExecutor
     {
         [SerializeField] private CinemachineCamera _exploreCamera;
         [SerializeField] private CinemachineCamera _ritualCamera;
@@ -35,6 +37,8 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField, Min(0f)] private float _stargazingSkyWeight = 0.35f;
         [SerializeField, Min(0f)] private float _fishingPlayerWeight = 0.75f;
         [SerializeField, Min(0f)] private float _fishingWaterWeight = 1.25f;
+        [Header("Activity camera profiles")]
+        [SerializeField] private ActivityCameraProfile[] _activityCameraProfiles = Array.Empty<ActivityCameraProfile>();
 
         private Transform _activePlayerTarget;
         private Transform _activeFollowTarget;
@@ -47,12 +51,19 @@ namespace DemonViglu.FirePlay.Player
         private RestInteraction _fishingInteraction;
         private Transform _fishingPlayerTarget;
         private Transform _fishingWaterTarget;
+        private ActivityCameraProfile _activeActivityProfile;
+        private Transform _activeActivityPlayerTarget;
+        private Transform _activeActivityLookTarget;
+        private string _activeActivityProfileId;
+        private uint _activeActivityRevision;
+        private PlayerLook _playerLook;
 
         public bool HasValidSetup => _exploreCamera != null && _ritualCamera != null && _ritualTargetGroup != null;
         public bool IsRitualCameraActive => _activeInteraction != null;
 
         private void Awake()
         {
+            _playerLook ??= GetComponent<PlayerLook>();
             ApplyExplorePriority();
             DeactivateRitualCamera();
             DeactivateStargazingCamera();
@@ -61,9 +72,115 @@ namespace DemonViglu.FirePlay.Player
 
         private void OnDisable()
         {
+            EndActivityCamera(default);
             EndRitual(_activeInteraction);
             EndStargazing(_stargazingInteraction);
             EndFishing(_fishingInteraction);
+        }
+
+        /// <summary>
+        /// Executes a camera request emitted by the new Activity system. The
+        /// request contains only a stable profile id; Cinemachine references
+        /// remain owned by this player-side presentation component.
+        /// </summary>
+        public bool Execute(ActivityCameraRequest request)
+        {
+            if (request.Kind == ActivityCameraRequestKind.Exit)
+            {
+                return EndActivityCamera(request);
+            }
+
+            if (string.IsNullOrWhiteSpace(request.CameraProfileId))
+            {
+                return true;
+            }
+
+            var profile = FindActivityProfile(request.CameraProfileId);
+            if (profile == null || profile.Camera == null || profile.TargetGroup == null)
+            {
+                Debug.LogWarning(
+                    $"[RitualCameraDirector] Activity camera profile is not configured: {request.CameraProfileId}",
+                    this);
+                return false;
+            }
+
+            EndActivityCamera(default);
+            EndRitual(_activeInteraction);
+            EndStargazing(_stargazingInteraction);
+            EndFishing(_fishingInteraction);
+
+            var anchor = ActivityAnchorNode.FindById(request.AnchorId);
+            var playerTarget = _playerFrameTarget != null ? _playerFrameTarget : transform;
+            var lookTarget = profile.LookTarget != null
+                ? profile.LookTarget
+                : anchor != null ? anchor.transform : playerTarget;
+            var followTarget = profile.FollowAnchor != null ? profile.FollowAnchor : playerTarget;
+
+            AddMemberIfMissing(profile.TargetGroup, playerTarget, profile.PlayerWeight, profile.PlayerRadius);
+            if (lookTarget != playerTarget)
+            {
+                AddMemberIfMissing(profile.TargetGroup, lookTarget, profile.LookTargetWeight, profile.LookTargetRadius);
+            }
+
+            profile.Camera.Follow = followTarget;
+            profile.Camera.LookAt = profile.TargetGroup.transform;
+            profile.Camera.Priority = profile.Priority;
+            ApplyExplorePriority();
+
+            _activeActivityProfile = profile;
+            _activeActivityPlayerTarget = playerTarget;
+            _activeActivityLookTarget = lookTarget;
+            _activeActivityProfileId = request.CameraProfileId;
+            _activeActivityRevision = request.SessionRevision;
+            _playerLook?.SetLookLocked(true);
+            return true;
+        }
+
+        private bool EndActivityCamera(ActivityCameraRequest request)
+        {
+            if (_activeActivityProfile == null)
+            {
+                return true;
+            }
+
+            if (request.Kind == ActivityCameraRequestKind.Exit
+                && ((!string.IsNullOrWhiteSpace(request.CameraProfileId)
+                        && !string.Equals(request.CameraProfileId, _activeActivityProfileId, StringComparison.Ordinal))
+                    || (request.SessionRevision != 0
+                        && request.SessionRevision != _activeActivityRevision)))
+            {
+                return false;
+            }
+
+            RemoveMemberIfPresent(_activeActivityProfile.TargetGroup, _activeActivityPlayerTarget);
+            if (_activeActivityLookTarget != _activeActivityPlayerTarget)
+            {
+                RemoveMemberIfPresent(_activeActivityProfile.TargetGroup, _activeActivityLookTarget);
+            }
+
+            _activeActivityProfile.Camera.Priority = 0;
+            _activeActivityProfile = null;
+            _activeActivityPlayerTarget = null;
+            _activeActivityLookTarget = null;
+            _activeActivityProfileId = string.Empty;
+            _activeActivityRevision = 0;
+            _playerLook?.SetLookLocked(false);
+            ApplyExplorePriority();
+            return true;
+        }
+
+        private ActivityCameraProfile FindActivityProfile(string profileId)
+        {
+            if (_activityCameraProfiles == null) return null;
+            foreach (var profile in _activityCameraProfiles)
+            {
+                if (profile != null && string.Equals(profile.ProfileId, profileId, StringComparison.Ordinal))
+                {
+                    return profile;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -268,6 +385,32 @@ namespace DemonViglu.FirePlay.Player
             _stargazingSkyWeight = Mathf.Max(0f, _stargazingSkyWeight);
             _fishingPlayerWeight = Mathf.Max(0f, _fishingPlayerWeight);
             _fishingWaterWeight = Mathf.Max(0f, _fishingWaterWeight);
+        }
+
+        [Serializable]
+        private sealed class ActivityCameraProfile
+        {
+            [SerializeField] private string _profileId;
+            [SerializeField] private CinemachineCamera _camera;
+            [SerializeField] private CinemachineTargetGroup _targetGroup;
+            [SerializeField] private Transform _followAnchor;
+            [SerializeField] private Transform _lookTarget;
+            [SerializeField] private int _priority = 20;
+            [SerializeField, Min(0f)] private float _playerWeight = 1f;
+            [SerializeField, Min(0f)] private float _playerRadius = 0.7f;
+            [SerializeField, Min(0f)] private float _lookTargetWeight = 1f;
+            [SerializeField, Min(0f)] private float _lookTargetRadius = 0.3f;
+
+            public string ProfileId => _profileId;
+            public CinemachineCamera Camera => _camera;
+            public CinemachineTargetGroup TargetGroup => _targetGroup;
+            public Transform FollowAnchor => _followAnchor;
+            public Transform LookTarget => _lookTarget;
+            public int Priority => _priority;
+            public float PlayerWeight => _playerWeight;
+            public float PlayerRadius => _playerRadius;
+            public float LookTargetWeight => _lookTargetWeight;
+            public float LookTargetRadius => _lookTargetRadius;
         }
     }
 }

@@ -1,8 +1,6 @@
 using DemonViglu.FirePlay.Flame;
 using DemonViglu.FirePlay.World;
 using DemonViglu.FirePlay.Core;
-using DemonViglu.FirePlay.UI;
-using DemonViglu.FirePlay.Debugging;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.Player
@@ -20,8 +18,6 @@ namespace DemonViglu.FirePlay.Player
         public PlayerInteraction Interaction { get; private set; }
         public PlayerAnimationController Animation { get; private set; }
         public RestInteraction RestInteraction { get; private set; }
-        public MarshmallowInteraction MarshmallowInteraction { get; private set; }
-        public FishingInteraction FishingInteraction { get; private set; }
         public FlameResourceController FlameResource { get; private set; }
         public CampfirePlacement CampfirePlacement { get; private set; }
         public InteractionRouter InteractionRouter { get; private set; }
@@ -30,15 +26,8 @@ namespace DemonViglu.FirePlay.Player
         public PlayerSharedStateAdapter SharedStateAdapter { get; private set; }
         public PlayerExpressionController Expressions { get; private set; }
         public PlayerProximityEffects ProximityEffects { get; private set; }
-        public PlayerActivityController Activities { get; private set; }
-        public ActivityUIOrchestrator ActivityUI { get; private set; }
         public PlayerCampfireComfortController CampfireComfort { get; private set; }
         public PlayerRestPoseController RestPose { get; private set; }
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-        public ActivitySelectionProbe ActivitySelectionProbe { get; private set; }
-        public FishingActivityPresenterProbe FishingActivityPresenterProbe { get; private set; }
-#endif
-
         public static LocalPlayerContext EnsureFor(Component component)
         {
             if (component == null) return Current;
@@ -72,8 +61,6 @@ namespace DemonViglu.FirePlay.Player
             Interaction = GetComponent<PlayerInteraction>();
             Animation = GetComponent<PlayerAnimationController>();
             RestInteraction = GetComponent<RestInteraction>();
-            MarshmallowInteraction = GetComponent<MarshmallowInteraction>();
-            FishingInteraction = GetComponent<FishingInteraction>();
             FlameResource = GetComponent<FlameResourceController>();
             CampfirePlacement = GetComponent<CampfirePlacement>();
         }
@@ -90,25 +77,14 @@ namespace DemonViglu.FirePlay.Player
             Expressions.Initialize(this);
             ProximityEffects = GetComponent<PlayerProximityEffects>() ?? gameObject.AddComponent<PlayerProximityEffects>();
             ProximityEffects.Initialize(Interaction);
-            Activities = GetComponent<PlayerActivityController>() ?? gameObject.AddComponent<PlayerActivityController>();
-            Activities.Initialize(this);
-            RestInteraction?.InitializeActivitySupport();
-            ActivityUI = GetComponent<ActivityUIOrchestrator>() ?? gameObject.AddComponent<ActivityUIOrchestrator>();
-            ActivityUI.Initialize(this);
             CampfireComfort = GetComponent<PlayerCampfireComfortController>() ?? gameObject.AddComponent<PlayerCampfireComfortController>();
             CampfireComfort.Initialize();
             RestPose = GetComponent<PlayerRestPoseController>() ?? gameObject.AddComponent<PlayerRestPoseController>();
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            ActivitySelectionProbe = GetComponent<ActivitySelectionProbe>() ?? gameObject.AddComponent<ActivitySelectionProbe>();
-#endif
+            RestInteraction?.InitializeActivitySupport();
             CommandExecutor = GetComponent<WorldCommandExecutor>() ?? gameObject.AddComponent<WorldCommandExecutor>();
             CommandExecutor.Initialize(this);
             InteractionRouter = GetComponent<InteractionRouter>() ?? gameObject.AddComponent<InteractionRouter>();
             InteractionRouter.Initialize(this);
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            FishingActivityPresenterProbe = GetComponent<FishingActivityPresenterProbe>() ?? gameObject.AddComponent<FishingActivityPresenterProbe>();
-            ActivityUI?.RegisterPresenter(FishingActivityPresenterProbe);
-#endif
         }
     }
 }

@@ -24,8 +24,14 @@
 {"Key":"ConfirmForms",
 "Value":"SUIFW/UIPrefabs/ConfirmForms"},
 
-{"Key":"ActivityForms",
-"Value":"SUIFW/UIPrefabs/ActivityForms"}
+{"Key":"MarshmallowActivityForms",
+"Value":"SUIFW/UIPrefabs/MarshmallowActivityForms"}
+
+,{"Key":"ActivitySelectionForms",
+"Value":"SUIFW/UIPrefabs/ActivitySelectionForms"}
+
+,{"Key":"FishingActivityForms",
+"Value":"SUIFW/UIPrefabs/FishingActivityForms"}
 
 ]
 }

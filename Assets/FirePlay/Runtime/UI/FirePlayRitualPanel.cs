@@ -1,4 +1,5 @@
 using DemonViglu.FirePlay.Player;
+using DemonViglu.FirePlay.Activity;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -25,7 +26,11 @@ namespace DemonViglu.FirePlay.UI
         {
             _localPlayer ??= LocalPlayerContext.Current;
             _coordinator ??= _localPlayer != null ? _localPlayer.RitualCoordinator : null;
-            if (_localPlayer != null && _localPlayer.ActivityUI != null && _localPlayer.ActivityUI.HasShownForm)
+            // The new Activity PresentationHost owns its dedicated form. Hide
+            // the legacy ritual panel while that Session is active so its
+            // RitualPrimary/RitualSecondary buttons cannot steal the click.
+            var activityHost = PlayerActivityHost.Local;
+            if (activityHost != null && activityHost.HasActiveActivity)
             {
                 SetActive(_panelRoot, false);
                 return;

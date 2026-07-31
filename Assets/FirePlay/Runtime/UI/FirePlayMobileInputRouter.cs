@@ -1,4 +1,6 @@
+using DemonViglu.FirePlay.Activity;
 using DemonViglu.FirePlay.Player;
+using SUIFW;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.UI
@@ -13,6 +15,8 @@ namespace DemonViglu.FirePlay.UI
         [SerializeField] private FirePlayPlayerInput _playerInput;
         [SerializeField] private RestInteraction _rest;
         [SerializeField] private LocalPlayerContext _localPlayer;
+        [SerializeField] private PlayerActivityHost _activityHost;
+        [SerializeField, Min(0.1f)] private float _activityAnchorSearchDistance = 3f;
         private IEventPublisher _events;
 
         private void Awake()
@@ -80,6 +84,70 @@ namespace DemonViglu.FirePlay.UI
                 _events?.Publish(new ExpressionRequested(_localPlayer.PlayerId, expressionId));
         }
 
+        /// <summary>
+        /// Generic activity-wheel entry. The nearest Anchor is resolved only
+        /// to provide its stable id; the ActivityHost performs the actual
+        /// definition lookup, rule evaluation and Session start.
+        /// </summary>
+        public void SelectActivity(string activityId)
+        {
+            ResolveActivityHost();
+            if (_activityHost == null || string.IsNullOrWhiteSpace(activityId)) return;
+
+            var anchor = ActivityAnchorNode.FindNearest(
+                _activityHost.transform.position,
+                _activityAnchorSearchDistance);
+            if (anchor != null && anchor.Provides(activityId))
+            {
+                SelectActivityAtAnchor(anchor.AnchorId, activityId);
+                return;
+            }
+
+            if (_activityHost.Catalog != null
+                && _activityHost.Catalog.TryGet(activityId, out var definition)
+                && definition.Scope == ActivityScope.Anywhere)
+            {
+                SelectAnywhereActivity(activityId);
+                return;
+            }
+
+            Debug.LogWarning(
+                $"[FirePlayMobileInputRouter] 当前 Anchor 未提供活动：{activityId}。请使用 SelectActivityAtAnchor 指定正确地点，或将活动定义为 Anywhere。",
+                this);
+        }
+
+        /// <summary>Explicit activity selection for a wheel attached to a known Anchor.</summary>
+        public void SelectActivityAtAnchor(string anchorId, string activityId)
+        {
+            ResolveActivityHost();
+            if (_activityHost == null || string.IsNullOrWhiteSpace(anchorId) || string.IsNullOrWhiteSpace(activityId)) return;
+
+            EnsureEventBus();
+            _events?.Publish(new DemonViglu.FirePlay.Activity.ActivitySelectionRequested(
+                _activityHost.PlayerId,
+                anchorId,
+                activityId));
+        }
+
+        /// <summary>Explicit entry for Anywhere activities such as emotes or guitar.</summary>
+        public void SelectAnywhereActivity(string activityId)
+        {
+            ResolveActivityHost();
+            if (_activityHost == null || string.IsNullOrWhiteSpace(activityId)) return;
+
+            EnsureEventBus();
+            _events?.Publish(new DemonViglu.FirePlay.Activity.ActivitySelectionRequested(
+                _activityHost.PlayerId,
+                string.Empty,
+                activityId));
+        }
+
+        /// <summary>Opens the generic activity selection surface.</summary>
+        public void OpenActivitySelection()
+        {
+            UIManager.GetInstance().ShowUIForms("ActivitySelectionForms");
+        }
+
         private void Request(System.Action<FirePlayPlayerInput> request)
         {
             ResolvePlayerInput();
@@ -96,6 +164,18 @@ namespace DemonViglu.FirePlay.UI
             _events ??= GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
             _playerInput ??= _localPlayer.Input;
             _rest ??= _localPlayer.RestInteraction;
+        }
+
+        private void ResolveActivityHost()
+        {
+            _activityHost ??= PlayerActivityHost.Local;
+            if (_activityHost == null)
+                _activityHost = FindAnyObjectByType<PlayerActivityHost>();
+        }
+
+        private void EnsureEventBus()
+        {
+            _events ??= GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
         }
     }
 }

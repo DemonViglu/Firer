@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3705180480966200510}
   - component: {fileID: 5063893319227214896}
-  - component: {fileID: 76763807160341158}
+  - component: {fileID: 9000000000000000001}
   m_Layer: 0
   m_Name: Fishing_RestPot
   m_TagString: Untagged
@@ -47,7 +47,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.RestSpot
   _interactionRadius: 3.51
---- !u!114 &76763807160341158
+--- !u!114 &9000000000000000001
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -56,17 +56,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 337721700724211250}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5af3a147c42f4d068c64c303880ca4e5, type: 3}
+  m_Script: {fileID: 11500000, guid: 97e8a7bd4f7c4eb7a2f9c3df01a9e001, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.FishingRitual
-  _lookTarget: {fileID: 98600597413187334}
-  _turnSpeed: 2.5
-  _rodFuelCost: 30
-  _catchesPerRod: 4
-  _fuelPerCatch: 8
-  _minimumBiteDelay: 1.5
-  _maximumBiteDelay: 4
-  _hookWindowSeconds: 2
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.ActivityAnchorNode
+  _anchorId: fishing.restpot
+  _regionId: fishing
+  _tags: []
+  _activities:
+  - {fileID: 11400000, guid: 4b8d2f6a1c3e5b7d9f0a2c4e6b8d1f35, type: 2}
+  _ruleProviderBehaviours: []
 --- !u!1 &4863215806714534347
 GameObject:
   m_ObjectHideFlags: 0

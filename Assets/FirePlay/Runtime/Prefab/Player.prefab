@@ -861,13 +861,11 @@ GameObject:
   - component: {fileID: 656637033389967464}
   - component: {fileID: 1743969675154280312}
   - component: {fileID: 1536743572776703721}
-  - component: {fileID: 2924035416857554141}
   - component: {fileID: 1357382950971186938}
   - component: {fileID: 2759977987356437026}
   - component: {fileID: 8662161886728232265}
-  - component: {fileID: 8916949396252110027}
+  - component: {fileID: 9016949396252110027}
   - component: {fileID: 2884395103448089037}
-  - component: {fileID: 5920864436569382322}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1102,27 +1100,6 @@ MonoBehaviour:
   _resourceController: {fileID: 0}
   _campfirePrefab: {fileID: 6920482071578527915, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
   _maximumActiveRuntimeCampfires: 4
---- !u!114 &2924035416857554141
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5546368970521514861}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 79ac2b2d926844608341d98d363ec8d5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.MarshmallowInteraction
-  _rest: {fileID: 0}
-  _resourceController: {fileID: 0}
-  _marshmallowProp: {fileID: 6623862794109983138}
-  _turnDegrees: 90
-  _animationController: {fileID: 0}
-  _showPrototypeMeter: 1
-  _meterWidth: 420
-  _meterHeight: 28
-  _meterBottomMargin: 70
 --- !u!114 &1357382950971186938
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1175,7 +1152,7 @@ MonoBehaviour:
   _ambientMinimumVolume: 0.35
   _warmthMaximumVolume: 0.8
   _restMaximumVolume: 1
---- !u!114 &8916949396252110027
+--- !u!114 &9016949396252110027
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1184,11 +1161,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 5546368970521514861}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8ccf960f99c34b74a7fdb11f39b8dcd0, type: 3}
+  m_Script: {fileID: 11500000, guid: e2b7c9d1f4a63850b6d8e0c2f7a91543, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.FishingInteraction
-  _rest: {fileID: 0}
-  _resourceController: {fileID: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.FishingActivityVisuals
+  _activityHost: {fileID: 0}
   _fishingRodProp: {fileID: 943385649231640846}
   _animationController: {fileID: 0}
 --- !u!114 &2884395103448089037
@@ -1240,25 +1216,6 @@ MonoBehaviour:
     parameterName: EmoteWarmth
   - cueId: expression.sit
     parameterName: EmoteSit
---- !u!114 &5920864436569382322
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5546368970521514861}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5d90b27a2cd54fc9b7bb193bcebde320, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Debugging.ActivitySelectionProbe
-  _localPlayer: {fileID: 0}
-  _anchor: {fileID: 0}
-  _firstActivityId: marshmallow
-  _secondActivityId: fishing
-  _firstKey: 41
-  _secondKey: 42
-  _enabled: 1
 --- !u!1 &6885646609970973548
 GameObject:
   m_ObjectHideFlags: 0
@@ -1268,6 +1225,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 329767659045973214}
+  - component: {fileID: 647466909312235555}
   m_Layer: 0
   m_Name: Hand
   m_TagString: Untagged
@@ -1303,7 +1261,6 @@ GameObject:
   - component: {fileID: 6623862794109983138}
   - component: {fileID: 1260898232653670224}
   - component: {fileID: 2985695178506586740}
-  - component: {fileID: 647466909312235555}
   m_Layer: 0
   m_Name: Marshmallow
   m_TagString: Untagged
@@ -1389,13 +1346,15 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7288205605736068481}
+  m_GameObject: {fileID: 6885646609970973548}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 20c608e835db440da163161eeeb934c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.MarshmallowVisuals
-  _interaction: {fileID: 0}
+  _activityHost: {fileID: 0}
+  _animationController: {fileID: 0}
+  _marshmallowProp: {fileID: 6623862794109983138}
   _renderers: []
   _rawColor: {r: 1, g: 0.93, b: 0.78, a: 1}
   _roastingColor: {r: 1, g: 0.72, b: 0.3, a: 1}

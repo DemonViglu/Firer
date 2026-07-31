@@ -179,6 +179,10 @@ namespace DemonViglu.FirePlay.World
             }
 
             var instance = Instantiate(_smallFirePrefab, _candidate.point, Quaternion.identity);
+            // A placed fire is a live world object. Keep this invariant here as
+            // well as in the prefab so an accidentally inactive authoring prefab
+            // cannot silently consume fuel without registering in ActiveCount.
+            instance.gameObject.SetActive(true);
             var stableId = instance.GetComponent<StableSceneId>() ?? instance.gameObject.AddComponent<StableSceneId>();
             if (!stableId.TryAssignRuntimeSpawnValue($"smallfire.{Guid.NewGuid():N}"))
             {

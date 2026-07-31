@@ -60,6 +60,11 @@ namespace SUIFW
             return _Instance;
         }
 
+        public static UIManager TryGetInstance()
+        {
+            return _Instance;
+        }
+
         void Awake()
         {
             //字段初始化
@@ -86,6 +91,20 @@ namespace SUIFW
             DontDestroyOnLoad(_CanvasTransform);
             //初始化“UI窗体预设”路径数据
             InitUIFormsPathsData();
+        }
+
+        private void OnDestroy()
+        {
+            if (_Instance == this)
+            {
+                _Instance = null;
+            }
+
+            _DicCurrentShowUIForms?.Clear();
+            _StaCurrentUIForms?.Clear();
+            _DicALLUIForms?.Clear();
+            _DicUIFormsPaths?.Clear();
+            _CanvasTransform = null;
         }
 
         /// <summary>

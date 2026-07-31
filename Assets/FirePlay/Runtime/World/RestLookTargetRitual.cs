@@ -21,6 +21,7 @@ namespace DemonViglu.FirePlay.World
         private bool _usingFishingCamera;
 
         public Transform LookTarget => _lookTarget;
+        public override bool LocksLookInput => true;
         protected virtual bool RotatePlayerTowardsTarget => false;
         protected virtual bool UsesExternalCamera => false;
 
@@ -34,7 +35,8 @@ namespace DemonViglu.FirePlay.World
             }
 
             _interaction = interaction;
-            _interaction.GetComponent<PlayerLook>()?.SetLookLocked(true);
+            if (interaction.GetComponent<PlayerActivityController>() == null)
+                _interaction.GetComponent<PlayerLook>()?.SetLookLocked(true);
 
             _cameraDirector = UsesExternalCamera || UsesStargazingCamera || UsesFishingCamera
                 ? Object.FindAnyObjectByType<RitualCameraDirector>()
@@ -86,7 +88,8 @@ namespace DemonViglu.FirePlay.World
                 _cameraTransform.localRotation = _cameraLocalRotation;
             }
 
-            interaction.GetComponent<PlayerLook>()?.SetLookLocked(false);
+            if (interaction.GetComponent<PlayerActivityController>() == null)
+                interaction.GetComponent<PlayerLook>()?.SetLookLocked(false);
             _interaction = null;
             _cameraDirector = null;
             _cameraTransform = null;

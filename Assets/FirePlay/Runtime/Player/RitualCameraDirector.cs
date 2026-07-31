@@ -71,11 +71,13 @@ namespace DemonViglu.FirePlay.Player
         /// </summary>
         public bool TryBeginStargazing(RestInteraction interaction, Transform skyTarget, Transform companionTarget)
         {
-            if (_stargazingCamera == null || _stargazingTargetGroup == null || interaction == null || skyTarget == null || _activeInteraction != null)
+            if (_stargazingCamera == null || _stargazingTargetGroup == null || interaction == null || skyTarget == null)
             {
                 return false;
             }
 
+            EndRitual(_activeInteraction);
+            EndFishing(_fishingInteraction);
             EndStargazing(_stargazingInteraction);
             _stargazingInteraction = interaction;
             _stargazingPlayerTarget = _playerFrameTarget != null ? _playerFrameTarget : interaction.transform;
@@ -120,12 +122,13 @@ namespace DemonViglu.FirePlay.Player
         /// </summary>
         public bool TryBeginFishing(RestInteraction interaction, Transform waterTarget)
         {
-            if (_fishingCamera == null || _fishingTargetGroup == null || interaction == null || waterTarget == null ||
-                _activeInteraction != null || _stargazingInteraction != null)
+            if (_fishingCamera == null || _fishingTargetGroup == null || interaction == null || waterTarget == null)
             {
                 return false;
             }
 
+            EndRitual(_activeInteraction);
+            EndStargazing(_stargazingInteraction);
             EndFishing(_fishingInteraction);
             _fishingInteraction = interaction;
             _fishingPlayerTarget = _playerFrameTarget != null ? _playerFrameTarget : interaction.transform;
@@ -168,6 +171,8 @@ namespace DemonViglu.FirePlay.Player
                 return false;
             }
 
+            EndStargazing(_stargazingInteraction);
+            EndFishing(_fishingInteraction);
             EndRitual(_activeInteraction);
 
             _activeInteraction = interaction;

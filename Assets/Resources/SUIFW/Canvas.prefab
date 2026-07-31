@@ -27,14 +27,7 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 8623448171637832097}
-  - {fileID: 4674388921966549995}
-  - {fileID: 1794009192176932602}
-  - {fileID: 218296287288798363}
-  - {fileID: 271166938348427055}
-  - {fileID: 6491392440960906737}
-  - {fileID: 9115102668191643101}
+  m_Children: []
   m_Father: {fileID: 224000014258978276}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -85,7 +78,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 76c392e42b5098c458856cdf6ecaaaa1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: 
   m_FirstSelected: {fileID: 0}
   m_sendNavigationEvents: 1
@@ -100,7 +93,7 @@ MonoBehaviour:
   m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f231c4fb786f3946a6b90b886c48677, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: 
   m_SendPointerHoverToParent: 1
   m_HorizontalAxis: Horizontal
@@ -492,7 +485,14 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 8623448171637832097}
+  - {fileID: 4674388921966549995}
+  - {fileID: 1794009192176932602}
+  - {fileID: 218296287288798363}
+  - {fileID: 271166938348427055}
+  - {fileID: 6491392440960906737}
+  - {fileID: 9115102668191643101}
   m_Father: {fileID: 224000014258978276}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1029,6 +1029,19 @@ MonoBehaviour:
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: New Text
+--- !u!114 &910000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1279484600662864183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ac57dd4c64f4ee9b79c9b29e0d7d922, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.FirePlayRitualContentBinding
+  _ritualId: marshmallow
 --- !u!1 &1378265160031067795
 GameObject:
   m_ObjectHideFlags: 0
@@ -1191,12 +1204,12 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1912452919509940744}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 224000010975163462}
+  m_Father: {fileID: 224000014018469270}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -1217,8 +1230,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.FirePlayMobileInputRouter
   _playerInput: {fileID: 0}
   _rest: {fileID: 0}
-  _marshmallow: {fileID: 0}
-  _fishing: {fileID: 0}
+  _localPlayer: {fileID: 0}
 --- !u!114 &6039952747931055216
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1231,6 +1243,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a91417e68854e47b67bf56c04623422, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.FirePlayRitualPanel
+  _localPlayer: {fileID: 0}
   _panelRoot: {fileID: 5780959609777861157}
   _statusText: {fileID: 7468714421611532043}
   _primaryActionText: {fileID: 1598124646626618623}
@@ -1248,6 +1261,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.FirePlayCampfirePanel
   _interaction: {fileID: 0}
+  _localPlayer: {fileID: 0}
   _panelRoot: {fileID: 4384805067721333120}
   _warmthText: {fileID: 6975671515119768887}
   _remainingTimeText: {fileID: 3078300112385206335}
@@ -1265,6 +1279,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.FirePlayPlacementPanel
   _placement: {fileID: 0}
+  _localPlayer: {fileID: 0}
   _panelRoot: {fileID: 8122532420290157584}
   _statusText: {fileID: 0}
 --- !u!114 &2979154068419087371
@@ -1280,6 +1295,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.FirePlayContextActionsPanel
   _interaction: {fileID: 0}
+  _localPlayer: {fileID: 0}
   _panelRoot: {fileID: 0}
   _gatherEmberButton: {fileID: 3653379557397380519}
   _addFireButton: {fileID: 6139456808824934718}
@@ -1310,7 +1326,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2349833674802868751}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1319,7 +1335,7 @@ RectTransform:
   - {fileID: 4666259414552423089}
   - {fileID: 7123433850978388420}
   - {fileID: 8861813859885419847}
-  m_Father: {fileID: 224000010975163462}
+  m_Father: {fileID: 224000014018469270}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -1773,19 +1789,6 @@ MonoBehaviour:
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: New Text
---- !u!114 &910000000000000001
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1279484600662864183}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0ac57dd4c64f4ee9b79c9b29e0d7d922, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.FirePlayRitualContentBinding
-  _ritualId: marshmallow
 --- !u!114 &910000000000000002
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1796,7 +1799,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0ac57dd4c64f4ee9b79c9b29e0d7d922, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.FirePlayRitualContentBinding
   _ritualId: fishing
 --- !u!1 &4128412237224530511
@@ -2114,7 +2117,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4384805067721333120}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -2122,7 +2125,7 @@ RectTransform:
   - {fileID: 7939601447399604703}
   - {fileID: 7308344527441249079}
   - {fileID: 3815125171521552175}
-  m_Father: {fileID: 224000010975163462}
+  m_Father: {fileID: 224000014018469270}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -2787,7 +2790,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5780959609777861157}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -2797,7 +2800,7 @@ RectTransform:
   - {fileID: 7797857196657585957}
   - {fileID: 1826737557583500513}
   - {fileID: 1599525845666053624}
-  m_Father: {fileID: 224000010975163462}
+  m_Father: {fileID: 224000014018469270}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -3741,12 +3744,12 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7564043602111810517}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 224000010975163462}
+  m_Father: {fileID: 224000014018469270}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -3805,6 +3808,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.FirePlayMobileLookArea
   _inputRouter: {fileID: 7696146763000996723}
   _dragSensitivity: 1
+  _placement: {fileID: 0}
+  _localPlayer: {fileID: 0}
 --- !u!1 &7572976837456665338
 GameObject:
   m_ObjectHideFlags: 0
@@ -4044,13 +4049,13 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8122532420290157584}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8943077291155880216}
-  m_Father: {fileID: 224000010975163462}
+  m_Father: {fileID: 224000014018469270}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -4289,14 +4294,14 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8561610832917939521}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2593247659014237781}
   - {fileID: 7854849551910651574}
-  m_Father: {fileID: 224000010975163462}
+  m_Father: {fileID: 224000014018469270}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -4318,8 +4323,7 @@ MonoBehaviour:
   _flameResource: {fileID: 0}
   _playerInteraction: {fileID: 0}
   _restInteraction: {fileID: 0}
-  _marshmallowInteraction: {fileID: 0}
-  _fishingInteraction: {fileID: 0}
+  _localPlayer: {fileID: 0}
   _fuelRoot: {fileID: 8145204193553946608}
   _fuelFill: {fileID: 29280421086983103}
   _flameImage: {fileID: 0}

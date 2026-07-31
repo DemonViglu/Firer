@@ -29,6 +29,11 @@ namespace DemonViglu.FirePlay.World
         public override string ActivityId => "fishing";
         public override string ActivityDisplayName => "钓鱼";
         public override string ActivityPresentationId => "custom.fishing";
+        public override ActivityActionDescriptor[] ActivityActions => new[]
+        {
+            new ActivityActionDescriptor("fishing.cast", "抛竿"),
+            new ActivityActionDescriptor("fishing.reel", "收线")
+        };
         public override string RestHint => "这里适合坐下来，静静钓一会儿鱼";
         public override string ShortRestHint => " · 这里可以坐下钓鱼";
 

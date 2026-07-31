@@ -43,6 +43,7 @@ namespace DemonViglu.FirePlay.Player
         private PlayerModeController _mode;
         private PlayerAnimationController _animation;
         private IEventPublisher _events;
+        private bool _eventsAttached;
 
         public PlayerExpressionDefinition[] Definitions => _definitions;
         public string LastExpressionId { get; private set; } = string.Empty;
@@ -50,14 +51,28 @@ namespace DemonViglu.FirePlay.Player
 
         public void Initialize(LocalPlayerContext context)
         {
+            DetachEvents();
             _context = context;
             _mode ??= GetComponent<PlayerModeController>();
             _animation ??= GetComponent<PlayerAnimationController>();
             _events ??= GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
-            _events.Unsubscribe<ExpressionRequested>(OnExpressionRequested);
-            _events.Unsubscribe<PlayerIntentRequested>(OnPlayerIntentRequested);
+            AttachEvents();
+        }
+
+        private void AttachEvents()
+        {
+            if (_eventsAttached || _events == null) return;
             _events.Subscribe<ExpressionRequested>(OnExpressionRequested);
             _events.Subscribe<PlayerIntentRequested>(OnPlayerIntentRequested);
+            _eventsAttached = true;
+        }
+
+        private void DetachEvents()
+        {
+            if (!_eventsAttached || _events == null) return;
+            _events.Unsubscribe<ExpressionRequested>(OnExpressionRequested);
+            _events.Unsubscribe<PlayerIntentRequested>(OnPlayerIntentRequested);
+            _eventsAttached = false;
         }
 
         private void Awake() => Initialize(GetComponent<LocalPlayerContext>());
@@ -65,8 +80,7 @@ namespace DemonViglu.FirePlay.Player
 
         private void OnDisable()
         {
-            _events?.Unsubscribe<ExpressionRequested>(OnExpressionRequested);
-            _events?.Unsubscribe<PlayerIntentRequested>(OnPlayerIntentRequested);
+            DetachEvents();
         }
 
         private void OnExpressionRequested(ExpressionRequested request)

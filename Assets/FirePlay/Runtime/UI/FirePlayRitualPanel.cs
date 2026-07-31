@@ -25,6 +25,11 @@ namespace DemonViglu.FirePlay.UI
         {
             _localPlayer ??= LocalPlayerContext.Current;
             _coordinator ??= _localPlayer != null ? _localPlayer.RitualCoordinator : null;
+            if (_localPlayer != null && _localPlayer.ActivityUI != null && _localPlayer.ActivityUI.HasShownForm)
+            {
+                SetActive(_panelRoot, false);
+                return;
+            }
             var view = _coordinator != null ? _coordinator.ViewState : default;
             SetActive(_panelRoot, view.IsVisible);
             foreach (var binding in _contentBindings)

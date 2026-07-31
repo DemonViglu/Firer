@@ -22,7 +22,10 @@
 "Value":"SUIFW/UIPrefabs/GoodsInfoForms"},
 
 {"Key":"ConfirmForms",
-"Value":"SUIFW/UIPrefabs/ConfirmForms"}
+"Value":"SUIFW/UIPrefabs/ConfirmForms"},
+
+{"Key":"ActivityForms",
+"Value":"SUIFW/UIPrefabs/ActivityForms"}
 
 ]
 }

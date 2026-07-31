@@ -10,7 +10,7 @@ namespace DemonViglu.FirePlay.Player
     /// 玩家侧钓鱼原型。Q 用于拟造/抛竿，E 只在上钩窗口收线。
     /// 没有背包与存档：每根竿钓满后本局结束，结果通过事件提供给未来分享或物品系统。
     /// </summary>
-    public sealed class FishingInteraction : MonoBehaviour, IRitualInteraction
+    public sealed class FishingInteraction : MonoBehaviour, IRitualInteraction, IActivityActionHandler
     {
         private enum FishingState
         {
@@ -27,6 +27,7 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField] private PlayerAnimationController _animationController;
 
         private FishingRitual _activeRitual;
+        private LocalPlayerContext _context;
         private FishingState _state;
         private int _catches;
         private float _stateEndsAt;
@@ -37,6 +38,7 @@ namespace DemonViglu.FirePlay.Player
         public bool IsFishBiting => _state == FishingState.BiteReady;
         public int Catches => _catches;
         public bool IsActive => _activeRitual != null;
+        public string ActivityId => "fishing";
         public string SharedStateId => HasRod ? PlayerAnimationStateIds.Fishing : PlayerAnimationStateIds.Resting;
         public RitualViewState ViewState => new(
             "fishing",
@@ -69,6 +71,7 @@ namespace DemonViglu.FirePlay.Player
 
         private void Awake()
         {
+            _context = GetComponent<LocalPlayerContext>();
             _rest ??= GetComponent<RestInteraction>();
             _resourceController ??= GetComponent<FlameResourceController>();
             _animationController ??= GetComponent<PlayerAnimationController>();
@@ -87,6 +90,37 @@ namespace DemonViglu.FirePlay.Player
         private void OnDisable()
         {
             EndSession(cancelled: true);
+        }
+
+        public bool TryHandle(ActivityActionRequested request)
+        {
+            if (!IsRequestForCurrentActivity(request)) return false;
+
+            return request.ActionId switch
+            {
+                "fishing.cast" => TryPrimaryAction(),
+                "fishing.reel" => TrySecondaryAction(),
+                "activity.exit" => _context.Activities.EndActivity(),
+                _ => false
+            };
+        }
+
+        private bool IsRequestForCurrentActivity(ActivityActionRequested request)
+        {
+            var context = ResolveContext();
+            var activities = context != null ? context.Activities : null;
+            if (request == null || activities == null || !activities.Session.IsActive) return false;
+
+            var snapshot = activities.Session.Snapshot;
+            return request.PlayerId == (context != null ? context.PlayerId : string.Empty)
+                && request.AnchorId == snapshot.AnchorId
+                && request.ActivityId == ActivityId
+                && snapshot.ActivityId == ActivityId;
+        }
+
+        private LocalPlayerContext ResolveContext()
+        {
+            return _context ??= GetComponent<LocalPlayerContext>() ?? LocalPlayerContext.Current;
         }
 
         private void Update()

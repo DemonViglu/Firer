@@ -16,6 +16,8 @@ namespace DemonViglu.FirePlay.Player
         private IEventPublisher _events;
         private PlayerRestPoseController _restPose;
         private PlayerCampfireComfortController _campfireComfort;
+        private PlayerLook _look;
+        private bool _eventsAttached;
 
         public ActivitySession Session { get; } = new();
         public ActivityAnchor NearestAnchor { get; private set; }
@@ -24,17 +26,19 @@ namespace DemonViglu.FirePlay.Player
 
         public void Initialize(LocalPlayerContext context)
         {
+            DetachEvents();
             _context = context;
             _restPose ??= GetComponent<PlayerRestPoseController>();
             _campfireComfort ??= GetComponent<PlayerCampfireComfortController>();
+            _look ??= GetComponent<PlayerLook>();
+            AttachEvents();
         }
 
         private void Awake() => Initialize(GetComponent<LocalPlayerContext>());
 
         private void OnEnable()
         {
-            _events = GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
-            _events.Subscribe<ActivitySelectionRequested>(OnActivitySelectionRequested);
+            AttachEvents();
         }
 
         private void Update()
@@ -66,6 +70,7 @@ namespace DemonViglu.FirePlay.Player
         {
             _restPose ??= GetComponent<PlayerRestPoseController>() ?? gameObject.AddComponent<PlayerRestPoseController>();
             _restPose.Initialize(movement, look, modeController, cameraDrop, cameraTransitionSpeed, standingPivotLocalPosition);
+            _look = look;
             _campfireComfort ??= GetComponent<PlayerCampfireComfortController>() ?? gameObject.AddComponent<PlayerCampfireComfortController>();
             _campfireComfort.Initialize();
         }
@@ -86,6 +91,7 @@ namespace DemonViglu.FirePlay.Player
             _campfireComfort ??= GetComponent<PlayerCampfireComfortController>();
             _campfireComfort?.TryBegin(spot);
             ActiveAnchor = anchor;
+            ApplyActivityLookLock(Session.Snapshot);
             SessionChanged?.Invoke(Session.Snapshot);
             return true;
         }
@@ -106,6 +112,7 @@ namespace DemonViglu.FirePlay.Player
             if (!Session.TrySwitch(_context.PlayerId, anchor.AnchorId, offer.activityId, offer.presentationId)) return false;
 
             ActiveAnchor = anchor;
+            ApplyActivityLookLock(Session.Snapshot);
             SessionChanged?.Invoke(Session.Snapshot);
             return true;
         }
@@ -117,8 +124,27 @@ namespace DemonViglu.FirePlay.Player
             if (!Session.End()) return false;
 
             ActiveAnchor = null;
+            ApplyActivityLookLock(Session.Snapshot);
             SessionChanged?.Invoke(Session.Snapshot);
             return true;
+        }
+
+        private void ApplyActivityLookLock(ActivitySessionSnapshot snapshot)
+        {
+            var shouldLock = false;
+            if (snapshot.IsActive && ActiveAnchor != null)
+            {
+                if (snapshot.ActivityId == "rest")
+                {
+                    shouldLock = ActiveAnchor.TryGetSingleLegacyActivityOffer(out var legacyOffer) && legacyOffer.locksLookInput;
+                }
+                else
+                {
+                    shouldLock = ActiveAnchor.TryGetOffer(snapshot.ActivityId, out var offer) && offer.locksLookInput;
+                }
+            }
+
+            _look?.SetLookLocked(shouldLock);
         }
 
         private void OnActivitySelectionRequested(ActivitySelectionRequested request)
@@ -127,6 +153,43 @@ namespace DemonViglu.FirePlay.Player
 
             var anchor = ResolveAnchor(request.AnchorId);
             if (anchor != null) TrySelectActivity(anchor, request.ActivityId);
+        }
+
+        private void OnActivityActionRequested(ActivityActionRequested request)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.Log($"[PlayerActivityController] 收到动作：{request?.ActivityId}/{request?.ActionId}，player={request?.PlayerId}，sessionActive={Session.IsActive}", this);
+#endif
+            if (_context == null || request == null || request.PlayerId != _context.PlayerId || !Session.IsActive)
+                return;
+
+            var snapshot = Session.Snapshot;
+            if (request.AnchorId != snapshot.AnchorId || request.ActivityId != snapshot.ActivityId)
+                return;
+
+            var matchedHandler = false;
+            foreach (var behaviour in GetComponents<MonoBehaviour>())
+            {
+                if (behaviour is not IActivityActionHandler handler || !behaviour.isActiveAndEnabled)
+                    continue;
+                if (handler.ActivityId != snapshot.ActivityId)
+                    continue;
+
+                matchedHandler = true;
+                if (handler.TryHandle(request))
+                {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                    Debug.Log($"[PlayerActivityController] Handler 已消费：{snapshot.ActivityId}/{request.ActionId}", this);
+#endif
+                    return;
+                }
+            }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.LogWarning(matchedHandler
+                ? $"[PlayerActivityController] Handler 存在但未消费：{snapshot.ActivityId}/{request.ActionId}"
+                : $"[PlayerActivityController] 没有启用的 Handler：{snapshot.ActivityId}/{request.ActionId}", this);
+#endif
         }
 
         private ActivityAnchor ResolveAnchor(string anchorId)
@@ -139,11 +202,31 @@ namespace DemonViglu.FirePlay.Player
 
         private void OnDisable()
         {
-            _events?.Unsubscribe<ActivitySelectionRequested>(OnActivitySelectionRequested);
+            DetachEvents();
             _restPose?.Exit();
             _campfireComfort?.End();
             Session.End();
             ActiveAnchor = null;
+            _look?.SetLookLocked(false);
+        }
+
+        private void AttachEvents()
+        {
+            if (_eventsAttached) return;
+
+            _events = GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
+            _events.Subscribe<ActivitySelectionRequested>(OnActivitySelectionRequested);
+            _events.Subscribe<ActivityActionRequested>(OnActivityActionRequested);
+            _eventsAttached = true;
+        }
+
+        private void DetachEvents()
+        {
+            if (!_eventsAttached || _events == null) return;
+
+            _events.Unsubscribe<ActivitySelectionRequested>(OnActivitySelectionRequested);
+            _events.Unsubscribe<ActivityActionRequested>(OnActivityActionRequested);
+            _eventsAttached = false;
         }
     }
 }

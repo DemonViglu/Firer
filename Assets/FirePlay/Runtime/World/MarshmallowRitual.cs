@@ -26,6 +26,12 @@ namespace DemonViglu.FirePlay.World
         public override string ActivityId => "marshmallow";
         public override string ActivityDisplayName => "烤棉花糖";
         public override string ActivityPresentationId => "compact.marshmallow";
+        public override ActivityActionDescriptor[] ActivityActions => new[]
+        {
+            new ActivityActionDescriptor("marshmallow.materialize", "取出棉花糖"),
+            new ActivityActionDescriptor("marshmallow.turn", "翻面"),
+            new ActivityActionDescriptor("marshmallow.eat", "吃掉")
+        };
         public bool IsCampfireBurning => TryGetComponent<Campfire>(out var campfire) && !campfire.IsExtinguished;
         public override string RestHint => "这里可以坐下，烤一颗棉花糖";
         public override string ShortRestHint => " · 这里可以坐下烤棉花糖";

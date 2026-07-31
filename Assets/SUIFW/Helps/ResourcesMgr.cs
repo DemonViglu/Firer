@@ -37,6 +37,15 @@ namespace SUIFW
             ht = new Hashtable();
         }
 
+        private void OnDestroy()
+        {
+            if (_Instance == this)
+            {
+                _Instance = null;
+            }
+            ht?.Clear();
+        }
+
         /// <summary>
         /// 调用资源（带对象缓冲技术）
         /// </summary>

@@ -335,6 +335,7 @@ GameObject:
   - component: {fileID: 8292225297649727681}
   - component: {fileID: 1827968074440552529}
   - component: {fileID: 5305289997750256037}
+  - component: {fileID: 1586079873786013634}
   m_Layer: 0
   m_Name: CampFire
   m_TagString: Untagged
@@ -392,6 +393,7 @@ MonoBehaviour:
   _warmth: 0
   _warmthInitialized: 0
   _isRuntimeCreated: 0
+  _isRetired: 0
   _sourceSmallFireId: 
 --- !u!114 &3161424325882539189
 MonoBehaviour:
@@ -405,7 +407,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80ca305f04f441bf9b906f95b14aa633, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.CampfireVisuals
-  _visualRoot: {fileID: 0}
+  _visualRoot: {fileID: 1917531652596367429}
   _fireLight: {fileID: 0}
   _fireVfx: {fileID: 0}
   _stageVisualRoots:
@@ -442,6 +444,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.MarshmallowRitual
   _lookTarget: {fileID: 4090978562897588483}
   _turnSpeed: 2.5
+  _materializeFuelCost: 3
+  _turnsRequired: 2
+  _needleCyclesPerSecond: 0.35
+  _perfectZoneWidth: 0.24
+  _targetEdgePadding: 0.15
+  _perfectEatFuelRefund: 2
+  _toastedEatFuelRefund: 1
+  _scorchedEatFuelRefund: 0
 --- !u!135 &5305289997750256037
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -463,6 +473,20 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 1.7
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1586079873786013634
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5893462792062315505}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e52e74acbd74336b21c995f7c35f71b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.ActivityAnchor
+  _anchorId: 
+  _additionalOffers: []
 --- !u!1001 &7283557018508234258
 PrefabInstance:
   m_ObjectHideFlags: 0

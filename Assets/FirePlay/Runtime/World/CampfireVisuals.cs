@@ -24,7 +24,18 @@ namespace DemonViglu.FirePlay.World
         private void Awake()
         {
             _campfire = GetComponent<Campfire>();
-            _visualRoot ??= transform;
+            if (_visualRoot == null)
+            {
+                _visualRoot = transform;
+            }
+
+            if (_visualRoot == null)
+            {
+                Debug.LogError("[CampfireVisuals] 缺少 Visual Root，组件已禁用。", this);
+                enabled = false;
+                return;
+            }
+
             _baseScale = _visualRoot.localScale;
             if (_fireLight != null)
             {

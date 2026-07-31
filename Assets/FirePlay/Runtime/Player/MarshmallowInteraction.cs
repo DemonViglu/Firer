@@ -6,7 +6,7 @@ using UnityEngine.Serialization;
 
 namespace DemonViglu.FirePlay.Player
 {
-    public sealed class MarshmallowInteraction : MonoBehaviour, IRitualInteraction
+    public sealed class MarshmallowInteraction : MonoBehaviour, IRitualInteraction, IActivityActionHandler
     {
         [SerializeField] private RestInteraction _rest;
         [SerializeField] private FlameResourceController _resourceController;
@@ -21,6 +21,7 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField, Min(0f)] private float _meterBottomMargin = 70f;
 
         private MarshmallowRitual _activeRitual;
+        private LocalPlayerContext _context;
         private bool _hasMaterializedMarshmallow;
         private MarshmallowRoastSession _roastSession;
         private MarshmallowResult _completedResult;
@@ -33,6 +34,7 @@ namespace DemonViglu.FirePlay.Player
         public int CompletedTurns => _roastSession?.CompletedTurns ?? 0;
         public int PerfectTurns => _roastSession?.PerfectTurns ?? 0;
         public bool IsActive => _activeRitual != null;
+        public string ActivityId => "marshmallow";
         public string SharedStateId => IsRoasting ? PlayerAnimationStateIds.MarshmallowRoasting : PlayerAnimationStateIds.Resting;
         public RitualViewState ViewState => new(
             "marshmallow",
@@ -48,16 +50,61 @@ namespace DemonViglu.FirePlay.Player
 
         private void Awake()
         {
+            _context = GetComponent<LocalPlayerContext>();
             _rest ??= GetComponent<RestInteraction>();
             _resourceController ??= GetComponent<FlameResourceController>();
             _animationController ??= GetComponent<PlayerAnimationController>();
-            if (_rest == null || _resourceController == null || _marshmallowProp == null) { enabled = false; return; }
+            if (_rest == null || _resourceController == null || _marshmallowProp == null)
+            {
+                Debug.LogError("[MarshmallowInteraction] 缺少 RestInteraction、FlameResourceController 或 MarshmallowProp，组件已禁用。", this);
+                enabled = false;
+                return;
+            }
             _marshmallowProp.gameObject.SetActive(false);
         }
 
         private void OnDisable()
         {
             EndSession(cancelled: true);
+        }
+
+        public bool TryHandle(ActivityActionRequested request)
+        {
+            if (!IsRequestForCurrentActivity(request)) return false;
+            if (_activeRitual == null)
+            {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                Debug.LogWarning("[MarshmallowInteraction] 当前 RestSpot 没有启用的 MarshmallowRitual，无法消费动作。请确认 Ritual 与 ActivityAnchor 在同一地点。", this);
+#endif
+                return false;
+            }
+
+            return request.ActionId switch
+            {
+                "marshmallow.materialize" => TryPrimaryAction(),
+                "marshmallow.turn" => TryPrimaryAction(),
+                "marshmallow.eat" => TrySecondaryAction(),
+                "activity.exit" => TrySecondaryAction(),
+                _ => false
+            };
+        }
+
+        private bool IsRequestForCurrentActivity(ActivityActionRequested request)
+        {
+            var context = ResolveContext();
+            var activities = context != null ? context.Activities : null;
+            if (request == null || activities == null || !activities.Session.IsActive) return false;
+
+            var snapshot = activities.Session.Snapshot;
+            return request.PlayerId == (context != null ? context.PlayerId : string.Empty)
+                && request.AnchorId == snapshot.AnchorId
+                && request.ActivityId == ActivityId
+                && snapshot.ActivityId == ActivityId;
+        }
+
+        private LocalPlayerContext ResolveContext()
+        {
+            return _context ??= GetComponent<LocalPlayerContext>() ?? LocalPlayerContext.Current;
         }
 
         private void Update()

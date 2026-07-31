@@ -36,6 +36,7 @@ namespace DemonViglu.FirePlay.Player
         public PlayerRestPoseController RestPose { get; private set; }
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         public ActivitySelectionProbe ActivitySelectionProbe { get; private set; }
+        public FishingActivityPresenterProbe FishingActivityPresenterProbe { get; private set; }
 #endif
 
         public static LocalPlayerContext EnsureFor(Component component)
@@ -104,6 +105,10 @@ namespace DemonViglu.FirePlay.Player
             CommandExecutor.Initialize(this);
             InteractionRouter = GetComponent<InteractionRouter>() ?? gameObject.AddComponent<InteractionRouter>();
             InteractionRouter.Initialize(this);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            FishingActivityPresenterProbe = GetComponent<FishingActivityPresenterProbe>() ?? gameObject.AddComponent<FishingActivityPresenterProbe>();
+            ActivityUI?.RegisterPresenter(FishingActivityPresenterProbe);
+#endif
         }
     }
 }

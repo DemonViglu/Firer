@@ -27,6 +27,7 @@ namespace DemonViglu.FirePlay.Player
         public RitualInteractionCoordinator RitualCoordinator { get; private set; }
         public PlayerSharedStateAdapter SharedStateAdapter { get; private set; }
         public PlayerExpressionController Expressions { get; private set; }
+        public PlayerProximityEffects ProximityEffects { get; private set; }
 
         public static LocalPlayerContext EnsureFor(Component component)
         {
@@ -77,6 +78,8 @@ namespace DemonViglu.FirePlay.Player
             SharedStateAdapter.Initialize(this);
             Expressions = GetComponent<PlayerExpressionController>() ?? gameObject.AddComponent<PlayerExpressionController>();
             Expressions.Initialize(this);
+            ProximityEffects = GetComponent<PlayerProximityEffects>() ?? gameObject.AddComponent<PlayerProximityEffects>();
+            ProximityEffects.Initialize(Interaction);
             CommandExecutor = GetComponent<WorldCommandExecutor>() ?? gameObject.AddComponent<WorldCommandExecutor>();
             CommandExecutor.Initialize(this);
             InteractionRouter = GetComponent<InteractionRouter>() ?? gameObject.AddComponent<InteractionRouter>();

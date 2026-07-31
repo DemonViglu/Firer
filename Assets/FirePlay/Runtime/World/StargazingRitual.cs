@@ -7,6 +7,9 @@ namespace DemonViglu.FirePlay.World
     public sealed class StargazingRitual : RestLookTargetRitual
     {
         [SerializeField] private Transform _companionFrameTarget;
+        public override string ActivityId => "stargazing";
+        public override string ActivityDisplayName => "观星";
+        public override string ActivityPresentationId => "none";
         public override string RestHint => "这里可以坐下，抬头看看星星";
         public override string ShortRestHint => " · 这里可以坐下看星星";
 

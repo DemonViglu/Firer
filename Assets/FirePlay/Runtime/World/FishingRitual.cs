@@ -26,6 +26,9 @@ namespace DemonViglu.FirePlay.World
         public float MinimumBiteDelay => _minimumBiteDelay;
         public float MaximumBiteDelay => _maximumBiteDelay;
         public float HookWindowSeconds => _hookWindowSeconds;
+        public override string ActivityId => "fishing";
+        public override string ActivityDisplayName => "钓鱼";
+        public override string ActivityPresentationId => "custom.fishing";
         public override string RestHint => "这里适合坐下来，静静钓一会儿鱼";
         public override string ShortRestHint => " · 这里可以坐下钓鱼";
 

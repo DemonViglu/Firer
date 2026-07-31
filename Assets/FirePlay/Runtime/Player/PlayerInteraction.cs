@@ -1,5 +1,6 @@
 using DemonViglu.FirePlay.Flame;
 using DemonViglu.FirePlay.World;
+using System;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.Player
@@ -14,8 +15,8 @@ namespace DemonViglu.FirePlay.Player
     }
 
     /// <summary>
-    /// 玩家在世界中的近距离交互入口。
-    /// 交互范围围绕玩家本体，而不是视觉上有偏移的火苗。
+    /// 玩家在世界中的近距离扫描器：只发现、排序和描述目标，并发布接触发现。
+    /// 交互范围围绕玩家本体，而不是视觉上有偏移的火苗；玩法写入由独立消费者处理。
     /// </summary>
     public sealed class PlayerInteraction : MonoBehaviour
     {
@@ -37,6 +38,7 @@ namespace DemonViglu.FirePlay.Player
         public CampfireUpgradeController CampfireUpgradeController => _campfireUpgradeController;
         public PlayerInteractTargetKind CurrentInteractTargetKind { get; private set; }
         public string CurrentInteractPrompt { get; private set; } = string.Empty;
+        public event Action<Collider> ProximityContactDetected;
         public string CurrentTargetId => CurrentInteractTargetKind switch
         {
             PlayerInteractTargetKind.Campfire => NearestCampfire != null ? NearestCampfire.CampfireId : string.Empty,
@@ -141,17 +143,7 @@ namespace DemonViglu.FirePlay.Player
 
             for (var index = 0; index < count; index++)
             {
-                var source = _overlapResults[index].GetComponentInParent<ColorSource>();
-                if (source != null)
-                {
-                    source.TryAbsorb(activeFlame);
-                }
-
-                var restorableNode = _overlapResults[index].GetComponentInParent<RestorableNode>();
-                if (restorableNode != null)
-                {
-                    restorableNode.TryRestore(activeFlame);
-                }
+                ProximityContactDetected?.Invoke(_overlapResults[index]);
 
                 var flameSource = _overlapResults[index].GetComponentInParent<FlameSource>();
                 if (flameSource != null)

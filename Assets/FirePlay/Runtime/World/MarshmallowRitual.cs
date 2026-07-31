@@ -23,6 +23,9 @@ namespace DemonViglu.FirePlay.World
         public float NeedleCyclesPerSecond => _needleCyclesPerSecond;
         public float PerfectZoneWidth => _perfectZoneWidth;
         public float TargetEdgePadding => _targetEdgePadding;
+        public override string ActivityId => "marshmallow";
+        public override string ActivityDisplayName => "烤棉花糖";
+        public override string ActivityPresentationId => "compact.marshmallow";
         public bool IsCampfireBurning => TryGetComponent<Campfire>(out var campfire) && !campfire.IsExtinguished;
         public override string RestHint => "这里可以坐下，烤一颗棉花糖";
         public override string ShortRestHint => " · 这里可以坐下烤棉花糖";

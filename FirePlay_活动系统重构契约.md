@@ -1,280 +1,207 @@
-# FirePlay 活动系统重构契约
+# FirePlay 活动系统核心契约
 
-> 本契约以当前已保存的可运行版本为切换基线。重构允许破坏旧兼容层；旧 Ritual、旧 UI 和旧 Player 动态服务不作为新系统的兼容目标。
+> 这是活动系统的唯一设计基准。它描述稳定的职责边界和运行链路，不记录历史迁移过程。当前 Demo 已保存可运行版本，允许删除旧兼容层。
 
 ## 1. 产品边界
 
-项目的长期核心只有四件事：
+FirePlay 的核心由三条相互协作但不混淆的链路组成：
 
-1. 美术表现；
-2. 玩家余火、篝火、小火种与大树贡献组成的火焰资源循环；
-3. 小活动的快速接入和组合；
-4. 玩家之间一起参与活动、互相影响并最终实时联机。
+1. **火焰资源链**：玩家余火、篝火、小火种、世界树贡献、存档与视觉表现；
+2. **活动内容链**：坐火、烤棉花、钓鱼、吉他、表情以及未来的小型玩法；
+3. **多人同步链**：请求、权威裁决、状态事实和远端表现。
 
-活动是内容扩展的第一公民。地点、Player、UI 和网络层都不能持有某个具体活动的类型分支。
+活动是内容扩展的第一公民。地点不拥有玩法逻辑，Player 不挂载具体活动，UI 不直接修改活动状态，网络层不依赖 Unity 对象。
 
-## 2. 活动不是 Ritual，也不默认绑定地点或坐姿
+当前 Demo 边界仍是单机可运行版本；下一阶段接入实时联机，异步保存只记录实时活动产生的必要数据，不单独设计另一套玩法兼容层。
 
-核心概念统一叫 `Activity`。Rest、Marshmallow、Fishing、Guitar、Stargazing 都只是活动内容。
+## 2. 核心概念
 
-活动定义不包含“必须坐下”这种固有前提。活动可以是：
+| 概念 | 职责 | 不负责 |
+|---|---|---|
+| `ActivityDefinition` | 稳定 ID、作用域、UI 键、Camera Profile、LogicKey、参与模式 | 具体运行状态 |
+| `ActivityDefinitionAsset` | Unity 资产形式的定义 | 玩法分支与 Player 引用 |
+| `ActivityCatalogAsset` | 全局可用活动目录 | 地点局部规则 |
+| `ActivityAnchorNode` | 地点身份、标签、活动引用、规则组件引用 | 复制活动动作或 UI |
+| `ActivityLogic` | 该玩法的状态、动作、资源消耗、结果 | 直接操作 UI、Camera、Animator |
+| `ActivitySession` | 一名玩家的一次活动状态和 revision | 传输层状态 |
+| `ActivityForm` | 活动自己的 UI 和输入映射 | 直接改 Player/火焰状态 |
+| `ActivityVisuals` | 道具、动画 Cue、音频、VFX 表现 | 活动规则与权威裁决 |
+| `PlayerActivityHost` | Player 侧活动宿主、Session 路由、Presentation 边界 | 保存具体活动字段 |
 
-- `Anywhere`：随时随地可开始，例如表情、吉他；
-- `Anchor`：需要一个地点或目标，例如烤棉花、观星；
-- `Targeted`：需要目标对象，例如把烤好的棉花糖交给另一名玩家。
+活动作用域只有三类：
 
-玩家当前状态、地点规则和全局规则共同决定当前是否可用。飞天、睡觉、游泳、坐下等都只是可被规则读取的状态事实，不写死在 ActivityDefinition 中。
+- `Anywhere`：不需要地点，例如表情、吉他；
+- `Anchor`：需要地点，例如篝火旁的烤棉花、池边钓鱼；
+- `Targeted`：需要可用目标，例如把产物交给另一名玩家。
 
-## 3. 活动内容契约
+“必须坐下”“不能飞行”“游泳时禁止”等不是定义字段，而是规则提供者读取玩家状态、地点状态和目标状态后给出的结果。
 
-每个活动由以下内容组成：
+## 3. 活动与地点的组合
 
-- `ActivityDefinition`：稳定 ID、显示名、作用域、UI Prefab、可选 Input Action Map、逻辑工厂和表现资源引用；
-- `ActivitySession`：一次玩家活动的纯状态；
-- `ActivityLogic`：活动自己的规则、动作、资源消耗和结果；
-- `ActivityUIPrefab`：活动专属 UI；
-- `ActivityPresentation`：动画、道具、音频等表现；
-- `ActivityCameraRequest`：活动向 Player Camera 请求镜头，不直接操作相机组件。
+一个活动定义可以被多个地点复用；一个地点可以引用多个活动定义。
 
-简单活动可以只拥有一个 Session 和一个 UI。复杂活动（例如 21 键吉他）可以拥有独立 Input Action Map、专属状态和瞬时音符事件，不进入通用 Player Router。
+地点只配置：
 
-### 3.1 活动与地点规则的边界
+- `AnchorId`：优先来自同物体 `StableSceneId.Value`；
+- `RegionId`、Tags；
+- `Activities`：拖入可复用的 `ActivityDefinitionAsset`；
+- `Rule Provider Behaviours`：显式引用实现 `IActivityRuleProvider` 的规则组件。
 
-活动逻辑可以知道自己当前运行上下文，但只能看到只读数据：
+活动逻辑可读取只读上下文：
 
 ```csharp
 public interface IActivityContext
 {
     string PlayerId { get; }
     string ActivityId { get; }
-    string AnchorId { get; } // Anywhere 活动为空
+    string AnchorId { get; }       // Anywhere 为空
     IActivityLocationView Location { get; }
+    IActivityPlayerStateView PlayerState { get; }
+    IActivityTargetView Target { get; }
     IActivityRuleSnapshot Rules { get; }
     IActivityFlameResource Flame { get; }
     IReadOnlyList<ActivityParticipant> Participants { get; }
 }
 ```
 
-- 活动可以读取 `AnchorId`、地点标签、目标对象和最终规则快照；
-- 活动不能拿到 `ActivityAnchor`、地点规则脚本或 UI／Camera MonoBehaviour 的可变引用；
-- 活动不能修改规则结果，也不能在运行中重新覆盖地点规则；
-- 活动自己的特殊前提以 `IActivityRuleProvider` 形式参与规则计算，而不是在计算完成后偷偷改结果；
-- 规则结果是只读快照，Session 开始后仍可因状态变化重新预检，但不能由活动逻辑直接篡改。
+活动可以知道自己在哪个稳定 Anchor 上，但不能持有 `ActivityAnchorNode`、规则组件、UI 控件、Camera、Animator 或移动组件的可变引用。活动不能在规则计算后偷偷覆写规则结果；自己的前提必须作为规则提供者参与计算。
 
-因此，活动“知道自己在哪个 Anchor 上”，但只知道稳定 ID 和只读地点视图，不依赖地点组件的实现细节。
+## 4. 规则裁决
 
-## 4. 地点与组合规则
+规则评估必须无副作用，产生不可变的 `ActivityRuleResult`。默认优先级：
 
-`ActivityAnchor` 只表示一个可发现的空间锚点，不复制活动动作配置。锚点可以引用多个可复用 ActivityDefinition。
+| 优先级 | 来源 |
+|---:|---|
+| 0 | Activity 默认规则 |
+| 100 | Anchor / Region 规则 |
+| 200 | Player 状态与能力规则 |
+| 300 | Target 规则 |
+| 1000 | 系统安全与资源保护 |
+| 2000 | 联机 Host 权威规则 |
 
-地点自己的规则脚本实现 `IActivityRuleProvider`，例如：
+裁决顺序固定为：
 
-- `CampfireActivityRules`；
-- `TentActivityRules`；
-- `LakeActivityRules`。
+1. 收集所有适用规则；
+2. Host 权威层出现 `Deny` 时直接拒绝；
+3. 否则取最高优先级的 `Override`；
+4. 没有 Override 时取最高优先级层；同级 `Deny` 优先；
+5. 没有任何允许结果时默认拒绝；
+6. 结果以只读 `ActivityRuleSnapshot` 传给 Session。
 
-规则结果包含：
+活动逻辑不能修改快照。Session 运行中因玩家状态、地点、目标或权威状态变化而重新预检；失败时以明确的 `ActivityEndReason` 结束或按定义暂停。
 
-- 是否允许；
-- 优先级；
-- 拒绝原因；
-- 可选的覆盖数据。
-
-规则来源可以叠加：
-
-1. 活动默认规则；
-2. 地点／地区规则；
-3. 玩家当前能力与模式规则；
-4. 目标对象规则；
-5. 联机权威规则。
-
-规则不是固定的 `requiresSeat` 字段。例：
-
-```text
-篝火规则：
-- Rest：允许
-- Marshmallow：必须处于坐下状态且篝火燃烧
-- Guitar：无需坐下
-
-游泳状态规则：
-- Guitar：允许或拒绝由活动规则决定
-- Flying：拒绝所有需要水面交互的活动
-```
-
-同一活动可以在多个地点复用，地点只声明“是否提供”和“如何覆盖规则”。
-
-### 4.1 规则冲突与确定性裁决
-
-规则不按脚本执行顺序或最后写入顺序覆盖。所有规则先收集，再按显式优先级统一裁决。默认优先级从低到高为：
-
-| 层级 | 来源 | 作用 |
-|---:|---|---|
-| 0 | Activity 默认规则 | 活动自身的一般前提 |
-| 100 | 地区／Anchor 规则 | 这个地点提供什么、如何覆盖 |
-| 200 | 玩家状态规则 | 飞天、睡觉、游泳、当前模式等 |
-| 300 | 目标对象规则 | 目标是否存在、是否可用、是否已被占用 |
-| 1000 | 系统安全规则 | 强制禁止或资源/生命周期保护 |
-| 2000 | 联机权威规则 | Host 最终裁决 |
-
-每条规则产生一个不可变决定：`Allow`、`Deny` 或明确的 `Override(Allow/Deny)`。
-
-实际算法固定为：
-
-1. 先收集所有适用规则，规则评估不能产生副作用；
-2. 联机权威层出现 `Deny` 时直接最终拒绝，不能被本地规则覆盖；
-3. 其余层中，最高优先级的 `Override` 覆盖所有更低优先级结果；
-4. 没有 `Override` 时，取最高优先级层的结果；同一优先级同时出现 `Allow` 和 `Deny`，`Deny` 优先；
-5. 没有任何 `Allow` 时默认拒绝；
-6. 活动逻辑不能产生最终 `Override`，只有规则提供者可以产生，并且必须声明覆盖理由。
-
-这意味着规则既不是“最严格永远优先”，也不是“后写覆盖前写”，而是由优先级、同级拒绝优先和权威最终裁决共同决定。
-
-## 5. 余火消耗契约
-
-活动可以消耗余火拟造道具或推进玩法。这是活动自己的经济规则，不是全局 Ritual 特判。
-
-活动通过上下文获取能力接口：
-
-```csharp
-public interface IActivityFlameResource
-{
-    float CurrentFuel { get; }
-    bool TryConsume(float amount);
-    bool Restore(float amount);
-}
-```
-
-当前单机实现可以直接代理玩家已有的 `TryConsume`。未来联机时替换为 Host 权威实现，活动逻辑不改。
-
-规则评估本身不能产生副作用；进入活动或提交动作时，由活动逻辑执行 `TryConsume`，失败则返回明确结果。
-
-## 6. 活动会话生命周期
-
-活动 Session 必须经过明确阶段：
+## 5. Session 生命周期
 
 ```text
 Requested
-    -> Preflight
-    -> Committed / Running
-    -> Switching / Interrupted / Completed
-    -> Ended
+  -> Preflight
+  -> Prepare
+  -> Commit
+  -> Running
+  -> Switching / Interrupted / Completed
+  -> Ended
 ```
 
-### 6.1 开始与切换
+- **Preflight**：检查定义、作用域、地点、目标、规则和活动自身的 `CheckStart`；不扣余火、不打开 UI；
+- **Prepare**：生成无副作用的开始操作；
+- **Commit**：创建 Session 的唯一提交点。需要余火拟造时在此调用 `IActivityFlameResource.TryConsume`；失败必须回滚；
+- **Running**：只由当前 Session 消费语义动作并更新活动状态；
+- **Switching**：新活动先完成预检和 Commit，成功后旧 Session 才以 `Switched` 结束；失败则旧 Session 保持不变；
+- **Interrupted**：离开地点、玩家状态变化、目标失效、资源失败或 Host 拒绝；
+- **Ended**：结束幂等，事实事件只发布一次。
 
-1. **Preflight**：收集 Player、Anchor、目标、参与者、规则和资源快照；不创建 Session，不扣余火，不打开 UI；
-2. **Prepare**：活动返回一个无副作用的开始操作；切换时旧 Session 进入可恢复的 `Switching` 阶段；
-3. **Commit**：规则全部通过后执行开始操作。需要余火的活动在此阶段执行 `TryConsume`，失败则回滚操作并恢复旧 Session；
-4. **Running**：活动逻辑处理自己的动作和状态；
-5. 切换活动时先对新活动执行 Preflight/Prepare。Commit 成功后旧 Session 以 `Switched` 原因结束，再创建新 Session；新活动预检或 Commit 失败时旧 Session 保持不变。
+默认每名玩家拥有独立 Session。同一地点的多人活动只有在定义声明 `SharedGroup` 或 `TargetedInteraction` 时才共享局部状态；同一 Anchor 不会自动合并所有玩家。
 
-### 6.2 中断与结束
-
-- 玩家离开 Anchor：对 `Anchor`/`Targeted` 活动重新预检；不再满足时以 `LeftAnchor` 中断；`Anywhere` 活动不受影响；
-- 玩家状态变化：收到 `PlayerStateChanged` 后重新预检；不再满足时以 `StateChanged` 中断；活动若明确声明可暂停，才允许进入 `Suspended`，否则不隐式暂停；
-- 目标消失、对象被占用、资源失效或 Host 拒绝：以对应原因中断；
-- UI 关闭只能发出退出请求，不能直接结束事实 Session；
-- `End` 幂等，任何结束原因只发布一次 `ActivityEnded`。
-
-### 6.3 多人同一 Anchor
-
-默认情况下，每名玩家拥有独立 Session。同一 Anchor 上两名玩家可以同时进行不同活动。
-
-只有 ActivityDefinition 明确声明共享模式时，ActivitySystem 才创建 Anchor 级 `ActivityGroupState`：
-
-- `Independent`：每个玩家完全独立，默认模式；
-- `SharedGroup`：共享局部进度、容量或产物，但每个玩家仍有自己的 Session；
-- `TargetedInteraction`：通过目标玩家/对象事件交互，不合并双方 Session。
-
-不允许因为“同一地点”就隐式共享所有活动状态。
-
-## 7. 运行流程
+## 6. 运行时逻辑链路
 
 ```text
-输入 / 活动 UI
-    -> EventBus: ActivitySelectionRequested
-    -> ActivitySystem 查找全局活动、附近 Anchor 和规则提供者
-    -> 解析候选、优先级和拒绝原因
-    -> Preflight 规则与资源
-    -> Commit：创建或切换玩家 ActivitySession
-    -> PlayerActivityPresentationSystem 执行 UI 请求
-    -> PlayerCameraSystem 执行 Camera 请求
-    -> UI / 独立 Input Action Map 发布 ActivityActionRequested
-    -> 当前 ActivitySession 消费动作并更新状态
-    -> 发布 ActivityStateChanged / ActivityInteractionOccurred
-    -> 本地表现、远端玩家表现、动画和音效分别消费
-    -> 退出请求
-    -> ActivitySystem 结束 Session
-    -> PlayerActivityPresentationSystem 关闭 UI
-    -> PlayerCameraSystem 恢复 Camera
+输入 / 活动 UI / 网络请求
+    -> GameEventBus: ActivitySelectionRequested
+    -> PlayerActivityHost
+    -> ActivityRuntime / ActivitySystem
+    -> Catalog + Anchor + Rule Providers + Player State
+    -> Preflight / Prepare / Commit
+    -> ActivitySession
+    -> GameEventBus: ActivitySessionStarted
+
+活动 UI / 独立 Input Action Map
+    -> ActivityActionRequested
+    -> PlayerActivityHost
+    -> 当前 ActivitySession 消费动作
+    -> ActivityInteractionOccurred
+    -> ActivityPresentation / 远端表现 / 存档订阅
+
+退出 / 状态失效 / Host 拒绝
+    -> ActivitySessionEnded
+    -> PresentationHost 关闭 UI、释放 Camera/Player 能力
 ```
 
-活动逻辑只能发布 `ActivityUIRequest`、`ActivityCameraRequest` 和 `ActivityPlayerRequest`，不能直接调用 `UIManager`、`Button`、`Camera.main`、Cinemachine、Animator 或移动组件。Player 侧的 PresentationSystem、CameraSystem 和 Player capability executor 是唯一执行者，并以只读结果回报请求是否成功。
+活动只发出语义请求：
 
-`ActivityPlayerRequest` 只表达语义能力：MovementLock、LookTarget、AnimationState、AnimationCue、VfxCue。活动通过稳定 ID、cue 和当前 Session revision 提交请求；Player 侧负责解析目标、处理组件缺失和释放请求。是否锁移动、是否朝向某个目标不是活动类型的固有属性，而是该活动在当前规则/状态下的表现策略。
+- `ActivityUiRequest`：打开/关闭自己的 UI；
+- `ActivityCameraRequest`：请求 Camera Profile、目标或恢复；
+- `ActivityPlayerRequest`：移动锁、Look Target、Animation State、Animation Cue、Vfx Cue。
 
-火焰资源采用独立链路：
+`PlayerActivityPresentationHost`、`RitualCameraDirector`（当前 Camera Executor）以及 Player 能力执行器负责真正调用 `UIManager`、Camera、移动和动画系统。活动逻辑不能直接拿这些组件。
+
+## 7. 火焰资源链路
+
+火焰系统不属于某个活动：
 
 ```text
-Player / Activity
-    -> FlameCommandRequested
-    -> FlameSystem 权威处理
+Player / Campfire / Activity
+    -> Flame command or IActivityFlameResource
+    -> FlameResourceController / Campfire authority
     -> FlameStateChanged
-    -> 视觉、UI、存档、网络分别消费
+    -> UI / Visuals / Save / Network
 ```
 
-## 8. Player 组合目标
+活动只通过 `IActivityFlameResource` 请求消耗或返还。余火不足必须返回失败原因，不能产生部分扣除。篝火成长、SmallFire 上限、世界树贡献和存档继续由各自火焰/世界系统负责。
 
-Player 只保留输入、移动、余火、ActivityHost、Camera、Presentation 和身份等核心组件。
+## 8. Player、EventBus 与全局服务
 
-不再由 `LocalPlayerContext` 在运行时动态 `AddComponent` 玩法服务。不再把棉花糖、钓鱼、吉他、观星各自挂在 Player 上。
+Player 的活动入口只有 `PlayerActivityHost`。活动内容不作为十几个玩法脚本挂在 Player 上；Logic、Factory、Form、Visuals 在活动或全局注册表中组合。`IsLocalPlayer` 决定对象是否拥有本地输入和本地世界命令；远端 Player 只能由网络事实驱动表现，不覆盖本地单例。
 
-ActivitySession 由 ActivitySystem 创建，活动 UI 和活动表现由 ActivityDefinition 提供。
+保留现有 `GameInstanceSubsystem` 与 `GameEventBus`：
 
-## 9. EventBus 使用边界
+- `GameInstanceSubsystem` 负责显式注册全局服务，例如 `IEventPublisher`、稳定 ID 注册表和世界命令服务；
+- `GameEventBus` 只传递跨模块语义事件：活动请求/事实、火焰命令/状态、表情请求、Camera 请求结果；
+- 逐帧移动、镜头拖拽和纯本地 Tick 不经过 EventBus；
+- 同一个事实只能由一个权威宿主消费，避免多个旧脚本猜测动作归属。
 
-保留 `GameInstanceSubsystem` 与 `GameEventBus`，但服务只在启动阶段显式注册。
+当前 `LocalPlayerContext` 负责一部分通用 Player 服务的组合，但服务已经由 Player Prefab 显式挂载；后续可将这些通用服务进一步合并为单一 Player Service Host，不应再向其中加入具体活动分支。
 
-EventBus 只承载跨模块语义：
+## 9. 实时联机边界
 
-- Activity 选择、动作、状态和交互事件；
-- Flame 命令与状态事件；
-- 表情语义事件；
-- Camera 请求和结果事件。
+网络层只处理稳定数据，不传输 Unity 引用或 `ActivityLogic` 实例。
 
-移动、视角拖拽、逐帧计时和纯本地 Session 推进不通过 EventBus。
+输入方向：
 
-不再让多个旧脚本同时订阅一个宽泛的 `PlayerIntentRequested` 并各自猜测谁拥有动作。
+```text
+客户端请求 ActivitySelectionRequested / ActivityActionRequested
+    -> Host 权威预检与执行
+    -> Host 发布 Started / Interaction / Ended DTO
+    -> 各客户端按稳定 ID 驱动本地表现
+```
 
-## 10. 明确删除范围
+当前代码已经具备可序列化的 `ActivitySessionStarted`、`ActivityInteractionOccurred`、`ActivitySessionEnded` 事实事件，并提供 `ActivitySelectionRequestDto`、`ActivityActionRequestDto`、`ActivityFactDto` 与 `IActivityAuthority`。`PlayerActivityHost` 是本地 EventBus 与未来网络请求共用的权威入口；尚未接入 Network SDK、Host Transport 或远端 Player 表现。接入顺序应是：先确定 Transport，再实现消息适配与请求确认，随后做远端事实回放，最后处理活动共享状态。
 
-重构完成后删除或替换：
+## 10. 新增活动的最小步骤
 
-- `RestSpotRitual` / `RestLookTargetRitual` 兼容体系；
-- 固定 Primary／Secondary 的 `RitualViewState`；
-- `RitualInteractionCoordinator`；
-- `RestInteraction` 的旧总控职责；
-- `ActivityAnchor` 的 `_legacyOffers`、`_additionalOffers`；
-- Player 上的 `MarshmallowInteraction`、`FishingInteraction` 玩法挂载模式；
-- 动态 `AddComponent` 初始化链；
-- 旧 Ritual Panel 与通用 Activity Form 的重复路径。
+1. 新建一个稳定 `ActivityId` 和 `ActivityDefinitionAsset`；
+2. 编写该活动自己的 `ActivityLogic` 与 `IActivityLogicFactory`，在 `ActivityLogicRegistryBehaviour` 注册；
+3. 创建专属 UI Prefab/Form；需要 21 键、节奏输入等复杂操作时使用独立 Input Action Map；
+4. 创建 Visuals，监听 Session 状态和语义 Cue；动画、音频、VFX 资源缺失不应让 Logic 失效；
+5. 若需要地点，在目标对象添加 `ActivityAnchorNode` 并引用定义；地点规则写成独立 `IActivityRuleProvider`；
+6. 若需要余火，通过 `IActivityFlameResource` 在 Commit 或明确动作阶段消费；
+7. 若需要镜头、移动锁、朝向或动画，只发 `ActivityPlayerRequest` / Camera Request；
+8. 先做单机纵向验收，再接入 Host DTO，不为网络另写一套玩法逻辑。
 
-保留并整理火焰状态、篝火状态、Stable ID、存档基础、视觉桥接和 EventBus 基础设施。
+## 11. 不变量
 
-## 11. 验收顺序
-
-1. 一个 `Anywhere` 活动：无需地点、无需坐下；
-2. 一个 Anchor 活动：同一地点提供两个活动；
-3. 地点规则覆盖：一个活动需要坐下，另一个不需要；
-4. 玩家状态规则：飞天、睡觉、游泳可以拒绝或覆盖活动；
-5. 活动专属 UI 与 Camera 接口；
-6. 活动余火消耗和失败回滚；
-7. 两名玩家同时选择同一地点的不同活动；
-8. 活动语义事件进入实时联机 Host 权威链路。
-
-## 12. 当前重构进度
-
-- 已建立无 Unity 依赖的 `ActivityDefinition`、`ActivityContext`、`ActivityRuleResolver`、`ActivitySession`、`ActivitySystem` 和 `ActivityCatalog`；
-- 已建立活动专属 UI／Camera 请求契约，活动逻辑不直接访问 UI 控件或相机组件；
-- 已建立唯一 UI Prefab 元数据入口 `ActivityDefinitionAsset`，后续不再制作棉花糖与钓鱼共用的通用活动窗体；
-- 当前旧 Ritual 链仍处于待迁移状态，本阶段没有接管旧场景运行路径；待新垂直切片通过后整体删除，不增加兼容适配。
+- 地点可以组合活动，但不复制活动逻辑；
+- 活动拥有自己的 UI 和表现，不复用一个“万能活动面板”承载所有玩法；
+- Activity 不直接控制 Player、UI、Camera 或网络；
+- 火焰资源只有一个权威状态源；
+- 稳定 ID 不使用 GameObject 名称、层级路径或 Unity Instance ID；
+- 所有 Session 结束必须可解释、幂等、可被网络事实重放。

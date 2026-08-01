@@ -13,10 +13,11 @@ namespace DemonViglu.FirePlay.Activity
     /// 和动态活动服务已从 Player Prefab 移除。
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerActivityHost : MonoBehaviour, IActivityActionRequester
+    public sealed class PlayerActivityHost : MonoBehaviour, IActivityActionRequester, IActivityAuthority
     {
         public static PlayerActivityHost Local { get; private set; }
         [SerializeField] private string _playerId = "local.player";
+        [SerializeField] private bool _isLocalPlayer = true;
         [SerializeField] private ActivityCatalogAsset _catalogAsset;
         [SerializeField] private MonoBehaviour _logicFactoryBehaviour;
         [SerializeField] private MonoBehaviour _presentationBehaviour;
@@ -35,6 +36,7 @@ namespace DemonViglu.FirePlay.Activity
         public ActivityRuntime Runtime => _runtime;
         public ActivitySystem System => _runtime?.System;
         public ActivityCatalog Catalog => _runtime?.Catalog;
+        public bool IsLocalPlayer => _isLocalPlayer;
         public bool IsReady => _runtime != null;
         public string PlayerId => _playerId;
         public ActivitySession ActiveSession => _runtime != null
@@ -50,9 +52,10 @@ namespace DemonViglu.FirePlay.Activity
 
         private void Awake()
         {
-            if (Local != null && Local != this)
+            if (_isLocalPlayer && Local != null && Local != this)
                 Debug.LogWarning("[PlayerActivityHost] 场景中存在多个本地 ActivityHost，UI 将使用最后启用的宿主。", this);
-            Local = this;
+            if (_isLocalPlayer)
+                Local = this;
             BuildRuntime();
             AttachEvents();
         }
@@ -66,7 +69,7 @@ namespace DemonViglu.FirePlay.Activity
         {
             DetachEvents();
             End(ActivityEndReason.OwnerDisabled);
-            if (Local == this) Local = null;
+            if (_isLocalPlayer && Local == this) Local = null;
         }
 
         private void Update()
@@ -151,6 +154,50 @@ namespace DemonViglu.FirePlay.Activity
             return TryStart(definition, context, anchor.RuleProviders);
         }
 
+        /// <summary>
+        /// Single authority entry point for both local selection events and a
+        /// future network transport. The DTO contains only stable IDs, so no
+        /// transport adapter needs to know about Unity objects or Logic.
+        /// </summary>
+        public ActivityStartResult HandleSelection(ActivitySelectionRequestDto request)
+        {
+            if (!request.IsValid || request.PlayerId != _playerId)
+                return ActivityStartResult.Reject("Activity selection request is not owned by this Player");
+
+            return string.IsNullOrWhiteSpace(request.AnchorId)
+                ? TryStartAnywhereActivity(request.ActivityId)
+                : TryStartAtAnchor(ActivityAnchorNode.FindById(request.AnchorId), request.ActivityId);
+        }
+
+        /// <summary>
+        /// Single authority entry point for an action in the active Session.
+        /// Anchor and revision checks happen here before Logic receives the
+        /// action, which makes stale or misrouted network messages harmless.
+        /// </summary>
+        public ActivityActionResult HandleAction(ActivityActionRequestDto request)
+        {
+            if (!request.IsValid || request.PlayerId != _playerId)
+                return ActivityActionResult.Reject("Activity action request is not owned by this Player");
+            if (_runtime == null)
+                return ActivityActionResult.Reject("PlayerActivityHost is not ready");
+            if (!_runtime.System.TryGetSession(_playerId, out var session))
+                return ActivityActionResult.Reject("No active activity session");
+            if (request.ActivityId != session.Definition.ActivityId)
+                return ActivityActionResult.Reject("Activity action does not match the active activity");
+            if (!string.IsNullOrWhiteSpace(request.AnchorId)
+                && request.AnchorId != session.Context.AnchorId)
+                return ActivityActionResult.Reject("Activity action does not match the active anchor");
+            if (request.SessionRevision != session.Revision)
+                return ActivityActionResult.Reject("Activity action uses a stale session revision");
+
+            return SubmitAction(new ActivityActionRequest(
+                _playerId,
+                session.Definition.ActivityId,
+                request.ActionId,
+                request.Payload,
+                session.Revision));
+        }
+
         public ActivityStartResult TryStart(
             string activityId,
             IActivityContext context,
@@ -195,7 +242,7 @@ namespace DemonViglu.FirePlay.Activity
             return result;
         }
 
-        public ActivityActionResult SubmitAction(ActivityActionRequest request)
+        private ActivityActionResult SubmitAction(ActivityActionRequest request)
         {
             var session = _runtime?.System != null && _runtime.System.TryGetSession(request.PlayerId, out var activeSession)
                 ? activeSession
@@ -220,8 +267,9 @@ namespace DemonViglu.FirePlay.Activity
             if (_runtime == null || !_runtime.System.TryGetSession(_playerId, out var session))
                 return ActivityActionResult.Reject("No active activity session");
 
-            return SubmitAction(new ActivityActionRequest(
+            return HandleAction(new ActivityActionRequestDto(
                 _playerId,
+                session.Context.AnchorId,
                 session.Definition.ActivityId,
                 actionId,
                 payload,
@@ -285,7 +333,7 @@ namespace DemonViglu.FirePlay.Activity
 
         private void AttachEvents()
         {
-            if (_eventsAttached) return;
+            if (_eventsAttached || !_isLocalPlayer) return;
 
             _events = GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
             _events.Subscribe<ActivitySelectionRequested>(OnActivitySelectionRequested);
@@ -304,18 +352,9 @@ namespace DemonViglu.FirePlay.Activity
 
         private void OnActivitySelectionRequested(ActivitySelectionRequested request)
         {
-            if (request == null || request.PlayerId != _playerId || string.IsNullOrWhiteSpace(request.ActivityId))
-                return;
+            if (request == null) return;
 
-            ActivityStartResult result;
-            if (string.IsNullOrWhiteSpace(request.AnchorId))
-            {
-                result = TryStartAnywhereActivity(request.ActivityId);
-            }
-            else
-            {
-                result = TryStartAtAnchor(ActivityAnchorNode.FindById(request.AnchorId), request.ActivityId);
-            }
+            var result = HandleSelection(ActivityNetworkMapper.ToDto(request));
 
             if (!result.Success)
                 Debug.LogWarning($"[PlayerActivityHost] Activity selection rejected: {request.ActivityId}; {result.Reason}", this);
@@ -327,23 +366,11 @@ namespace DemonViglu.FirePlay.Activity
 
         private void OnActivityActionRequested(ActivityActionRequested request)
         {
-            if (request == null || request.PlayerId != _playerId || !HasActiveActivity)
+            if (request == null || _runtime == null
+                || !_runtime.System.TryGetSession(_playerId, out var session))
                 return;
 
-            if (!string.IsNullOrWhiteSpace(request.ActivityId) && request.ActivityId != ActiveActivityId)
-                return;
-
-            if (!_runtime.System.TryGetSession(_playerId, out var session)) return;
-            if (!string.IsNullOrWhiteSpace(request.AnchorId)
-                && request.AnchorId != session.Context.AnchorId)
-                return;
-
-            var result = SubmitAction(new ActivityActionRequest(
-                _playerId,
-                session.Definition.ActivityId,
-                request.ActionId,
-                request.Payload,
-                session.Revision));
+            var result = HandleAction(ActivityNetworkMapper.ToDto(request, session.Revision));
             if (!result.Consumed)
                 Debug.LogWarning($"[PlayerActivityHost] Activity action rejected: {request.ActivityId}/{request.ActionId}; {result.Reason}", this);
         }

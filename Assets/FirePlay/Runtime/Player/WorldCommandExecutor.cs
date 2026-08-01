@@ -29,6 +29,8 @@ namespace DemonViglu.FirePlay.Player
         public void Initialize(LocalPlayerContext context)
         {
             _context = context;
+            if (_context != null && !_context.IsLocalPlayer) return;
+
             _flame ??= GetComponent<PlayerFlameController>();
             _campfireUpgrade ??= GetComponent<CampfireUpgradeController>();
             _events ??= GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());

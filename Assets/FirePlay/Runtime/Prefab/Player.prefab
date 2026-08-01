@@ -1048,6 +1048,12 @@ GameObject:
   - component: {fileID: 2884395103448089037}
   - component: {fileID: 6467109789447716751}
   - component: {fileID: 523296443919546474}
+  - component: {fileID: 7750000000000000001}
+  - component: {fileID: 7750000000000000002}
+  - component: {fileID: 7750000000000000003}
+  - component: {fileID: 7750000000000000004}
+  - component: {fileID: 7750000000000000005}
+  - component: {fileID: 7750000000000000006}
   - component: {fileID: 8918313119764425079}
   m_Layer: 0
   m_Name: Player
@@ -1413,6 +1419,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.PlayerActivityHost
   _playerId: local.player
+  _isLocalPlayer: 1
   _catalogAsset: {fileID: 11400000, guid: 1a9e7c5b3d2f0e8a6c4b2d1f9e7a5c30, type: 2}
   _logicFactoryBehaviour: {fileID: 0}
   _presentationBehaviour: {fileID: 0}
@@ -1436,6 +1443,112 @@ MonoBehaviour:
   _movement: {fileID: 0}
   _look: {fileID: 0}
   _animation: {fileID: 0}
+--- !u!114 &7750000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5546368970521514861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a90befe52827f24ba9a9db570a198d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.LocalPlayerContext
+  _playerId: local.player
+  _isLocalPlayer: 1
+  _localCamera: {fileID: 0}
+  _sharedStateAdapter: {fileID: 7750000000000000002}
+  _expressions: {fileID: 7750000000000000003}
+  _proximityEffects: {fileID: 7750000000000000004}
+  _commandExecutor: {fileID: 7750000000000000005}
+  _interactionRouter: {fileID: 7750000000000000006}
+--- !u!114 &7750000000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5546368970521514861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fd2f8bb57514a23a962b4f41343a580, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerSharedStateAdapter
+--- !u!114 &7750000000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5546368970521514861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34722deff75a486cacb67a3518aec9f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerExpressionController
+  _defaultExpressionId: wave
+  _definitions:
+  - expressionId: wave
+    displayName: wave
+    icon: {fileID: 0}
+    animationCueId: expression.wave
+    allowWhileExploring: 1
+    allowWhileResting: 0
+  - expressionId: thanks
+    displayName: thanks
+    icon: {fileID: 0}
+    animationCueId: expression.thanks
+    allowWhileExploring: 1
+    allowWhileResting: 0
+  - expressionId: warmth
+    displayName: warmth
+    icon: {fileID: 0}
+    animationCueId: expression.warmth
+    allowWhileExploring: 1
+    allowWhileResting: 0
+  - expressionId: sit
+    displayName: sit
+    icon: {fileID: 0}
+    animationCueId: expression.sit
+    allowWhileExploring: 1
+    allowWhileResting: 0
+--- !u!114 &7750000000000000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5546368970521514861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8493d149402652442989cfd7b21fb183, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerProximityEffects
+--- !u!114 &7750000000000000005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5546368970521514861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b7a4f83c2d94d34b56e8e74c289f461, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.WorldCommandExecutor
+--- !u!114 &7750000000000000006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5546368970521514861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dca478a9c8c5b914298ce515315761a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.InteractionRouter
 --- !u!82 &8918313119764425079
 AudioSource:
   m_ObjectHideFlags: 0

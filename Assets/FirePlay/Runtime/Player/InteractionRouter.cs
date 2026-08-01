@@ -23,6 +23,8 @@ namespace DemonViglu.FirePlay.Player
         public void Initialize(LocalPlayerContext context)
         {
             _context = context;
+            if (_context != null && !_context.IsLocalPlayer) return;
+
             _mode = GetComponent<PlayerModeController>();
             _events ??= GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
             _registry ??= GameInstanceSubsystem.GetOrCreate<IWorldObjectRegistry>(() => new StableIdWorldObjectRegistry());
@@ -36,16 +38,14 @@ namespace DemonViglu.FirePlay.Player
                 Debug.LogError("[InteractionRouter] 已存在另一个本地交互路由。", this);
                 enabled = false;
             }
+
+            BindInput();
         }
 
         private void OnEnable()
         {
             _context ??= GetComponent<LocalPlayerContext>();
             Initialize(_context);
-            if (_context != null && _context.Input != null)
-            {
-                _context.Input.RawInputPerformed += Route;
-            }
         }
 
         private void OnDisable()
@@ -59,6 +59,13 @@ namespace DemonViglu.FirePlay.Player
                 GameInstanceSubsystem.Unregister<IInteractionRouter>();
             }
             _pendingInputs.Clear();
+        }
+
+        private void BindInput()
+        {
+            if (_context?.Input == null) return;
+            _context.Input.RawInputPerformed -= Route;
+            _context.Input.RawInputPerformed += Route;
         }
 
         public void Route(RawPlayerInput input)

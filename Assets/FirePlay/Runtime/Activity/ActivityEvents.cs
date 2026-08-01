@@ -137,4 +137,180 @@ namespace DemonViglu.FirePlay.Activity
             Reason = reason;
         }
     }
+
+    /// <summary>
+    /// Transport-neutral request sent to the activity authority. These DTOs
+    /// contain only stable IDs and semantic payloads; they never contain
+    /// Unity objects, ActivityLogic instances or Session references.
+    /// </summary>
+    public readonly struct ActivitySelectionRequestDto
+    {
+        public string PlayerId { get; }
+        public string AnchorId { get; }
+        public string ActivityId { get; }
+        public bool IsValid => !string.IsNullOrWhiteSpace(PlayerId)
+            && !string.IsNullOrWhiteSpace(ActivityId);
+
+        public ActivitySelectionRequestDto(string playerId, string anchorId, string activityId)
+        {
+            PlayerId = playerId?.Trim() ?? string.Empty;
+            AnchorId = anchorId?.Trim() ?? string.Empty;
+            ActivityId = activityId?.Trim() ?? string.Empty;
+        }
+    }
+
+    /// <summary>Action requests carry the Session revision returned at start.</summary>
+    public readonly struct ActivityActionRequestDto
+    {
+        public string PlayerId { get; }
+        public string AnchorId { get; }
+        public string ActivityId { get; }
+        public string ActionId { get; }
+        public string Payload { get; }
+        public uint SessionRevision { get; }
+        public bool IsValid => !string.IsNullOrWhiteSpace(PlayerId)
+            && !string.IsNullOrWhiteSpace(ActivityId)
+            && !string.IsNullOrWhiteSpace(ActionId)
+            && SessionRevision > 0;
+
+        public ActivityActionRequestDto(
+            string playerId,
+            string anchorId,
+            string activityId,
+            string actionId,
+            string payload,
+            uint sessionRevision)
+        {
+            PlayerId = playerId?.Trim() ?? string.Empty;
+            AnchorId = anchorId?.Trim() ?? string.Empty;
+            ActivityId = activityId?.Trim() ?? string.Empty;
+            ActionId = actionId?.Trim() ?? string.Empty;
+            Payload = payload ?? string.Empty;
+            SessionRevision = sessionRevision;
+        }
+    }
+
+    /// <summary>
+    /// The only authority entry point a future network adapter needs. Local
+    /// EventBus requests and network requests use the same host implementation.
+    /// </summary>
+    public interface IActivityAuthority
+    {
+        ActivityStartResult HandleSelection(ActivitySelectionRequestDto request);
+        ActivityActionResult HandleAction(ActivityActionRequestDto request);
+    }
+
+    public enum ActivityNetworkFactKind
+    {
+        SessionStarted,
+        InteractionOccurred,
+        SessionEnded
+    }
+
+    /// <summary>
+    /// Serializable lifecycle fact. A transport can encode this struct as
+    /// JSON, binary data or SDK-native messages without changing the domain.
+    /// </summary>
+    public readonly struct ActivityFactDto
+    {
+        public ActivityNetworkFactKind Kind { get; }
+        public string PlayerId { get; }
+        public string AnchorId { get; }
+        public string ActivityId { get; }
+        public ActivityParticipationMode ParticipationMode { get; }
+        public string ActionId { get; }
+        public string Payload { get; }
+        public uint SessionRevision { get; }
+        public bool EndsSession { get; }
+        public ActivityEndReason EndReason { get; }
+        public string Reason { get; }
+
+        private ActivityFactDto(
+            ActivityNetworkFactKind kind,
+            string playerId,
+            string anchorId,
+            string activityId,
+            ActivityParticipationMode participationMode,
+            string actionId,
+            string payload,
+            uint sessionRevision,
+            bool endsSession,
+            ActivityEndReason endReason,
+            string reason)
+        {
+            Kind = kind;
+            PlayerId = playerId ?? string.Empty;
+            AnchorId = anchorId ?? string.Empty;
+            ActivityId = activityId ?? string.Empty;
+            ParticipationMode = participationMode;
+            ActionId = actionId ?? string.Empty;
+            Payload = payload ?? string.Empty;
+            SessionRevision = sessionRevision;
+            EndsSession = endsSession;
+            EndReason = endReason;
+            Reason = reason ?? string.Empty;
+        }
+
+        public static ActivityFactDto From(ActivitySessionStarted fact) => fact == null
+            ? default
+            : new(
+                ActivityNetworkFactKind.SessionStarted,
+                fact.PlayerId,
+                fact.AnchorId,
+                fact.ActivityId,
+                fact.ParticipationMode,
+                string.Empty,
+                string.Empty,
+                fact.SessionRevision,
+                false,
+                ActivityEndReason.Requested,
+                string.Empty);
+
+        public static ActivityFactDto From(ActivityInteractionOccurred fact) => fact == null
+            ? default
+            : new(
+                ActivityNetworkFactKind.InteractionOccurred,
+                fact.PlayerId,
+                fact.AnchorId,
+                fact.ActivityId,
+                ActivityParticipationMode.Independent,
+                fact.ActionId,
+                fact.Payload,
+                fact.SessionRevision,
+                fact.EndsSession,
+                fact.EndReason,
+                fact.Reason);
+
+        public static ActivityFactDto From(ActivitySessionEnded fact) => fact == null
+            ? default
+            : new(
+                ActivityNetworkFactKind.SessionEnded,
+                fact.PlayerId,
+                fact.AnchorId,
+                fact.ActivityId,
+                ActivityParticipationMode.Independent,
+                string.Empty,
+                string.Empty,
+                fact.SessionRevision,
+                true,
+                fact.Reason,
+                string.Empty);
+    }
+
+    public static class ActivityNetworkMapper
+    {
+        public static ActivitySelectionRequestDto ToDto(ActivitySelectionRequested request) => request == null
+            ? default
+            : new(request.PlayerId, request.AnchorId, request.ActivityId);
+
+        public static ActivityActionRequestDto ToDto(ActivityActionRequested request, uint sessionRevision) => request == null
+            ? default
+            : new(
+                request.PlayerId,
+                request.AnchorId,
+                request.ActivityId,
+                request.ActionId,
+                request.Payload,
+                sessionRevision);
+    }
 }

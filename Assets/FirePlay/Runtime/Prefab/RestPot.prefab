@@ -138,7 +138,6 @@ GameObject:
   - component: {fileID: 1419465830074975838}
   - component: {fileID: 4593426551536960040}
   - component: {fileID: 1632136005454703088}
-  - component: {fileID: 2017135008270290349}
   m_Layer: 0
   m_Name: RestPot
   m_TagString: Untagged
@@ -192,22 +191,6 @@ MonoBehaviour:
   _lookTarget: {fileID: 8228558257125691068}
   _turnSpeed: 2.5
   _companionFrameTarget: {fileID: 0}
---- !u!114 &2017135008270290349
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5986995585998082832}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6e52e74acbd74336b21c995f7c35f71b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.ActivityAnchor
-  _anchorId: anchor.star
-  _offers: []
-  _legacyOffers: []
-  _additionalOffers: []
 --- !u!1 &7544033939219673561
 GameObject:
   m_ObjectHideFlags: 0

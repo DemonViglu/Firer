@@ -163,8 +163,12 @@ namespace DemonViglu.FirePlay.Activity
             if (result.Success)
             {
                 if (previous != null && previous != result.Session)
+                {
                     RequestPresentationClose(previous);
+                    PublishSessionEnded(previous, ActivityEndReason.Switched);
+                }
                 RequestPresentationOpen(result.Session);
+                PublishSessionStarted(result.Session);
             }
             return result;
         }
@@ -181,8 +185,12 @@ namespace DemonViglu.FirePlay.Activity
             if (result.Success)
             {
                 if (previous != null && previous != result.Session)
+                {
                     RequestPresentationClose(previous);
+                    PublishSessionEnded(previous, ActivityEndReason.Switched);
+                }
                 RequestPresentationOpen(result.Session);
+                PublishSessionStarted(result.Session);
             }
             return result;
         }
@@ -195,8 +203,15 @@ namespace DemonViglu.FirePlay.Activity
             var result = _runtime == null
                 ? ActivityActionResult.Reject("PlayerActivityHost is not ready")
                 : _runtime.SubmitAction(request);
+            if (result.Consumed && session != null)
+            {
+                PublishInteraction(session, request, result);
+            }
             if (result.EndsSession && session != null)
+            {
                 RequestPresentationClose(session);
+                PublishSessionEnded(session, result.EndReason);
+            }
             return result;
         }
 
@@ -217,8 +232,55 @@ namespace DemonViglu.FirePlay.Activity
         {
             if (_runtime == null || string.IsNullOrWhiteSpace(_playerId)) return false;
             if (_runtime.System.TryGetSession(_playerId, out var session))
+            {
                 RequestPresentationClose(session, reason);
-            return _runtime.End(_playerId, reason);
+                var ended = _runtime.End(_playerId, reason);
+                if (ended)
+                    PublishSessionEnded(session, reason);
+                return ended;
+            }
+
+            return false;
+        }
+
+        private void PublishSessionStarted(ActivitySession session)
+        {
+            if (_events == null || session == null) return;
+            _events.Publish(new ActivitySessionStarted(
+                session.Context.PlayerId,
+                session.Context.AnchorId,
+                session.Definition.ActivityId,
+                session.Definition.ParticipationMode,
+                session.Revision));
+        }
+
+        private void PublishInteraction(
+            ActivitySession session,
+            ActivityActionRequest request,
+            ActivityActionResult result)
+        {
+            if (_events == null || session == null) return;
+            _events.Publish(new ActivityInteractionOccurred(
+                session.Context.PlayerId,
+                session.Context.AnchorId,
+                session.Definition.ActivityId,
+                request.ActionId,
+                request.Payload,
+                session.Revision,
+                result.EndsSession,
+                result.EndReason,
+                result.Reason));
+        }
+
+        private void PublishSessionEnded(ActivitySession session, ActivityEndReason reason)
+        {
+            if (_events == null || session == null) return;
+            _events.Publish(new ActivitySessionEnded(
+                session.Context.PlayerId,
+                session.Context.AnchorId,
+                session.Definition.ActivityId,
+                session.Revision,
+                reason));
         }
 
         private void AttachEvents()

@@ -45,6 +45,8 @@ namespace DemonViglu.FirePlay.Player
         }
 
         [SerializeField] private Animator _animator;
+        [Tooltip("吉他逐键 cue 会映射到此前缀加两位键号，例如 GuitarKey01。没有对应 Animator 参数时会安全忽略。")]
+        [SerializeField] private string _guitarKeyTriggerPrefix = "GuitarKey";
         [SerializeField] private BoolBinding[] _boolBindings =
         {
             new() { stateId = PlayerAnimationStateIds.Resting, parameterName = "IsResting" },
@@ -89,6 +91,9 @@ namespace DemonViglu.FirePlay.Player
         public void Play(string cueId)
         {
             if (string.IsNullOrWhiteSpace(cueId)) return;
+            if (TryPlayGuitarKeyCue(cueId))
+                return;
+
             foreach (var binding in _triggerBindings)
             {
                 if (binding.cueId == cueId)
@@ -97,6 +102,20 @@ namespace DemonViglu.FirePlay.Player
                     return;
                 }
             }
+        }
+
+        private bool TryPlayGuitarKeyCue(string cueId)
+        {
+            const string cuePrefix = "guitar.key.";
+            if (string.IsNullOrWhiteSpace(_guitarKeyTriggerPrefix)
+                || !cueId.StartsWith(cuePrefix, StringComparison.Ordinal)
+                || !int.TryParse(cueId.Substring(cuePrefix.Length), out var keyIndex)
+                || keyIndex < 1
+                || keyIndex > 21)
+                return false;
+
+            SetTrigger($"{_guitarKeyTriggerPrefix}{keyIndex:00}");
+            return true;
         }
 
         public void ApplySharedState(PlayerSharedStateSnapshot snapshot)

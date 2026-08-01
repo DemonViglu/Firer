@@ -334,6 +334,7 @@ GameObject:
   - component: {fileID: 3161424325882539189}
   - component: {fileID: 8292225297649727681}
   - component: {fileID: 5305289997750256037}
+  - component: {fileID: 7270402919480136689}
   m_Layer: 0
   m_Name: CampFire
   m_TagString: Untagged
@@ -449,6 +450,24 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 1.7
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7270402919480136689
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5893462792062315505}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97e8a7bd4f7c4eb7a2f9c3df01a9e001, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.ActivityAnchorNode
+  _anchorId: 
+  _regionId: 
+  _tags: []
+  _activities:
+  - {fileID: 11400000, guid: 6d5a4f3e2c1b0a9876543210fedcba98, type: 2}
+  _ruleProviderBehaviours: []
 --- !u!1001 &7283557018508234258
 PrefabInstance:
   m_ObjectHideFlags: 0

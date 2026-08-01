@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using DemonViglu.FirePlay.Core;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.Activity
@@ -21,25 +22,43 @@ namespace DemonViglu.FirePlay.Activity
         [SerializeField] private MonoBehaviour[] _ruleProviderBehaviours = Array.Empty<MonoBehaviour>();
 
         private readonly List<IActivityRuleProvider> _ruleProviders = new();
+        private StableSceneId _stableSceneId;
+        private string _resolvedAnchorId;
         private AnchorLocationView _locationView;
 
-        public string AnchorId => _anchorId;
+        public string AnchorId
+        {
+            get
+            {
+                RefreshIdentityIfNeeded();
+                return _resolvedAnchorId;
+            }
+        }
         public string RegionId => _regionId;
         public IReadOnlyList<ActivityDefinitionAsset> Activities => _activities ?? Array.Empty<ActivityDefinitionAsset>();
-        public IActivityLocationView Location => _locationView;
+        public IActivityLocationView Location
+        {
+            get
+            {
+                RefreshIdentityIfNeeded();
+                return _locationView;
+            }
+        }
         public IReadOnlyList<IActivityRuleProvider> RuleProviders => _ruleProviders;
 
         private void Awake()
         {
-            _anchorId = string.IsNullOrWhiteSpace(_anchorId) ? gameObject.name : _anchorId.Trim();
+            _stableSceneId = GetComponent<StableSceneId>();
             _regionId = _regionId?.Trim() ?? string.Empty;
-            _locationView = new AnchorLocationView(_anchorId, _regionId, _tags);
+            RefreshIdentity();
             RefreshRuleProviders();
         }
 
         private void OnEnable()
         {
+            RefreshIdentity();
             if (!ActiveNodes.Contains(this)) ActiveNodes.Add(this);
+            ValidateUniqueIdentity();
         }
 
         private void OnDisable() => ActiveNodes.Remove(this);
@@ -53,6 +72,74 @@ namespace DemonViglu.FirePlay.Activity
             {
                 if (behaviour is IActivityRuleProvider provider && behaviour != this)
                     _ruleProviders.Add(provider);
+            }
+        }
+
+        /// <summary>
+        /// Rebuilds the read-only location view after a runtime StableSceneId
+        /// has been assigned. Generated Campfires can therefore keep their
+        /// ActivityAnchorNode in the prefab and assign identity afterwards.
+        /// </summary>
+        public void RefreshIdentity()
+        {
+            var nextAnchorId = ResolveAnchorId();
+            if (string.Equals(_resolvedAnchorId, nextAnchorId, StringComparison.Ordinal)
+                && _locationView != null)
+            {
+                return;
+            }
+
+            _resolvedAnchorId = nextAnchorId;
+            _locationView = new AnchorLocationView(_resolvedAnchorId, _regionId, _tags);
+            if (isActiveAndEnabled)
+                ValidateUniqueIdentity();
+        }
+
+        private void RefreshIdentityIfNeeded()
+        {
+            if (_stableSceneId == null)
+                _stableSceneId = GetComponent<StableSceneId>();
+
+            var nextAnchorId = ResolveAnchorId();
+            if (!string.Equals(_resolvedAnchorId, nextAnchorId, StringComparison.Ordinal)
+                || _locationView == null)
+            {
+                RefreshIdentity();
+            }
+        }
+
+        private string ResolveAnchorId()
+        {
+            if (_stableSceneId != null && _stableSceneId.IsValid)
+                return _stableSceneId.Value.Trim();
+
+            if (!string.IsNullOrWhiteSpace(_anchorId))
+                return _anchorId.Trim();
+
+            return gameObject.name;
+        }
+
+        private void ValidateUniqueIdentity()
+        {
+            // A generated prefab may briefly share its clone name before its
+            // StableSceneId is assigned. Only stable identities are validated
+            // here; authoring-only fallback names remain legacy-local IDs.
+            if (_stableSceneId == null
+                || !_stableSceneId.IsValid
+                || string.IsNullOrWhiteSpace(_resolvedAnchorId))
+                return;
+
+            foreach (var node in ActiveNodes)
+            {
+                if (node != null
+                    && node != this
+                    && string.Equals(node.AnchorId, _resolvedAnchorId, StringComparison.Ordinal))
+                {
+                    Debug.LogError(
+                        $"[ActivityAnchorNode] 活动 AnchorId 重复：{_resolvedAnchorId}。请确保每个地点使用唯一 StableSceneId。",
+                        this);
+                    return;
+                }
             }
         }
 

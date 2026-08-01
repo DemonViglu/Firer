@@ -33,5 +33,8 @@
 ,{"Key":"FishingActivityForms",
 "Value":"SUIFW/UIPrefabs/FishingActivityForms"}
 
+,{"Key":"GuitarActivityForms",
+"Value":"SUIFW/UIPrefabs/GuitarActivityForms"}
+
 ]
 }

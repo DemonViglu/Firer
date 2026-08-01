@@ -84,8 +84,9 @@ namespace DemonViglu.FirePlay.Player
         public bool TryBeginRest()
         {
             var spot = NearestRestSpot;
-            var anchor = spot != null ? spot.ActivityAnchor : null;
-            if (IsResting || spot == null || anchor == null || !anchor.TryGetOffer("rest", out _))
+            // Rest availability belongs to RestSpot; activity discovery must not
+            // decide whether every RestSpot can be entered.
+            if (IsResting || spot == null)
             {
                 return false;
             }
@@ -101,7 +102,6 @@ namespace DemonViglu.FirePlay.Player
             BeginCampfireComfort(spot);
             IsResting = true;
             ActiveRestSpot = spot;
-            ApplyRestLookLock(true);
             ActiveRestSpot.NotifyRestStarted(this);
             RestStarted?.Invoke(ActiveRestSpot);
             return true;
@@ -120,7 +120,6 @@ namespace DemonViglu.FirePlay.Player
             _modeController?.Exit(PlayerMode.Resting);
             _movement?.SetMovementLocked(false);
             EndCampfireComfort();
-            ApplyRestLookLock(false, completedSpot);
             if (completedSpot != null)
             {
                 completedSpot.NotifyRestEnded(this);
@@ -146,16 +145,6 @@ namespace DemonViglu.FirePlay.Player
             if (_resourceController != null && _activeCampfire != null)
                 _resourceController.ExitCampfireRest();
             _activeCampfire = null;
-        }
-
-        private void ApplyRestLookLock(bool active, RestSpot spot = null)
-        {
-            var anchor = (spot ?? ActiveRestSpot)?.ActivityAnchor;
-            var shouldLock = active
-                && anchor != null
-                && anchor.TryGetSingleLegacyActivityOffer(out var offer)
-                && offer.locksLookInput;
-            _look?.SetLookLocked(shouldLock);
         }
 
         private void OnDisable()

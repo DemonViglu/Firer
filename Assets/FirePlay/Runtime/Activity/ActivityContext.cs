@@ -15,7 +15,7 @@ namespace DemonViglu.FirePlay.Activity
         }
     }
 
-    /// <summary>活动可读取的地点事实，不暴露 ActivityAnchor 的 Unity 实现。</summary>
+    /// <summary>活动可读取的地点事实，不暴露地点组件的 Unity 实现。</summary>
     public interface IActivityLocationView
     {
         string AnchorId { get; }

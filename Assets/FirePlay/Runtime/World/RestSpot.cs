@@ -12,7 +12,6 @@ namespace DemonViglu.FirePlay.World
         private static readonly List<RestSpot> ActiveSpots = new();
 
         [SerializeField, Min(0.1f)] private float _interactionRadius = 1.75f;
-        public ActivityAnchor ActivityAnchor { get; private set; }
 
         public float InteractionRadius => _interactionRadius;
 
@@ -53,12 +52,6 @@ namespace DemonViglu.FirePlay.World
             {
                 ActiveSpots.Add(this);
             }
-        }
-
-        private void Awake()
-        {
-            ActivityAnchor = GetComponent<ActivityAnchor>() ?? gameObject.AddComponent<ActivityAnchor>();
-            ActivityAnchor.Initialize(this);
         }
 
         private void OnDisable()

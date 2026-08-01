@@ -22,12 +22,9 @@ namespace DemonViglu.FirePlay.Player
         public CampfirePlacement CampfirePlacement { get; private set; }
         public InteractionRouter InteractionRouter { get; private set; }
         public WorldCommandExecutor CommandExecutor { get; private set; }
-        public RitualInteractionCoordinator RitualCoordinator { get; private set; }
         public PlayerSharedStateAdapter SharedStateAdapter { get; private set; }
         public PlayerExpressionController Expressions { get; private set; }
         public PlayerProximityEffects ProximityEffects { get; private set; }
-        public PlayerCampfireComfortController CampfireComfort { get; private set; }
-        public PlayerRestPoseController RestPose { get; private set; }
         public static LocalPlayerContext EnsureFor(Component component)
         {
             if (component == null) return Current;
@@ -69,18 +66,12 @@ namespace DemonViglu.FirePlay.Player
         {
             Identity = GameInstanceSubsystem.GetOrCreate<IPlayerIdentityService>(() => new LocalPlayerIdentityService(_playerId));
             GameInstanceSubsystem.GetOrCreate<IWorldObjectRegistry>(() => new StableIdWorldObjectRegistry());
-            RitualCoordinator = GetComponent<RitualInteractionCoordinator>() ?? gameObject.AddComponent<RitualInteractionCoordinator>();
-            RitualCoordinator.Initialize(this);
             SharedStateAdapter = GetComponent<PlayerSharedStateAdapter>() ?? gameObject.AddComponent<PlayerSharedStateAdapter>();
             SharedStateAdapter.Initialize(this);
             Expressions = GetComponent<PlayerExpressionController>() ?? gameObject.AddComponent<PlayerExpressionController>();
             Expressions.Initialize(this);
             ProximityEffects = GetComponent<PlayerProximityEffects>() ?? gameObject.AddComponent<PlayerProximityEffects>();
             ProximityEffects.Initialize(Interaction);
-            CampfireComfort = GetComponent<PlayerCampfireComfortController>() ?? gameObject.AddComponent<PlayerCampfireComfortController>();
-            CampfireComfort.Initialize();
-            RestPose = GetComponent<PlayerRestPoseController>() ?? gameObject.AddComponent<PlayerRestPoseController>();
-            RestInteraction?.InitializeActivitySupport();
             CommandExecutor = GetComponent<WorldCommandExecutor>() ?? gameObject.AddComponent<WorldCommandExecutor>();
             CommandExecutor.Initialize(this);
             InteractionRouter = GetComponent<InteractionRouter>() ?? gameObject.AddComponent<InteractionRouter>();

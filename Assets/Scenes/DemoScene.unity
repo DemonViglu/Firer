@@ -2323,6 +2323,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.PlayerActivityPresentationHost
   _cameraExecutorBehaviour: {fileID: 1412847011}
+  _vfxExecutorBehaviour: {fileID: 0}
+  _movement: {fileID: 0}
+  _look: {fileID: 0}
+  _animation: {fileID: 0}
 --- !u!114 &733872032
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3222,6 +3226,7 @@ GameObject:
   - component: {fileID: 971497442}
   - component: {fileID: 971497443}
   - component: {fileID: 971497444}
+  - component: {fileID: 971497445}
   m_Layer: 0
   m_Name: TST
   m_TagString: Untagged
@@ -3279,6 +3284,7 @@ MonoBehaviour:
   _factories:
   - {fileID: 971497442}
   - {fileID: 971497444}
+  - {fileID: 971497445}
 --- !u!114 &971497444
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3297,6 +3303,18 @@ MonoBehaviour:
   _minimumBiteDelay: 1.5
   _maximumBiteDelay: 4
   _hookWindowSeconds: 2
+--- !u!114 &971497445
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 971497439}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8e4d9f3a2154c7b0e6d8f2a3b9c5d1e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.EmoteActivityLogicFactory
 --- !u!1 &979459601
 GameObject:
   m_ObjectHideFlags: 0

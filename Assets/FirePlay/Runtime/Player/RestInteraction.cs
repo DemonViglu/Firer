@@ -1,5 +1,6 @@
-using DemonViglu.FirePlay.World;
 using System;
+using DemonViglu.FirePlay.Flame;
+using DemonViglu.FirePlay.World;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.Player
@@ -13,16 +14,18 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField] private PlayerMovement _movement;
         [SerializeField] private PlayerLook _look;
         [SerializeField] private PlayerModeController _modeController;
+        [SerializeField] private FlameResourceController _resourceController;
         [SerializeField, Min(0f)] private float _cameraDrop = 0.55f;
         [SerializeField, Min(0f)] private float _cameraTransitionSpeed = 5f;
 
         private Transform _cameraPivot;
         private Vector3 _standingPivotLocalPosition;
-        private PlayerRestPoseController _restPose;
-        private PlayerCampfireComfortController _campfireComfort;
+        private Campfire _activeCampfire;
         private IEventPublisher _events;
 
         public bool IsResting { get; private set; }
+        public bool IsRecovering => _activeCampfire != null;
+        public Campfire ActiveCampfire => _activeCampfire;
         public RestSpot NearestRestSpot { get; private set; }
         public RestSpot ActiveRestSpot { get; private set; }
 
@@ -34,6 +37,7 @@ namespace DemonViglu.FirePlay.Player
             _movement ??= GetComponent<PlayerMovement>();
             _look ??= GetComponent<PlayerLook>();
             _modeController ??= GetComponent<PlayerModeController>();
+            _resourceController ??= GetComponent<FlameResourceController>();
             _cameraPivot = _look != null ? _look.CameraPivot : null;
 
             if (_movement == null || _cameraPivot == null || _modeController == null)
@@ -43,22 +47,7 @@ namespace DemonViglu.FirePlay.Player
                 return;
             }
 
-            InitializeActivitySupport();
-        }
-
-        public void InitializeActivitySupport()
-        {
-            _movement ??= GetComponent<PlayerMovement>();
-            _look ??= GetComponent<PlayerLook>();
-            _modeController ??= GetComponent<PlayerModeController>();
-            _restPose ??= GetComponent<PlayerRestPoseController>();
-            _campfireComfort ??= GetComponent<PlayerCampfireComfortController>();
-            _cameraPivot = _look != null ? _look.CameraPivot : null;
-            if (_movement == null || _cameraPivot == null || _modeController == null || _restPose == null) return;
-
             _standingPivotLocalPosition = _cameraPivot.localPosition;
-            _restPose.Initialize(_movement, _look, _modeController, _cameraDrop, _cameraTransitionSpeed, _standingPivotLocalPosition);
-            _campfireComfort?.Initialize();
         }
 
         private void OnEnable()
@@ -70,7 +59,17 @@ namespace DemonViglu.FirePlay.Player
         private void Update()
         {
             NearestRestSpot = RestSpot.FindNearest(transform.position);
+        }
 
+        private void LateUpdate()
+        {
+            if (_cameraPivot == null) return;
+
+            var target = IsResting
+                ? _standingPivotLocalPosition + Vector3.down * _cameraDrop
+                : _standingPivotLocalPosition;
+            var blend = 1f - Mathf.Exp(-_cameraTransitionSpeed * Time.deltaTime);
+            _cameraPivot.localPosition = Vector3.Lerp(_cameraPivot.localPosition, target, blend);
         }
 
         private void OnIntentRequested(PlayerIntentRequested intent)
@@ -91,14 +90,15 @@ namespace DemonViglu.FirePlay.Player
                 return false;
             }
 
-            _restPose ??= GetComponent<PlayerRestPoseController>();
-            if (_restPose == null || !_restPose.TryEnter())
+            if (_movement == null || _modeController == null || _cameraPivot == null)
+                return false;
+            if (!_modeController.TryEnter(PlayerMode.Resting))
             {
                 return false;
             }
 
-            _campfireComfort ??= GetComponent<PlayerCampfireComfortController>();
-            _campfireComfort?.TryBegin(spot);
+            _movement.SetMovementLocked(true);
+            BeginCampfireComfort(spot);
             IsResting = true;
             ActiveRestSpot = spot;
             ApplyRestLookLock(true);
@@ -117,14 +117,35 @@ namespace DemonViglu.FirePlay.Player
             var completedSpot = ActiveRestSpot;
             IsResting = false;
             ActiveRestSpot = null;
-            _restPose?.Exit();
-            _campfireComfort?.End();
+            _modeController?.Exit(PlayerMode.Resting);
+            _movement?.SetMovementLocked(false);
+            EndCampfireComfort();
             ApplyRestLookLock(false, completedSpot);
             if (completedSpot != null)
             {
                 completedSpot.NotifyRestEnded(this);
                 RestEnded?.Invoke(completedSpot);
             }
+        }
+
+        private void BeginCampfireComfort(RestSpot spot)
+        {
+            EndCampfireComfort();
+
+            var campfire = spot != null ? spot.GetComponent<Campfire>() : null;
+            if (campfire == null || campfire.IsExtinguished || campfire.Config == null)
+                return;
+            if (_resourceController == null) return;
+
+            _resourceController.EnterCampfireRest(campfire);
+            _activeCampfire = campfire;
+        }
+
+        private void EndCampfireComfort()
+        {
+            if (_resourceController != null && _activeCampfire != null)
+                _resourceController.ExitCampfireRest();
+            _activeCampfire = null;
         }
 
         private void ApplyRestLookLock(bool active, RestSpot spot = null)
@@ -141,6 +162,9 @@ namespace DemonViglu.FirePlay.Player
         {
             _events?.Unsubscribe<PlayerIntentRequested>(OnIntentRequested);
             EndRest();
+            EndCampfireComfort();
+            if (_cameraPivot != null)
+                _cameraPivot.localPosition = _standingPivotLocalPosition;
         }
 
     }

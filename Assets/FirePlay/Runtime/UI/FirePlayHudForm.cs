@@ -18,7 +18,6 @@ namespace DemonViglu.FirePlay.UI
         [SerializeField] private PlayerInteraction _playerInteraction;
         [SerializeField] private RestInteraction _restInteraction;
         [SerializeField] private LocalPlayerContext _localPlayer;
-        private RitualInteractionCoordinator _ritualCoordinator;
 
         [Header("Fuel")]
         [SerializeField] private GameObject _fuelRoot;
@@ -31,9 +30,6 @@ namespace DemonViglu.FirePlay.UI
         [Header("Prompts")]
         [SerializeField] private GameObject _interactionPromptRoot;
         [SerializeField] private Text _interactionPromptText;
-        [SerializeField] private GameObject _ritualPromptRoot;
-        [SerializeField] private Text _ritualPromptText;
-        [SerializeField] private bool _showLegacyRitualPrompt;
 
         private float _nextReferenceSearchTime;
 
@@ -54,7 +50,6 @@ namespace DemonViglu.FirePlay.UI
 
             UpdateFuel();
             UpdateInteractionPrompt();
-            UpdateRitualPrompt();
         }
 
         private void ResolveReferences()
@@ -64,7 +59,6 @@ namespace DemonViglu.FirePlay.UI
             _flameResource ??= _localPlayer.FlameResource;
             _playerInteraction ??= _localPlayer.Interaction;
             _restInteraction ??= _localPlayer.RestInteraction;
-            _ritualCoordinator ??= _localPlayer.RitualCoordinator;
         }
 
         private void ResolveUiReferences()
@@ -76,9 +70,7 @@ namespace DemonViglu.FirePlay.UI
             _flameImage ??= FindChild("FlameImage")?.GetComponent<Image>();
             _fuelText ??= FindChild("FuelText")?.GetComponent<Text>();
             _interactionPromptRoot ??= FindChild("InteractionPromptRoot")?.gameObject;
-            _ritualPromptRoot ??= FindChild("RitualPromptRoot")?.gameObject;
             _interactionPromptText ??= FindText(_interactionPromptRoot);
-            _ritualPromptText ??= FindText(_ritualPromptRoot);
 
             // The original SUIFW sample used a Simple Image. A fuel amount only
             // changes visually when the Image is a horizontal filled image.
@@ -126,31 +118,6 @@ namespace DemonViglu.FirePlay.UI
             if (shouldShow && _interactionPromptText != null)
             {
                 _interactionPromptText.text = prompt;
-            }
-        }
-
-        private void UpdateRitualPrompt()
-        {
-            if (!_showLegacyRitualPrompt)
-            {
-                SetActive(_ritualPromptRoot, false);
-                return;
-            }
-
-            var view = _ritualCoordinator != null ? _ritualCoordinator.ViewState : default;
-            if (!view.IsVisible)
-            {
-                SetActive(_ritualPromptRoot, false);
-                return;
-            }
-
-            var status = view.Status;
-
-            var shouldShow = !string.IsNullOrWhiteSpace(status);
-            SetActive(_ritualPromptRoot, shouldShow);
-            if (shouldShow && _ritualPromptText != null)
-            {
-                _ritualPromptText.text = status;
             }
         }
 

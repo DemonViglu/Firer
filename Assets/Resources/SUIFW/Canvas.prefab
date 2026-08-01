@@ -960,7 +960,6 @@ GameObject:
   - component: {fileID: 1826737557583500513}
   - component: {fileID: 5575421974355803691}
   - component: {fileID: 4101885556788809422}
-  - component: {fileID: 910000000000000001}
   m_Layer: 5
   m_Name: MarshmallowContent
   m_TagString: Untagged
@@ -1029,19 +1028,6 @@ MonoBehaviour:
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: New Text
---- !u!114 &910000000000000001
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1279484600662864183}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0ac57dd4c64f4ee9b79c9b29e0d7d922, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.FirePlayRitualContentBinding
-  _ritualId: marshmallow
 --- !u!1 &1378265160031067795
 GameObject:
   m_ObjectHideFlags: 0
@@ -1186,7 +1172,6 @@ GameObject:
   m_Component:
   - component: {fileID: 9115102668191643101}
   - component: {fileID: 7696146763000996723}
-  - component: {fileID: 6039952747931055216}
   - component: {fileID: 7463834020734742584}
   - component: {fileID: 6108344304640745054}
   - component: {fileID: 2979154068419087371}
@@ -1233,23 +1218,6 @@ MonoBehaviour:
   _localPlayer: {fileID: 0}
   _activityHost: {fileID: 0}
   _activityAnchorSearchDistance: 3
---- !u!114 &6039952747931055216
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1912452919509940744}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1a91417e68854e47b67bf56c04623422, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.FirePlayRitualPanel
-  _localPlayer: {fileID: 0}
-  _panelRoot: {fileID: 5780959609777861157}
-  _statusText: {fileID: 7468714421611532043}
-  _primaryActionText: {fileID: 1598124646626618623}
-  _secondaryActionText: {fileID: 9026145484244690764}
 --- !u!114 &7463834020734742584
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1857,7 +1825,6 @@ GameObject:
   - component: {fileID: 1599525845666053624}
   - component: {fileID: 2461602728701089442}
   - component: {fileID: 4445010817960458105}
-  - component: {fileID: 910000000000000002}
   m_Layer: 5
   m_Name: FishingContent
   m_TagString: Untagged
@@ -1926,19 +1893,6 @@ MonoBehaviour:
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: New Text
---- !u!114 &910000000000000002
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3987745183201815969}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0ac57dd4c64f4ee9b79c9b29e0d7d922, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.FirePlayRitualContentBinding
-  _ritualId: fishing
 --- !u!1 &4128412237224530511
 GameObject:
   m_ObjectHideFlags: 0
@@ -4548,9 +4502,6 @@ MonoBehaviour:
   _fullFuelColor: {r: 1, g: 0.68, b: 0.2, a: 1}
   _interactionPromptRoot: {fileID: 44233354024747243}
   _interactionPromptText: {fileID: 3284017288034072379}
-  _ritualPromptRoot: {fileID: 0}
-  _ritualPromptText: {fileID: 0}
-  _showLegacyRitualPrompt: 0
 --- !u!1 &8642947994194070593
 GameObject:
   m_ObjectHideFlags: 0

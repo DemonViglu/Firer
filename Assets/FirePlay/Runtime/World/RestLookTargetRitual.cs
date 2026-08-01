@@ -21,7 +21,6 @@ namespace DemonViglu.FirePlay.World
         private bool _usingFishingCamera;
 
         public Transform LookTarget => _lookTarget;
-        public override bool LocksLookInput => true;
         protected virtual bool RotatePlayerTowardsTarget => false;
         protected virtual bool UsesExternalCamera => false;
 

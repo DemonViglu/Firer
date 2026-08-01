@@ -9,7 +9,6 @@ namespace DemonViglu.FirePlay.Player
     public sealed class PlayerSharedStateAdapter : MonoBehaviour
     {
         private PlayerModeController _mode;
-        private RitualInteractionCoordinator _rituals;
         private PlayerAnimationController _animation;
 
         public PlayerSharedState State { get; } = new();
@@ -19,7 +18,6 @@ namespace DemonViglu.FirePlay.Player
         public void Initialize(LocalPlayerContext context)
         {
             _mode = GetComponent<PlayerModeController>();
-            _rituals = context != null ? context.RitualCoordinator : GetComponent<RitualInteractionCoordinator>();
             _animation = context != null ? context.Animation : GetComponent<PlayerAnimationController>();
         }
 
@@ -28,11 +26,11 @@ namespace DemonViglu.FirePlay.Player
         private void LateUpdate()
         {
             var mode = _mode != null ? _mode.CurrentMode : PlayerMode.Exploring;
-            var active = _rituals != null ? _rituals.ActiveRitual : null;
-            var ritualStateId = active != null
-                ? active.SharedStateId
-                : mode == PlayerMode.Resting ? PlayerAnimationStateIds.Resting : string.Empty;
-            var ritualId = active != null ? active.ViewState.RitualId : string.Empty;
+            // Activity sessions have their own semantic/network path. This
+            // legacy shared snapshot only mirrors Player mode and Resting
+            // animation state until the realtime DTO replaces it.
+            var ritualStateId = mode == PlayerMode.Resting ? PlayerAnimationStateIds.Resting : string.Empty;
+            var ritualId = string.Empty;
             if (State.Set(mode, ritualStateId, ritualId)) Changed?.Invoke(State.Snapshot);
             _animation?.ApplySharedState(State.Snapshot);
         }

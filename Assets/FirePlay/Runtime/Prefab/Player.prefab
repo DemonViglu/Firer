@@ -1054,6 +1054,7 @@ GameObject:
   - component: {fileID: 7750000000000000004}
   - component: {fileID: 7750000000000000005}
   - component: {fileID: 7750000000000000006}
+  - component: {fileID: 7750000000000000007}
   - component: {fileID: 8918313119764425079}
   m_Layer: 0
   m_Name: Player
@@ -1139,7 +1140,7 @@ MonoBehaviour:
   _sprintSpeedMultiplier: 1.55
   _gravity: 20
   _cameraTransform: {fileID: 0}
-  _flameResourceController: {fileID: 0}
+  _sprintPolicyBehaviour: {fileID: 1518005239310531485}
 --- !u!114 &7699362426026562702
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1458,6 +1459,7 @@ MonoBehaviour:
   _playerId: local.player
   _isLocalPlayer: 1
   _localCamera: {fileID: 0}
+  _cameraTargets: {fileID: 7750000000000000007}
   _sharedStateAdapter: {fileID: 7750000000000000002}
   _expressions: {fileID: 7750000000000000003}
   _proximityEffects: {fileID: 7750000000000000004}
@@ -1549,6 +1551,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dca478a9c8c5b914298ce515315761a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.InteractionRouter
+--- !u!114 &7750000000000000007
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5546368970521514861}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d7e8f901a2b43c5b6d7e8f901a2b3c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerCameraTargetSet
+  _followTarget: {fileID: 546559225208236123}
+  _frameTarget: {fileID: 7405655564242794545}
+  _lookAtTarget: {fileID: 2465744658530655391}
+  _inputPivot: {fileID: 7512999131663255409}
 --- !u!82 &8918313119764425079
 AudioSource:
   m_ObjectHideFlags: 0

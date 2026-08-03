@@ -8,39 +8,69 @@ namespace DemonViglu.FirePlay.Player
     [DisallowMultipleComponent]
     public sealed class PlayerSharedStateAdapter : MonoBehaviour
     {
-        private PlayerModeController _mode;
+        private readonly PlayerSharedState _fallbackState = new();
+        private PlayerSharedStateService _service;
+        private LocalPlayerContext _context;
         private PlayerAnimationController _animation;
 
-        public PlayerSharedState State { get; } = new();
+        public PlayerSharedState State => _service != null ? _service.State : _fallbackState;
         public PlayerSharedStateSnapshot Snapshot => State.Snapshot;
         public event Action<PlayerSharedStateSnapshot> Changed;
 
         public void Initialize(LocalPlayerContext context)
         {
-            _mode = GetComponent<PlayerModeController>();
+            Initialize(context, context?.CoreHost?.SharedStateService);
+        }
+
+        public void Initialize(LocalPlayerContext context, PlayerSharedStateService service)
+        {
+            if (_service != null)
+                _service.Changed -= OnServiceChanged;
+
+            _context = context;
             _animation = context != null ? context.Animation : GetComponent<PlayerAnimationController>();
+            _service = service;
+            if (isActiveAndEnabled && _service != null)
+                _service.Changed += OnServiceChanged;
         }
 
         private void Awake() => Initialize(GetComponent<LocalPlayerContext>());
 
-        private void LateUpdate()
+        private void OnEnable()
         {
-            var mode = _mode != null ? _mode.CurrentMode : PlayerMode.Exploring;
-            // Activity sessions have their own semantic/network path. This
-            // legacy shared snapshot only mirrors Player mode and Resting
-            // animation state until the realtime DTO replaces it.
-            var ritualStateId = mode == PlayerMode.Resting ? PlayerAnimationStateIds.Resting : string.Empty;
-            var ritualId = string.Empty;
-            if (State.Set(mode, ritualStateId, ritualId)) Changed?.Invoke(State.Snapshot);
-            _animation?.ApplySharedState(State.Snapshot);
+            if (_service != null)
+            {
+                _service.Changed -= OnServiceChanged;
+                _service.Changed += OnServiceChanged;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (_service != null)
+                _service.Changed -= OnServiceChanged;
+        }
+
+        private void OnServiceChanged(PlayerSharedStateSnapshot snapshot)
+        {
+            Changed?.Invoke(snapshot);
         }
 
         public bool ApplyRemoteSnapshot(PlayerSharedStateSnapshot snapshot)
         {
-            if (!State.Apply(snapshot)) return false;
-            _animation?.ApplySharedState(State.Snapshot);
-            Changed?.Invoke(State.Snapshot);
+            if (_service != null)
+                return _service.ApplyRemoteSnapshot(snapshot);
+
+            if (!_fallbackState.Apply(snapshot)) return false;
+            _animation?.ApplySharedState(_fallbackState.Snapshot);
+            Changed?.Invoke(_fallbackState.Snapshot);
             return true;
+        }
+
+        private void OnDestroy()
+        {
+            if (_service != null)
+                _service.Changed -= OnServiceChanged;
         }
     }
 }

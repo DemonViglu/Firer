@@ -64,16 +64,19 @@ namespace DemonViglu.FirePlay.Player
             }
 
             _moveAction = FindRequiredAction("Move");
-            _sprintAction = FindRequiredAction("Sprint");
-            _constrictFlameAction = FindRequiredAction("ConstrictFlame");
-            _placeFireAction = FindRequiredAction("PlaceFire");
-            _restAction = FindRequiredAction("Rest");
-            _upgradeCampfireAction = FindRequiredAction("UpgradeCampfire");
             _lookAction = FindRequiredAction("Look");
-            _interactAction = FindRequiredAction("Interact");
-            _emoteAction = FindRequiredAction("Emote");
-            _cycleTreeLightColorAction = FindRequiredAction("CycleTreeLightColor");
-            _pauseAction = FindRequiredAction("Pause");
+
+            // Only Move and Look are part of the base Player contract. Sprint
+            // and all discrete actions belong to optional feature modules.
+            _sprintAction = FindOptionalAction("Sprint");
+            _constrictFlameAction = FindOptionalAction("ConstrictFlame");
+            _placeFireAction = FindOptionalAction("PlaceFire");
+            _restAction = FindOptionalAction("Rest");
+            _upgradeCampfireAction = FindOptionalAction("UpgradeCampfire");
+            _interactAction = FindOptionalAction("Interact");
+            _emoteAction = FindOptionalAction("Emote");
+            _cycleTreeLightColorAction = FindOptionalAction("CycleTreeLightColor");
+            _pauseAction = FindOptionalAction("Pause");
         }
 
         private void OnEnable()
@@ -97,6 +100,11 @@ namespace DemonViglu.FirePlay.Player
             }
 
             return action;
+        }
+
+        private InputAction FindOptionalAction(string actionName)
+        {
+            return _playerMap.FindAction(actionName, throwIfNotFound: false);
         }
 
         public void SetVirtualMove(Vector2 value)

@@ -1,6 +1,7 @@
 using DemonViglu.FirePlay.Data;
 using DemonViglu.FirePlay.World;
 using DemonViglu.FirePlay.Activity;
+using DemonViglu.FirePlay.Player;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.Flame
@@ -9,7 +10,7 @@ namespace DemonViglu.FirePlay.Flame
     /// Player 上的余火入口。负责固定夜间消耗、恢复区域计数，
     /// 并向后续冲刺、自然火源和篝火提供显式消耗/恢复接口。
     /// </summary>
-    public sealed class FlameResourceController : MonoBehaviour, IActivityFlameResource
+    public sealed class FlameResourceController : MonoBehaviour, IActivityFlameResource, IPlayerSprintPolicy
     {
         [SerializeField] private FlameResourceConfig _config;
         [SerializeField] private bool _nightDrainActive = true;
@@ -76,6 +77,11 @@ namespace DemonViglu.FirePlay.Flame
 
         public bool TryConsume(float amount) => State != null && State.TryConsume(amount);
         public bool ConsumeUpTo(float amount) => State != null && State.ConsumeUpTo(amount);
+        public bool TryConsumeSprint(float deltaTime)
+        {
+            var sprintCost = Config != null ? Config.SprintDrainPerSecond * Mathf.Max(0f, deltaTime) : 0f;
+            return sprintCost <= 0f || ConsumeUpTo(sprintCost);
+        }
         public bool Restore(float amount) => State != null && State.Restore(amount);
         public void SetNightDrainActive(bool active) => _nightDrainActive = active;
         public void SetReceiverOverride(bool active) => State?.SetReceiverOverride(active && IsInSafeZone);

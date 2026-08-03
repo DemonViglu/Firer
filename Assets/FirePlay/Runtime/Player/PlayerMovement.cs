@@ -1,8 +1,12 @@
-using DemonViglu.FirePlay.Flame;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.Player
 {
+    public interface IPlayerSprintPolicy
+    {
+        bool TryConsumeSprint(float deltaTime);
+    }
+
     /// <summary>
     /// 基于 CharacterController 的基础第三人称移动。
     /// 移动方向由相机在水平面上的朝向决定。
@@ -15,10 +19,11 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField, Min(1f)] private float _sprintSpeedMultiplier = 1.55f;
         [SerializeField, Min(0f)] private float _gravity = 20f;
         [SerializeField] private Transform _cameraTransform;
-        [SerializeField] private FlameResourceController _flameResourceController;
+        [SerializeField] private MonoBehaviour _sprintPolicyBehaviour;
 
         private CharacterController _controller;
         private FirePlayPlayerInput _input;
+        private IPlayerSprintPolicy _sprintPolicy;
         private float _verticalVelocity;
 
         public bool IsSprinting { get; private set; }
@@ -28,11 +33,7 @@ namespace DemonViglu.FirePlay.Player
         {
             _controller = GetComponent<CharacterController>();
             _input = GetComponent<FirePlayPlayerInput>();
-
-            if (_flameResourceController == null)
-            {
-                _flameResourceController = GetComponent<FlameResourceController>();
-            }
+            _sprintPolicy = _sprintPolicyBehaviour as IPlayerSprintPolicy;
 
             // 移动方向优先跟随 PlayerLook 的 CameraPivot，而不是实际渲染相机。
             // 这样 Main Camera 交给 Cinemachine 或从 Player 层级移出后，探索移动仍与玩家视角一致。
@@ -83,21 +84,22 @@ namespace DemonViglu.FirePlay.Player
             }
         }
 
+        public void BindSprintPolicy(MonoBehaviour behaviour)
+        {
+            _sprintPolicyBehaviour = behaviour;
+            _sprintPolicy = behaviour as IPlayerSprintPolicy;
+        }
+
         private bool TrySprint(Vector2 moveInput)
         {
-            if (!_input.SprintHeld || moveInput.sqrMagnitude < 0.01f || _flameResourceController == null)
+            if (!_input.SprintHeld || moveInput.sqrMagnitude < 0.01f)
             {
                 return false;
             }
 
-            var config = _flameResourceController.Config;
-            if (config == null)
-            {
-                return false;
-            }
-
-            var sprintCost = config.SprintDrainPerSecond * Time.deltaTime;
-            return sprintCost <= 0f || _flameResourceController.ConsumeUpTo(sprintCost);
+            // A base Player has no resource policy and can sprint freely. The
+            // FlameModule supplies a policy when sprint should consume fuel.
+            return _sprintPolicy == null || _sprintPolicy.TryConsumeSprint(Time.deltaTime);
         }
 
         private void OnValidate()

@@ -146,3 +146,21 @@ Player / Campfire / Activity
 - 动作必须携带当前 Session revision；旧 Session、错误 Player、错误 Anchor 或错误 Activity 会在进入 Logic 前拒绝。
 - `ActivityFactDto` 可由 Started/Interaction/Ended 事实事件映射得到，后续可直接序列化为 SDK 消息。
 - 本切片没有引入 Network SDK、Transport 或远端 Logic；下一步才是选定 SDK 并实现传输适配器。
+
+## 9. Player 收口门禁
+
+- 已完成 `Player.prefab` 根组件审计：当前 27 个 Unity 组件，其中 24 个是自定义脚本；问题是职责混合，不是单纯数量问题。
+- 已确认 `LocalPlayerContext`、5 个通用服务、`PlayerInteraction`/`InteractionRouter` 重复入口和 Player 根上的 `FishingActivityVisuals` 是收口重点。
+- 已建立非 `MonoBehaviour` 的 `PlayerCoreHost` 组合宿主：集中服务依赖、缺失配置诊断和初始化顺序，暂不删除现有组件。
+- `PlayerSharedStateService` 已迁入 `PlayerCoreHost`，`PlayerSharedStateAdapter` 暂作为兼容外观保留；状态 Tick、远端快照和 Changed 通知均保持可用。
+- 收口目标已调整为“基础移动 Player + 可插拔 FlameModule + 可插拔 ActivityModule”；不能继续把火焰、活动和表情服务当作 Player Core 的必需组件。
+- `IPlayerModule`、`PlayerModuleContext` 和可选模块查询已加入 `PlayerCoreHost`；缺少可选服务不会阻止基础 Player Core 就绪。
+- 基础输入现在只要求 `Move`、`Look`；`PlayerMovement` 通过 `IPlayerSprintPolicy` 接入可选余火冲刺消耗，Player 没有 FlameModule 时仍可运行基础移动。
+- 已新增 `Assets/FirePlay/Runtime/Prefab/PlayerCoreOnly.prefab`：只包含 CharacterController、基础输入、移动、视角和 LocalPlayerContext，不挂火焰、活动、交互、Rest 或表现服务；移动无 FlameModule 时保留无限冲刺作为基础能力。
+- 已新增 `PlayerCameraTargetSet` 与 `IPlayerCameraTargetProvider`：Player 只暴露 Follow、Frame、LookAt、InputPivot 四类语义目标，不引用 Cinemachine；完整 Player 和 Core-only prefab 均已配置。
+- `PlayerModuleContext.CameraTargets` 可供 Flame/Activity/Presentation 模块读取通用目标；活动专属相机仍由 CameraSystem/ActivityCameraRig 提供额外 TargetGroup、FollowAnchor 和 LookTarget。
+- `PlayerCoreOnly.prefab` 已通过静态 Prefab 结构检查和命令行编译；仍需在 Unity Play Mode 中确认移动、视角、重力和缺少可选模块时无启动错误。
+- 已新增场景级 `ActivityCameraRig`（`ActivityCameraRigExecutor`），并将 DemoScene 的 `PlayerActivityPresentationHost` 改为请求该执行器；新 Activity 相机 profile 已从旧 `RitualCameraDirector` 的执行入口分离，旧 Rest/观星/旧钓鱼方法暂时保留。
+- `ActivityCameraRig` 当前复用已有 Cinemachine 相机、TargetGroup 和稳定 profile ID，行为不变；仍需在 Unity Play Mode 验证烤棉花和钓鱼的进入、退出、镜头优先级与目标组清理。
+- Play Mode 验收通过后，再移除 `RitualCameraDirector` 中重复的新 Activity profile 字段，并分别制作 FlameModule、ActivityModule 的独立挂载对象；不直接批量删除已验收功能。
+- 在 Player 收口、完整回归和本地/远端生命周期确认前，暂停 Network SDK/Transport 接入。

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using DemonViglu.FirePlay.Player;
 using UnityEngine;
@@ -12,8 +13,18 @@ namespace DemonViglu.FirePlay.World
         private static readonly List<RestSpot> ActiveSpots = new();
 
         [SerializeField, Min(0.1f)] private float _interactionRadius = 1.75f;
+        [SerializeField] private string _restHint;
+        [SerializeField] private string _shortRestHint;
 
         public float InteractionRadius => _interactionRadius;
+
+        /// <summary>
+        /// Scene composition hook for modules that react to sitting at this
+        /// spot. RestSpot does not know which Activity is selected; it only
+        /// reports the lifecycle fact.
+        /// </summary>
+        public event Action<RestInteraction> RestStarted;
+        public event Action<RestInteraction> RestEnded;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetActiveSpots()
@@ -61,25 +72,21 @@ namespace DemonViglu.FirePlay.World
 
         public void NotifyRestStarted(RestInteraction interaction)
         {
-            foreach (var ritual in GetComponents<RestSpotRitual>())
-            {
-                ritual.OnRestStarted(interaction);
-            }
+            RestStarted?.Invoke(interaction);
         }
 
         public void NotifyRestEnded(RestInteraction interaction)
         {
-            foreach (var ritual in GetComponents<RestSpotRitual>())
-            {
-                ritual.OnRestEnded(interaction);
-            }
+            RestEnded?.Invoke(interaction);
         }
 
         public string GetRestHint(bool shortForm)
         {
-            var rituals = GetComponents<RestSpotRitual>();
-            if (rituals.Length == 0) return shortForm ? " · 这里可以坐下歇一会儿" : "这里可以坐下，安静歇一会儿";
-            return shortForm ? rituals[0].ShortRestHint : rituals[0].RestHint;
+            var configuredHint = shortForm ? _shortRestHint : _restHint;
+            if (!string.IsNullOrWhiteSpace(configuredHint))
+                return configuredHint;
+
+            return shortForm ? " · 这里可以坐下歇一会儿" : "这里可以坐下，安静歇一会儿";
         }
 
         private void OnDrawGizmosSelected()

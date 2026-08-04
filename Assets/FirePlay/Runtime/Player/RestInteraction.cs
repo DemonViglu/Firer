@@ -118,13 +118,16 @@ namespace DemonViglu.FirePlay.Player
             IsResting = false;
             ActiveRestSpot = null;
             _modeController?.Exit(PlayerMode.Resting);
-            _movement?.SetMovementLocked(false);
             EndCampfireComfort();
             if (completedSpot != null)
             {
                 completedSpot.NotifyRestEnded(this);
                 RestEnded?.Invoke(completedSpot);
             }
+            // Release the base Rest lock after Activity presentation has had
+            // a chance to release its own requests. This keeps nested locks
+            // symmetric when a Rest-triggered Activity ends in the callback.
+            _movement?.SetMovementLocked(false);
         }
 
         private void BeginCampfireComfort(RestSpot spot)

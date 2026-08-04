@@ -3300,6 +3300,7 @@ GameObject:
   - component: {fileID: 971497444}
   - component: {fileID: 971497445}
   - component: {fileID: 971497447}
+  - component: {fileID: 971497448}
   m_Layer: 0
   m_Name: TST
   m_TagString: Untagged
@@ -3359,6 +3360,7 @@ MonoBehaviour:
   - {fileID: 971497444}
   - {fileID: 971497445}
   - {fileID: 971497447}
+  - {fileID: 971497448}
 --- !u!114 &971497444
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3401,6 +3403,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2c8a3d7e6598b1f4a0c2d6e7b3f9a5d, type: 3}
   m_Name: GuitarActivityLogicFactory
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.GuitarActivityLogicFactory
+--- !u!114 &971497448
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 971497439}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a0d8b2e3f4c5d7e9b1a2c3d4e5f6071, type: 3}
+  m_Name: StargazingActivityLogicFactory
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.StargazingActivityLogicFactory
 --- !u!1 &979459601
 GameObject:
   m_ObjectHideFlags: 0
@@ -3733,7 +3747,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1412847010}
   - {fileID: 146968240}
   - {fileID: 131168078}
   - {fileID: 1684119226}
@@ -3742,6 +3755,7 @@ Transform:
   - {fileID: 1165691987}
   - {fileID: 979459602}
   - {fileID: 433230830}
+  - {fileID: 1900000002}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1113001591
@@ -4499,8 +4513,12 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1632136005454703088, guid: 22ae408d89196034a80e5eabe672f7d4, type: 3}
-      propertyPath: _companionFrameTarget
+    - target: {fileID: 9000000000000003, guid: 22ae408d89196034a80e5eabe672f7d4, type: 3}
+      propertyPath: _additionalTargets.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9000000000000003, guid: 22ae408d89196034a80e5eabe672f7d4, type: 3}
+      propertyPath: _additionalTargets.Array.data[0]._target
       value: 
       objectReference: {fileID: 175905987}
     - target: {fileID: 5986995585998082832, guid: 22ae408d89196034a80e5eabe672f7d4, type: 3}
@@ -4625,72 +4643,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: af611ccf1383f0c4dba38d96585a66af, type: 3}
   m_PrefabInstance: {fileID: 1393203323}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1412847009
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1412847010}
-  - component: {fileID: 1412847011}
-  m_Layer: 0
-  m_Name: RitualCameraDirector
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1412847010
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1412847009}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1101955441}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1412847011
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1412847009}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 98f23f7af2814b34870af77e6c8f2e1e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.RitualCameraDirector
-  _exploreCamera: {fileID: 1450952974}
-  _ritualCamera: {fileID: 146968241}
-  _ritualTargetGroup: {fileID: 1165691988}
-  _stargazingCamera: {fileID: 1684119229}
-  _stargazingTargetGroup: {fileID: 433230831}
-  _stargazingFollowAnchor: {fileID: 570388545}
-  _fishingCamera: {fileID: 131168081}
-  _fishingTargetGroup: {fileID: 979459603}
-  _fishingFollowAnchor: {fileID: 163541243}
-  _ritualFollowAnchor: {fileID: 163541243}
-  _playerFrameTarget: {fileID: 126113406}
-  _explorePriority: 10
-  _ritualPriority: 20
-  _stargazingPriority: 20
-  _fishingPriority: 20
-  _playerTargetRadius: 0.7
-  _ritualTargetRadius: 0.3
-  _ritualTargetWeight: 1.4
-  _stargazingCompanionWeight: 1
-  _stargazingSkyWeight: 0.35
-  _fishingPlayerWeight: 0.75
-  _fishingWaterWeight: 1.25
 --- !u!1 &1900000001
 GameObject:
   m_ObjectHideFlags: 0
@@ -4721,7 +4673,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1646655474}
+  m_Father: {fileID: 1101955441}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1900000003
 MonoBehaviour:
@@ -4757,6 +4709,16 @@ MonoBehaviour:
     _playerWeight: 0.75
     _playerRadius: 0.7
     _lookTargetWeight: 1.25
+    _lookTargetRadius: 0.3
+  - _profileId: activity.stargazing
+    _camera: {fileID: 1684119229}
+    _targetGroup: {fileID: 433230831}
+    _followAnchor: {fileID: 570388545}
+    _lookTarget: {fileID: 0}
+    _priority: 20
+    _playerWeight: 1
+    _playerRadius: 0.7
+    _lookTargetWeight: 0.35
     _lookTargetRadius: 0.3
 --- !u!1 &1415170326
 GameObject:
@@ -5246,7 +5208,6 @@ Transform:
   - {fileID: 727792752}
   - {fileID: 547033134}
   - {fileID: 1083239233}
-  - {fileID: 1900000002}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1683950600

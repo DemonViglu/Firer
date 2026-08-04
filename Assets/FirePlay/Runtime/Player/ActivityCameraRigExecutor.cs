@@ -12,8 +12,8 @@ namespace DemonViglu.FirePlay.CameraSystem
     ///
     /// This component owns Cinemachine references and activity camera rigs;
     /// Player and ActivityLogic exchange only stable profile/anchor IDs.
-    /// Legacy Rest/观星/旧钓鱼 camera methods remain in RitualCameraDirector
-    /// until those paths are migrated completely.
+    /// Legacy Rest camera code does not own any Activity camera after the
+    /// migration; this component is the sole Activity Cinemachine adapter.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class ActivityCameraRigExecutor : MonoBehaviour, IActivityCameraRequestExecutor
@@ -25,6 +25,8 @@ namespace DemonViglu.FirePlay.CameraSystem
         private ActivityCameraProfile _activeProfile;
         private Transform _activePlayerTarget;
         private Transform _activeLookTarget;
+        private readonly System.Collections.Generic.List<Transform> _activeAdditionalTargets =
+            new System.Collections.Generic.List<Transform>();
         private string _activeProfileId;
         private uint _activeRevision;
 
@@ -56,8 +58,12 @@ namespace DemonViglu.FirePlay.CameraSystem
             var playerTargets = LocalPlayerContext.Current?.CameraTargets;
             var playerTarget = playerTargets?.FrameTarget ?? _fallbackPlayerFrameTarget ?? transform;
             var anchor = ActivityAnchorNode.FindById(request.AnchorId);
+            var anchorTargets = anchor != null
+                ? anchor.GetComponent<ActivityCameraAnchorTargets>()
+                : null;
             var lookTarget = profile.LookTarget != null
                 ? profile.LookTarget
+                : anchorTargets?.LookTarget != null ? anchorTargets.LookTarget
                 : anchor != null ? anchor.transform : playerTargets?.LookAtTarget ?? playerTarget;
             var followTarget = profile.FollowAnchor != null
                 ? profile.FollowAnchor
@@ -67,6 +73,21 @@ namespace DemonViglu.FirePlay.CameraSystem
             if (lookTarget != playerTarget)
             {
                 AddMemberIfMissing(profile.TargetGroup, lookTarget, profile.LookTargetWeight, profile.LookTargetRadius);
+            }
+
+            if (anchorTargets != null)
+            {
+                foreach (var target in anchorTargets.AdditionalTargets)
+                {
+                    if (target?.Target == null || target.Target == playerTarget || target.Target == lookTarget)
+                        continue;
+
+                    if (profile.TargetGroup.FindMember(target.Target) < 0)
+                    {
+                        AddMemberIfMissing(profile.TargetGroup, target.Target, target.Weight, target.Radius);
+                        _activeAdditionalTargets.Add(target.Target);
+                    }
+                }
             }
 
             profile.Camera.Follow = followTarget;
@@ -98,6 +119,9 @@ namespace DemonViglu.FirePlay.CameraSystem
             RemoveMemberIfPresent(_activeProfile.TargetGroup, _activePlayerTarget);
             if (_activeLookTarget != _activePlayerTarget)
                 RemoveMemberIfPresent(_activeProfile.TargetGroup, _activeLookTarget);
+            foreach (var target in _activeAdditionalTargets)
+                RemoveMemberIfPresent(_activeProfile.TargetGroup, target);
+            _activeAdditionalTargets.Clear();
 
             _activeProfile.Camera.Priority = 0;
             _activeProfile = null;

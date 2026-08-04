@@ -55,6 +55,14 @@ namespace DemonViglu.FirePlay.Player
             _context = context;
             _mode ??= GetComponent<PlayerModeController>();
             _animation ??= GetComponent<PlayerAnimationController>();
+
+            // ExpressionRequested and PlayerIntentRequested are local input
+            // events. A remote Player may still use TryPlay when a future
+            // network presentation applies an authoritative cue, but it must
+            // never subscribe to the local EventBus itself.
+            if (_context == null || !_context.IsLocalPlayer)
+                return;
+
             _events ??= GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
             AttachEvents();
         }

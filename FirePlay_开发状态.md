@@ -23,7 +23,7 @@
 - Fishing：独立 Logic、Factory、Definition、Form、Visuals；支持拟造、抛竿、咬钩、收线和镜头请求。
 - Emote：Anywhere 活动，只发送动画 Cue，不依赖 Anchor 或坐姿。
 - Guitar：Anywhere 活动，固定 `guitar.key.01`～`guitar.key.21` 语义动作，独立 UI 和道具 Visuals 已建立，动画/音频资源可后补。
-- Stargazing：当前仍是 `RestSpot` + `RestSpotRitual` + `RestLookTargetRitual` 的 Rest 表现，不是新 Activity Offer。
+- Stargazing：已迁移为独立 Activity；`StargazingActivityTrigger` 只负责把指定 RestSpot 的坐下事实组合为 `stargazing` Session，Logic 自己校验 `resting` 状态并处理生命周期。
 
 ### 活动基础设施
 
@@ -78,7 +78,7 @@ Player / Campfire / Activity
 | Player Boundary | `PlayerActivityHost`、`PlayerActivityPresentationHost` | 活动与 Player/UI/Camera 的边界明确 |
 | Global Services | `GameInstanceSubsystem`、`GameEventBus` | 可定位核心服务，跨模块事件统一 |
 | Flame/World | `FlameResourceController`、`Campfire`、`SmallFire`、`WorldTreeContribution`、Save | 独立于活动，但仍需网络权威适配 |
-| Legacy Rest | `RestInteraction`、`RestSpot`、`RestSpotRitual`、`RestLookTargetRitual` | 观星仍依赖，暂不等同于 Activity |
+| Rest 基础层 | `RestInteraction`、`RestSpot` | 只负责坐下/起身和通用休息表现；具体活动通过地点触发器组合 |
 | Input/UI | `FirePlayMobileInputRouter`、各 Activity Form、SUIFW UIManager | 活动 UI 已分离，轮盘尚为列表选择 |
 
 ### Player Core Services 收口
@@ -107,7 +107,7 @@ Player / Campfire / Activity
 3. **Player 仍有多个通用 MonoBehaviour**：动态创建已经移除，依赖现在能在 Prefab 上看见并验收；本地/远端所有权也已分开，但输入、世界命令、表达和邻近效果仍是多个组件，未来可进一步合并为单一 Player Service Host。当前风险已从“隐藏创建”降为“组件边界较多”。
 4. **全局服务定位器有初始化风险**：`GameInstanceSubsystem.GetOrCreate` 很方便，但可能掩盖注册顺序错误；EventBus 的订阅/取消订阅也应减少“未订阅即警告”的噪声。联机后必须在启动阶段显式注册 Host、Transport 和权限服务。
 5. **Unity 工程边界仍偏粗**：当前没有按 Core、Activity、World、Network 拆分 asmdef，主要代码仍编译在 `Assembly-CSharp`；短期开发快，长期会降低编译隔离和依赖约束。
-6. **UI 和 Camera 仍有字符串/历史命名耦合**：UIManager 窗体键、Camera Profile 和部分 `RitualCameraDirector` 命名属于配置约定，能用但缺少编译期检查；后续应把请求结果、缺失配置和生命周期日志标准化。
+6. **UI 和 Camera 仍有字符串/配置约定**：UIManager 窗体键和 Camera Profile 使用稳定字符串，能用但缺少编译期检查；后续应把请求结果、缺失配置和生命周期日志标准化。
 7. **选择表现尚未完成产品形态**：当前活动选择是列表式 `ActivitySelectionForms`，移动中动态刷新和真正的活动轮盘仍属于 UI 工作，不需要改 Activity Domain。
 
 ### 结论评分
@@ -145,7 +145,7 @@ Player / Campfire / Activity
 - `IActivityAuthority` 是网络适配器的唯一活动入口；`PlayerActivityHost` 同时实现本地 EventBus 与未来网络请求。
 - 动作必须携带当前 Session revision；旧 Session、错误 Player、错误 Anchor 或错误 Activity 会在进入 Logic 前拒绝。
 - `ActivityFactDto` 可由 Started/Interaction/Ended 事实事件映射得到，后续可直接序列化为 SDK 消息。
-- 本切片没有引入 Network SDK、Transport 或远端 Logic；下一步才是选定 SDK 并实现传输适配器。
+- 本切片没有引入 Network SDK、Transport 或远端 Logic；生命周期门禁完成后，下一步才是选定 SDK 并实现传输适配器。
 
 ## 9. Player 收口门禁
 
@@ -160,9 +160,14 @@ Player / Campfire / Activity
 - 已新增 `PlayerCameraTargetSet` 与 `IPlayerCameraTargetProvider`：Player 只暴露 Follow、Frame、LookAt、InputPivot 四类语义目标，不引用 Cinemachine；完整 Player 和 Core-only prefab 均已配置。
 - `PlayerModuleContext.CameraTargets` 可供 Flame/Activity/Presentation 模块读取通用目标；活动专属相机仍由 CameraSystem/ActivityCameraRig 提供额外 TargetGroup、FollowAnchor 和 LookTarget。
 - `PlayerCoreOnly.prefab` 已通过静态 Prefab 结构检查和命令行编译；仍需在 Unity Play Mode 中确认移动、视角、重力和缺少可选模块时无启动错误。
-- 已新增场景级 `ActivityCameraRig`（`ActivityCameraRigExecutor`），并将 DemoScene 的 `PlayerActivityPresentationHost` 改为请求该执行器；新 Activity 相机 profile 已从旧 `RitualCameraDirector` 的执行入口分离，旧 Rest/观星/旧钓鱼方法暂时保留。
+- 已新增场景级 `ActivityCameraRig`（`ActivityCameraRigExecutor`），并将 DemoScene 的 `PlayerActivityPresentationHost` 改为请求该执行器；烤棉花、钓鱼和观星的 Activity profile 统一由此执行器拥有。
 - `ActivityCameraRig` 当前复用已有 Cinemachine 相机、TargetGroup 和稳定 profile ID，行为不变；仍需在 Unity Play Mode 验证烤棉花和钓鱼的进入、退出、镜头优先级与目标组清理。
-- 已移除 `RitualCameraDirector` 中重复的新 Activity profile 字段和 `IActivityCameraRequestExecutor` 实现；DemoScene 的新活动相机配置现在只存在于 `ActivityCameraRig`，旧 Director 只保留 Rest/观星/旧钓鱼路径。
+- `StargazingActivityLogic`、`StargazingActivityLogicFactory`、`StargazingActivityTrigger` 已接入全局活动注册表；`RestPot` 显式配置 `ActivityAnchorNode`、观星定义和天空/伙伴相机目标。
+- 观星不再重复申请 MovementLock；RestInteraction 在 Activity 结束回调完成后才释放基础坐下锁，避免起身后活动锁覆盖移动恢复。
+- `RestPot` 的伙伴目标已在 prefab 中保留显式序列化槽位，DemoScene 只将该槽位覆写为 `AnotherPlayer`，由 `ActivityCameraRigExecutor` 动态加入/移除 `CM_Stargazing_TargetGroup`。
+- 场景相机审计已完成：`Cameras` 下有 `Main Camera + CinemachineBrain`、`CM_Explore`、`CM_Marshmallow`、`CM_Fishing`、`CM_Stargazing`、三个 TargetGroup 和 `ActivityCameraRig`；它通过 Player 场景覆盖注入 `PlayerActivityPresentationHost`，再按 Activity 的 `CameraProfileId` 驱动这些相机。
+- 已清理 `RitualCameraDirector`、`RestLookTargetRitual` 和 `StargazingRitual` 的旧源码与 DemoScene 对象；`ActivityCameraRig` 已移动到 `Cameras` 下，`CM_Stargazing` 不再有第二个控制者。
+- 旧禁用 `Camera` 根对象仍存在；它不参与运行，但会增加场景编辑噪声，后续可在单独的场景清理切片中删除。
 - 已新增 Player 子节点 `Modules/FlameModule` 与 `FlameModule` 组件，注册到 `PlayerCoreHost`；模块承接 `IPlayerSprintPolicy`，并挂载 `CampfirePlacement`、`CampfireUpgradeController` 作为火焰世界操作入口。
 - `PlayerMovement` 的冲刺策略引用已从 `FlameResourceController` 改为 `FlameModule`，基础 Player 不挂模块时仍可自由冲刺；火焰资源扣除路径未改变。
 - `LocalPlayerContext`、`PlayerInteraction`、`WorldCommandExecutor` 和放置 UI 已支持从 Player 子树解析火焰世界操作；`CampfirePlacement` 的输入归属改为按 Player 根节点判断，移动层级不改变事件语义。
@@ -170,4 +175,5 @@ Player / Campfire / Activity
 - `FlameResourceVisualBridge`、`FlameContractionController`、`PlayerAtmosphereBridge` 已迁入 FlameModule；Atmosphere 对 Rest 只读，不再要求与 Rest 组件同层。ActivityModule 已建立，`FishingActivityVisuals` 不再占用 Player 根节点。
 - `PlayerInteraction` 现在只负责扫描、目标排序和提示；余火/篝火字段已移除并改从 FlameModule 读取。`InteractionRouter` 是唯一 RawInput -> PlayerIntentRequested 入口，二者不再共享世界执行职责。
 - `InteractionModule` 已建立并承载 `PlayerInteraction`、`InteractionRouter`；子节点组件统一通过父级 `LocalPlayerContext` 初始化，本地 Router 仍由 `PlayerCoreHost` 显式绑定输入。
-- 在 Player 收口、完整回归和本地/远端生命周期确认前，暂停 Network SDK/Transport 接入。
+- 生命周期门禁已落地：远端 `PlayerExpressionController` 不订阅本地 EventBus；远端 `PlayerActivityHost` 不创建本地 ActivityRuntime、不 Tick Logic，也不会消费余火或发布本地 Activity 事实；本地路径保持不变。
+- 观星迁移后，下一步可以选择并安装实时联机 SDK/Transport。SDK 只负责连接、生成 Player 和传输请求/事实，Activity/Flame 的权威执行仍留在现有 Host/Module 边界内。

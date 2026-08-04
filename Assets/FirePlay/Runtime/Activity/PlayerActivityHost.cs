@@ -80,6 +80,17 @@ namespace DemonViglu.FirePlay.Activity
 
         public void BuildRuntime()
         {
+            // A remote Player is a presentation target only. Its activity
+            // logic is owned by the authority and will be reconstructed from
+            // network facts once the transport adapter is connected. Keeping
+            // the local runtime absent prevents remote objects from consuming
+            // flame, advancing sessions, or publishing local activity facts.
+            if (!_isLocalPlayer)
+            {
+                _runtime = null;
+                return;
+            }
+
             _logicFactory = _logicFactoryBehaviour as IActivityLogicFactory;
             _presentation = _presentationBehaviour as IActivityPresentationRequests;
             _flame = _flameBehaviour as IActivityFlameResource;

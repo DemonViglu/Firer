@@ -24,7 +24,7 @@ namespace DemonViglu.FirePlay.Player
 
         private void Awake()
         {
-            _interaction ??= GetComponent<PlayerInteraction>();
+            _interaction ??= GetComponentInChildren<PlayerInteraction>(true);
             _modeController ??= GetComponent<PlayerModeController>();
         }
 

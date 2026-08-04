@@ -1033,18 +1033,9 @@ GameObject:
   - component: {fileID: 7708806687425791670}
   - component: {fileID: 2857817690614511905}
   - component: {fileID: 7699362426026562702}
-  - component: {fileID: 1088538406894554522}
-  - component: {fileID: 5522832255115861586}
-  - component: {fileID: 1518005239310531485}
-  - component: {fileID: 1467539416060756229}
-  - component: {fileID: 5291183042340213138}
-  - component: {fileID: 656637033389967464}
   - component: {fileID: 1743969675154280312}
-  - component: {fileID: 1536743572776703721}
   - component: {fileID: 1357382950971186938}
   - component: {fileID: 2759977987356437026}
-  - component: {fileID: 8662161886728232265}
-  - component: {fileID: 9016949396252110027}
   - component: {fileID: 2884395103448089037}
   - component: {fileID: 6467109789447716751}
   - component: {fileID: 523296443919546474}
@@ -1053,7 +1044,6 @@ GameObject:
   - component: {fileID: 7750000000000000003}
   - component: {fileID: 7750000000000000004}
   - component: {fileID: 7750000000000000005}
-  - component: {fileID: 7750000000000000006}
   - component: {fileID: 7750000000000000007}
   - component: {fileID: 8918313119764425079}
   m_Layer: 0
@@ -1083,6 +1073,7 @@ Transform:
   - {fileID: 7405655564242794545}
   - {fileID: 2204901666775286147}
   - {fileID: 2123541160011506919}
+  - {fileID: 9000000000000002}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!143 &3322527406275569607
@@ -1140,7 +1131,7 @@ MonoBehaviour:
   _sprintSpeedMultiplier: 1.55
   _gravity: 20
   _cameraTransform: {fileID: 0}
-  _sprintPolicyBehaviour: {fileID: 1518005239310531485}
+  _sprintPolicyBehaviour: {fileID: 9000000000000005}
 --- !u!114 &7699362426026562702
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1162,7 +1153,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5546368970521514861}
+  m_GameObject: {fileID: 9000000000000003}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ec121e4c14365fb40913efe1dbc2f21b, type: 3}
@@ -1176,15 +1167,13 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5546368970521514861}
+  m_GameObject: {fileID: 9000000000000009}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f2da766bb8fb14b448712ff8edca2b0c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerInteraction
   _flameController: {fileID: 1088538406894554522}
-  _flameResourceController: {fileID: 0}
-  _campfireUpgradeController: {fileID: 0}
   _interactionLayers:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -1195,7 +1184,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5546368970521514861}
+  m_GameObject: {fileID: 9000000000000003}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e52401429fae45bb9048d39c6158031e, type: 3}
@@ -1210,7 +1199,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5546368970521514861}
+  m_GameObject: {fileID: 9000000000000003}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a62b843274034ef88c88020b5ac6a99f, type: 3}
@@ -1228,7 +1217,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5546368970521514861}
+  m_GameObject: {fileID: 9000000000000003}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c97179540d87436cb7eff51a09a18f57, type: 3}
@@ -1243,7 +1232,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5546368970521514861}
+  m_GameObject: {fileID: 9000000000000003}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d135bb7edcd64675853a79c3197da258, type: 3}
@@ -1282,7 +1271,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5546368970521514861}
+  m_GameObject: {fileID: 9000000000000003}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ca738504d03c40a3bb70c7c986c0a645, type: 3}
@@ -1328,7 +1317,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5546368970521514861}
+  m_GameObject: {fileID: 9000000000000003}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 09acf5d138c94ef3a32f657e479e0052, type: 3}
@@ -1349,7 +1338,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5546368970521514861}
+  m_GameObject: {fileID: 9000000000000006}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e2b7c9d1f4a63850b6d8e0c2f7a91543, type: 3}
@@ -1545,7 +1534,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5546368970521514861}
+  m_GameObject: {fileID: 9000000000000009}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dca478a9c8c5b914298ce515315761a9, type: 3}
@@ -1567,6 +1556,188 @@ MonoBehaviour:
   _frameTarget: {fileID: 7405655564242794545}
   _lookAtTarget: {fileID: 2465744658530655391}
   _inputPivot: {fileID: 7512999131663255409}
+--- !u!1 &9000000000000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9000000000000002}
+  m_Layer: 0
+  m_Name: Modules
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9000000000000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 9000000000000004}
+  - {fileID: 9000000000000007}
+  - {fileID: 9000000000000010}
+  m_Father: {fileID: 8922695638565747190}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &9000000000000003
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9000000000000004}
+  - component: {fileID: 9000000000000005}
+  - component: {fileID: 1088538406894554522}
+  - component: {fileID: 1518005239310531485}
+  - component: {fileID: 656637033389967464}
+  - component: {fileID: 1536743572776703721}
+  - component: {fileID: 1467539416060756229}
+  - component: {fileID: 5291183042340213138}
+  - component: {fileID: 8662161886728232265}
+  m_Layer: 0
+  m_Name: FlameModule
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9000000000000004
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000003}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9000000000000002}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9000000000000005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f901a2b3c4d56e7f8a901a2b3c4d5e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.FlameModule
+  _resourceController: {fileID: 1518005239310531485}
+  _playerFlameController: {fileID: 1088538406894554522}
+  _campfirePlacement: {fileID: 656637033389967464}
+  _campfireUpgrade: {fileID: 1536743572776703721}
+--- !u!1 &9000000000000006
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9000000000000007}
+  - component: {fileID: 9000000000000008}
+  - component: {fileID: 9016949396252110027}
+  m_Layer: 0
+  m_Name: ActivityModule
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9000000000000007
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000006}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 9000000000000002}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9000000000000008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000006}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b8f1a2c3d4e5f60718293a4b5c6d7e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.ActivityModule
+  _activityHost: {fileID: 6467109789447716751}
+  _presentationHost: {fileID: 523296443919546474}
+--- !u!1 &9000000000000009
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9000000000000010}
+  - component: {fileID: 9000000000000011}
+  - component: {fileID: 5522832255115861586}
+  - component: {fileID: 7750000000000000006}
+  m_Layer: 0
+  m_Name: InteractionModule
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9000000000000010
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000009}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 9000000000000002}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9000000000000011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000009}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a7c9e1b2d3f40568192a4b5c6d7e8f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.InteractionModule
+  _scanner: {fileID: 5522832255115861586}
+  _router: {fileID: 7750000000000000006}
 --- !u!82 &8918313119764425079
 AudioSource:
   m_ObjectHideFlags: 0

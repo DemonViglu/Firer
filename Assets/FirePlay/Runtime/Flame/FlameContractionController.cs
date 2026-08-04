@@ -17,14 +17,14 @@ namespace DemonViglu.FirePlay.Flame
         {
             if (_input == null)
             {
-                _input = GetComponent<FirePlayPlayerInput>();
+                _input = GetComponentInParent<FirePlayPlayerInput>();
             }
 
             if (_resourceController == null)
             {
-                _resourceController = GetComponent<FlameResourceController>();
+                _resourceController = GetComponentInChildren<FlameResourceController>(true);
             }
-            _modeController ??= GetComponent<PlayerModeController>();
+            _modeController ??= GetComponentInParent<PlayerModeController>();
 
             if (_input == null || _resourceController == null)
             {

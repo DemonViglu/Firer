@@ -14,12 +14,12 @@ namespace DemonViglu.FirePlay.Player
         {
             if (_scanner != null) _scanner.ProximityContactDetected -= OnProximityContactDetected;
             _scanner = scanner;
-            _flameController ??= GetComponent<PlayerFlameController>();
+            _flameController ??= GetComponentInChildren<PlayerFlameController>(true);
             if (isActiveAndEnabled && _scanner != null)
                 _scanner.ProximityContactDetected += OnProximityContactDetected;
         }
 
-        private void Awake() => Initialize(GetComponent<PlayerInteraction>());
+        private void Awake() => Initialize(GetComponentInChildren<PlayerInteraction>(true));
 
         private void OnEnable()
         {

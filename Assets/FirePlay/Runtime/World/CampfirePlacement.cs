@@ -41,10 +41,10 @@ namespace DemonViglu.FirePlay.World
         {
             if (_resourceController == null)
             {
-                _resourceController = GetComponent<FlameResourceController>();
+                _resourceController = GetComponentInParent<FlameResourceController>();
             }
 
-            _modeController ??= GetComponent<PlayerModeController>();
+            _modeController ??= GetComponentInParent<PlayerModeController>();
 
             if (_placementCamera == null)
             {
@@ -91,7 +91,7 @@ namespace DemonViglu.FirePlay.World
         private void OnIntentRequested(PlayerIntentRequested intent)
         {
             var local = LocalPlayerContext.Current;
-            if (local == null || local.gameObject != gameObject || intent.PlayerId != local.PlayerId) return;
+            if (local == null || transform.root != local.transform.root || intent.PlayerId != local.PlayerId) return;
             if (intent.Kind == PlayerIntentKind.PlaceFire && (_modeController == null || _modeController.IsExploring || IsPlacing))
             {
                 if (IsPlacing)

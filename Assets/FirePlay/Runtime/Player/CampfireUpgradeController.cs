@@ -38,7 +38,7 @@ namespace DemonViglu.FirePlay.Player
         {
             if (_resourceController == null)
             {
-                _resourceController = GetComponent<FlameResourceController>();
+                _resourceController = GetComponentInParent<FlameResourceController>();
             }
 
             if (!HasValidSetup)

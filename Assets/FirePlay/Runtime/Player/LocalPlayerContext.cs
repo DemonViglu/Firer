@@ -37,6 +37,9 @@ namespace DemonViglu.FirePlay.Player
         public RestInteraction RestInteraction { get; private set; }
         public FlameResourceController FlameResource { get; private set; }
         public CampfirePlacement CampfirePlacement { get; private set; }
+        public CampfireUpgradeController CampfireUpgrade { get; private set; }
+        public FlameModule FlameModule { get; private set; }
+        public ActivityModule ActivityModule { get; private set; }
         public InteractionRouter InteractionRouter { get; private set; }
         public WorldCommandExecutor CommandExecutor { get; private set; }
         public PlayerSharedStateAdapter SharedStateAdapter { get; private set; }
@@ -45,7 +48,7 @@ namespace DemonViglu.FirePlay.Player
         public static LocalPlayerContext EnsureFor(Component component)
         {
             if (component == null) return Current;
-            var context = component.GetComponent<LocalPlayerContext>();
+            var context = component.GetComponent<LocalPlayerContext>() ?? component.GetComponentInParent<LocalPlayerContext>();
             if (context == null)
             {
                 Debug.LogError(
@@ -87,11 +90,14 @@ namespace DemonViglu.FirePlay.Player
             Look = GetComponent<PlayerLook>();
             _cameraTargets ??= GetComponent<PlayerCameraTargetSet>();
             CameraTargets = _cameraTargets;
-            Interaction = GetComponent<PlayerInteraction>();
+            Interaction = GetComponent<PlayerInteraction>() ?? GetComponentInChildren<PlayerInteraction>(true);
             Animation = GetComponent<PlayerAnimationController>();
             RestInteraction = GetComponent<RestInteraction>();
-            FlameResource = GetComponent<FlameResourceController>();
-            CampfirePlacement = GetComponent<CampfirePlacement>();
+            FlameResource = GetComponent<FlameResourceController>() ?? GetComponentInChildren<FlameResourceController>(true);
+            CampfirePlacement = GetComponent<CampfirePlacement>() ?? GetComponentInChildren<CampfirePlacement>(true);
+            CampfireUpgrade = GetComponent<CampfireUpgradeController>() ?? GetComponentInChildren<CampfireUpgradeController>(true);
+            FlameModule = GetComponentInChildren<FlameModule>(true);
+            ActivityModule = GetComponentInChildren<ActivityModule>(true);
 
             // These services are intentionally serialized on the Player
             // prefab. Resolve only fills inspector references for older
@@ -100,7 +106,7 @@ namespace DemonViglu.FirePlay.Player
             _expressions ??= GetComponent<PlayerExpressionController>();
             _proximityEffects ??= GetComponent<PlayerProximityEffects>();
             _commandExecutor ??= GetComponent<WorldCommandExecutor>();
-            _interactionRouter ??= GetComponent<InteractionRouter>();
+            _interactionRouter ??= GetComponent<InteractionRouter>() ?? GetComponentInChildren<InteractionRouter>(true);
 
             SharedStateAdapter = _sharedStateAdapter;
             Expressions = _expressions;
@@ -192,6 +198,8 @@ namespace DemonViglu.FirePlay.Player
             if (_context == null)
                 return;
 
+            RegisterModulesFromHierarchy();
+
             SharedStateService.Initialize(_context);
             _sharedStateAdapter?.Initialize(_context, SharedStateService);
 
@@ -207,6 +215,16 @@ namespace DemonViglu.FirePlay.Player
 
             IsReady = true;
             InitializeModules();
+        }
+
+        private void RegisterModulesFromHierarchy()
+        {
+            var components = _context.GetComponentsInChildren<MonoBehaviour>(true);
+            foreach (var component in components)
+            {
+                if (component is IPlayerModule module)
+                    RegisterModule(module);
+            }
         }
 
         public void Tick()
@@ -289,7 +307,7 @@ namespace DemonViglu.FirePlay.Player
         }
 
         public T GetComponent<T>() where T : Component => Player != null
-            ? Player.GetComponent<T>()
+            ? Player.GetComponent<T>() ?? Player.GetComponentInChildren<T>(true)
             : null;
 
         public bool TryGetModule<T>(out T module) where T : class => Core != null

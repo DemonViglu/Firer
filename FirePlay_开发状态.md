@@ -149,7 +149,7 @@ Player / Campfire / Activity
 
 ## 9. Player 收口门禁
 
-- 已完成 `Player.prefab` 根组件审计：当前 27 个 Unity 组件，其中 24 个是自定义脚本；问题是职责混合，不是单纯数量问题。
+- 已完成 `Player.prefab` 根组件审计：当前根节点 18 个 Unity 组件，其中 15 个是自定义脚本；`Modules/FlameModule` 子节点挂载火焰逻辑、火焰表现和音景桥接，`Modules/ActivityModule` 子节点挂载活动服务，`Modules/InteractionModule` 子节点挂载扫描与输入路由。问题是职责混合，不是单纯数量问题。
 - 已确认 `LocalPlayerContext`、5 个通用服务、`PlayerInteraction`/`InteractionRouter` 重复入口和 Player 根上的 `FishingActivityVisuals` 是收口重点。
 - 已建立非 `MonoBehaviour` 的 `PlayerCoreHost` 组合宿主：集中服务依赖、缺失配置诊断和初始化顺序，暂不删除现有组件。
 - `PlayerSharedStateService` 已迁入 `PlayerCoreHost`，`PlayerSharedStateAdapter` 暂作为兼容外观保留；状态 Tick、远端快照和 Changed 通知均保持可用。
@@ -162,5 +162,12 @@ Player / Campfire / Activity
 - `PlayerCoreOnly.prefab` 已通过静态 Prefab 结构检查和命令行编译；仍需在 Unity Play Mode 中确认移动、视角、重力和缺少可选模块时无启动错误。
 - 已新增场景级 `ActivityCameraRig`（`ActivityCameraRigExecutor`），并将 DemoScene 的 `PlayerActivityPresentationHost` 改为请求该执行器；新 Activity 相机 profile 已从旧 `RitualCameraDirector` 的执行入口分离，旧 Rest/观星/旧钓鱼方法暂时保留。
 - `ActivityCameraRig` 当前复用已有 Cinemachine 相机、TargetGroup 和稳定 profile ID，行为不变；仍需在 Unity Play Mode 验证烤棉花和钓鱼的进入、退出、镜头优先级与目标组清理。
-- Play Mode 验收通过后，再移除 `RitualCameraDirector` 中重复的新 Activity profile 字段，并分别制作 FlameModule、ActivityModule 的独立挂载对象；不直接批量删除已验收功能。
+- 已移除 `RitualCameraDirector` 中重复的新 Activity profile 字段和 `IActivityCameraRequestExecutor` 实现；DemoScene 的新活动相机配置现在只存在于 `ActivityCameraRig`，旧 Director 只保留 Rest/观星/旧钓鱼路径。
+- 已新增 Player 子节点 `Modules/FlameModule` 与 `FlameModule` 组件，注册到 `PlayerCoreHost`；模块承接 `IPlayerSprintPolicy`，并挂载 `CampfirePlacement`、`CampfireUpgradeController` 作为火焰世界操作入口。
+- `PlayerMovement` 的冲刺策略引用已从 `FlameResourceController` 改为 `FlameModule`，基础 Player 不挂模块时仍可自由冲刺；火焰资源扣除路径未改变。
+- `LocalPlayerContext`、`PlayerInteraction`、`WorldCommandExecutor` 和放置 UI 已支持从 Player 子树解析火焰世界操作；`CampfirePlacement` 的输入归属改为按 Player 根节点判断，移动层级不改变事件语义。
+- `FlameResourceController`、`PlayerFlameController` 已迁入 `Modules/FlameModule`；交互、休息、邻近效果、火焰表现和音景桥接均改为从 Player 子树解析，余火状态与存档/活动接口保持不变。
+- `FlameResourceVisualBridge`、`FlameContractionController`、`PlayerAtmosphereBridge` 已迁入 FlameModule；Atmosphere 对 Rest 只读，不再要求与 Rest 组件同层。ActivityModule 已建立，`FishingActivityVisuals` 不再占用 Player 根节点。
+- `PlayerInteraction` 现在只负责扫描、目标排序和提示；余火/篝火字段已移除并改从 FlameModule 读取。`InteractionRouter` 是唯一 RawInput -> PlayerIntentRequested 入口，二者不再共享世界执行职责。
+- `InteractionModule` 已建立并承载 `PlayerInteraction`、`InteractionRouter`；子节点组件统一通过父级 `LocalPlayerContext` 初始化，本地 Router 仍由 `PlayerCoreHost` 显式绑定输入。
 - 在 Player 收口、完整回归和本地/远端生命周期确认前，暂停 Network SDK/Transport 接入。

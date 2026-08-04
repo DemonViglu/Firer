@@ -2,10 +2,11 @@
 
 ## 1. 审计结论
 
-当前 `Assets/FirePlay/Runtime/Prefab/Player.prefab` 的根节点有 27 个 Unity 组件：
+当前 `Assets/FirePlay/Runtime/Prefab/Player.prefab` 的根节点有 18 个 Unity 组件：
 
 - `Transform`、`CharacterController`、`AudioSource`；
-- 24 个 FirePlay 自定义 `MonoBehaviour`。
+- 15 个 FirePlay 自定义 `MonoBehaviour`。
+- `Modules/FlameModule` 子节点挂载火焰逻辑、放置/升级、纯火焰表现和音景桥接；`Modules/ActivityModule` 子节点挂载活动服务；`Modules/InteractionModule` 子节点挂载 `PlayerInteraction` 与 `InteractionRouter`，不再占用 Player 根节点。
 
 数量本身不是唯一问题。真正的问题是 Player 根节点同时承担了移动、交互、火焰资源、世界操作、活动权威、活动表现、视觉桥接和旧 Rest 逻辑。接入实时网络前必须完成职责收口，否则网络所有权和表现同步会继承这组混合依赖。
 
@@ -93,7 +94,15 @@
 - 已新增 `PlayerCameraTargetSet` / `IPlayerCameraTargetProvider`，Player 只提供框架无关的 Follow、Frame、LookAt、InputPivot 目标；Cinemachine 和活动专属目标不进入 Player Core。
 - 静态 Prefab 检查和命令行编译已通过；需要 Play Mode 验收后，才能把它作为后续模块挂载基线。
 - 已新增场景级 `ActivityCameraRig` / `ActivityCameraRigExecutor`，DemoScene 的活动 Presentation 已改为请求它；`RitualCameraDirector` 暂时只保留旧 Rest/观星/旧钓鱼入口和兼容字段。
-- 下一步先在 Play Mode 验证新执行器，再移除旧 Director 中重复的 Activity profile 字段，为现有火焰和活动系统分别建立独立模块挂载对象，迁移调用方，最后才删除 Player 根上的旧组件。
+- 已移除 `RitualCameraDirector` 中重复的新 Activity profile 字段和接口实现；Activity profile 只在 `ActivityCameraRig` 配置，旧 Director 只负责 Rest/观星/旧钓鱼。
+- 已新增 `Modules/FlameModule` 子节点和 `FlameModule`，并由 `PlayerCoreHost` 自动发现和初始化；模块同时承接冲刺余火策略以及放置/升级篝火的世界操作组件。
+- `PlayerMovement` 现在只依赖 `IPlayerSprintPolicy`，完整 Player 由 FlameModule 提供策略，Core-only Player 没有该模块时不再依赖火焰。
+- `LocalPlayerContext`、`PlayerInteraction`、`WorldCommandExecutor` 与放置 UI 已改为从 Player 子树解析这两个世界操作组件；放置输入按 Player 根归属判断，避免子节点迁移后事件失效。
+- `FlameResourceController`、`PlayerFlameController`、`FlameResourceVisualBridge`、`FlameContractionController`、`PlayerAtmosphereBridge` 已迁入 FlameModule；表现桥接、Rest、交互和邻近效果已改为从 Player 子树解析。
+- 已建立 `ActivityModule`，并将 `FishingActivityVisuals` 移入其子节点；`PlayerActivityHost` 和 `PlayerActivityPresentationHost` 暂留根节点作为统一适配入口。
+- `PlayerInteraction` 现在只负责扫描/目标描述，`InteractionRouter` 负责唯一的原始输入转语义意图入口；二者不再重复持有火焰世界执行字段。
+- `InteractionModule` 已完成下沉；`LocalPlayerContext`、`PlayerProximityEffects`、TreeLight 选择器和子节点初始化均已适配父级查找。
+- 下一步确认本地/远端 Player 生命周期，再处理 Player 根上剩余的 Rest、Activity Host 和通用表现服务；资源权威不再继续复制或拆分。
 
 ### 阶段 C：先建立模块边界，再迁移服务
 

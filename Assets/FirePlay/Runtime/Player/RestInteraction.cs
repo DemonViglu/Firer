@@ -37,7 +37,7 @@ namespace DemonViglu.FirePlay.Player
             _movement ??= GetComponent<PlayerMovement>();
             _look ??= GetComponent<PlayerLook>();
             _modeController ??= GetComponent<PlayerModeController>();
-            _resourceController ??= GetComponent<FlameResourceController>();
+            _resourceController ??= GetComponentInChildren<FlameResourceController>(true);
             _cameraPivot = _look != null ? _look.CameraPivot : null;
 
             if (_movement == null || _cameraPivot == null || _modeController == null)

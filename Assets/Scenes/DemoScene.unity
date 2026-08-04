@@ -4691,27 +4691,6 @@ MonoBehaviour:
   _stargazingSkyWeight: 0.35
   _fishingPlayerWeight: 0.75
   _fishingWaterWeight: 1.25
-  _activityCameraProfiles:
-  - _profileId: activity.ritual
-    _camera: {fileID: 146968241}
-    _targetGroup: {fileID: 1165691988}
-    _followAnchor: {fileID: 163541243}
-    _lookTarget: {fileID: 0}
-    _priority: 20
-    _playerWeight: 1
-    _playerRadius: 0.7
-    _lookTargetWeight: 1.4
-    _lookTargetRadius: 0.3
-  - _profileId: custom.fishing
-    _camera: {fileID: 131168081}
-    _targetGroup: {fileID: 979459603}
-    _followAnchor: {fileID: 163541243}
-    _lookTarget: {fileID: 0}
-    _priority: 20
-    _playerWeight: 0.75
-    _playerRadius: 0.7
-    _lookTargetWeight: 1.25
-    _lookTargetRadius: 0.3
 --- !u!1 &1900000001
 GameObject:
   m_ObjectHideFlags: 0

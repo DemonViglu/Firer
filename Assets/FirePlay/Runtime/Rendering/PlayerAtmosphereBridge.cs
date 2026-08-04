@@ -33,8 +33,8 @@ namespace DemonViglu.FirePlay.Rendering
 
         private void Awake()
         {
-            _resourceController ??= GetComponent<FlameResourceController>();
-            _restInteraction ??= GetComponent<RestInteraction>();
+            _resourceController ??= GetComponentInChildren<FlameResourceController>(true);
+            _restInteraction ??= GetComponentInParent<RestInteraction>();
 
             if (_resourceController == null)
             {

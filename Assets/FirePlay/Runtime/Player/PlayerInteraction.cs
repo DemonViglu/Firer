@@ -23,19 +23,18 @@ namespace DemonViglu.FirePlay.Player
         private const int MaxDetectedColliders = 8;
 
         [SerializeField] private PlayerFlameController _flameController;
-        [SerializeField] private FlameResourceController _flameResourceController;
-        [SerializeField] private CampfireUpgradeController _campfireUpgradeController;
         [SerializeField] private LayerMask _interactionLayers = ~0;
         [SerializeField] private PlayerModeController _modeController;
 
         private readonly Collider[] _overlapResults = new Collider[MaxDetectedColliders];
+        private FlameModule _flameModule;
 
         public FlameSource NearestFlameSource { get; private set; }
         public SmallFire NearestSmallFire { get; private set; }
         public Campfire NearestCampfire { get; private set; }
         public WorldTreeContribution NearestWorldTree { get; private set; }
         public RestSpot NearestRestSpot { get; private set; }
-        public CampfireUpgradeController CampfireUpgradeController => _campfireUpgradeController;
+        public CampfireUpgradeController CampfireUpgradeController => _flameModule?.CampfireUpgrade;
         public PlayerInteractTargetKind CurrentInteractTargetKind { get; private set; }
         public string CurrentInteractPrompt { get; private set; } = string.Empty;
         public event Action<Collider> ProximityContactDetected;
@@ -83,25 +82,16 @@ namespace DemonViglu.FirePlay.Player
         private void Awake()
         {
             LocalPlayerContext.EnsureFor(this);
+            _flameModule ??= GetComponentInChildren<FlameModule>(true);
             if (_flameController == null)
             {
-                _flameController = GetComponent<PlayerFlameController>();
+                _flameController = _flameModule?.PlayerFlameController ?? GetComponentInChildren<PlayerFlameController>(true);
             }
+            _modeController ??= GetComponentInParent<PlayerModeController>();
 
-            if (_flameResourceController == null)
+            if (_flameController == null)
             {
-                _flameResourceController = GetComponent<FlameResourceController>();
-            }
-
-            if (_campfireUpgradeController == null)
-            {
-                _campfireUpgradeController = GetComponent<CampfireUpgradeController>();
-            }
-            _modeController ??= GetComponent<PlayerModeController>();
-
-            if (_flameController == null || _flameResourceController == null)
-            {
-                Debug.LogError("[PlayerInteraction] 缺少 PlayerFlameController、输入或余火控制器。", this);
+                Debug.LogError("[PlayerInteraction] 缺少 PlayerFlameController。请挂载 FlameModule，或为扫描器配置火苗控制器。", this);
                 enabled = false;
             }
         }
@@ -214,15 +204,16 @@ namespace DemonViglu.FirePlay.Player
             if (smallFire != null)
             {
                 CurrentInteractTargetKind = PlayerInteractTargetKind.SmallFire;
-                var tendCost = _campfireUpgradeController != null ? _campfireUpgradeController.TendFuelCost : 0f;
+                var upgrade = _flameModule?.CampfireUpgrade;
+                var tendCost = upgrade != null ? upgrade.TendFuelCost : 0f;
                 if (tendCost <= 0f)
                 {
                     CurrentInteractPrompt = "这团小火还没有准备好";
                     return;
                 }
 
-                CurrentInteractPrompt = _campfireUpgradeController != null && !_campfireUpgradeController.CanStartPublicFire
-                    ? $"公共篝火已经够多了（{_campfireUpgradeController.ActiveRuntimeCampfireCount}/{_campfireUpgradeController.MaximumActiveRuntimeCampfires}），可以先收回这团小火"
+                CurrentInteractPrompt = upgrade != null && !upgrade.CanStartPublicFire
+                    ? $"公共篝火已经够多了（{upgrade.ActiveRuntimeCampfireCount}/{upgrade.MaximumActiveRuntimeCampfires}），可以先收回这团小火"
                     : $"让小火慢慢长成篝火（{tendCost:0.0} 余火）／也可收回";
                 return;
             }

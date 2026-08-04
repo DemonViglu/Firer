@@ -60,11 +60,11 @@ namespace DemonViglu.FirePlay.Player
 
         private void ResolveReferences()
         {
-            _activityHost ??= GetComponent<PlayerActivityHost>();
+            _activityHost ??= GetComponentInParent<PlayerActivityHost>();
             _activityHost ??= PlayerActivityHost.Local;
             _activityHost ??= FindAnyObjectByType<PlayerActivityHost>();
-            _animationController ??= GetComponent<PlayerAnimationController>();
-            _fishingRodProp ??= transform.Find("Hand/FishingRodPop");
+            _animationController ??= GetComponentInParent<PlayerAnimationController>();
+            _fishingRodProp ??= transform.root.Find("Hand/FishingRodPop");
         }
 
         private void ResetPresentation()

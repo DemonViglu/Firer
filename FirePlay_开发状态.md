@@ -7,7 +7,7 @@
 - Unity `6000.5.5f1`，URP `17.5.0`，Input System `1.19.0`。
 - 当前 Demo 已保存可运行版本，单机功能已由用户验收通过。
 - 当前目标顺序：先接入实时联机，再将实时活动产生的必要数据用于异步保存。
-- Packages 中尚未安装 Netcode、Photon、Mirror、Relay 等网络 Transport；实时联机尚未开始。
+- NGO/UTP 兼容候选已确认并完成包解析：Unity `6000.5` 使用 NGO `2.10.0` + 内置 Transport `6.5.0`；当前只完成 SDK 导入，尚未向场景加入 NetworkManager 或网络 Player。之前的 NGO `2.7.0` 已撤销。
 
 ## 2. 已验收能力
 
@@ -176,4 +176,4 @@ Player / Campfire / Activity
 - `PlayerInteraction` 现在只负责扫描、目标排序和提示；余火/篝火字段已移除并改从 FlameModule 读取。`InteractionRouter` 是唯一 RawInput -> PlayerIntentRequested 入口，二者不再共享世界执行职责。
 - `InteractionModule` 已建立并承载 `PlayerInteraction`、`InteractionRouter`；子节点组件统一通过父级 `LocalPlayerContext` 初始化，本地 Router 仍由 `PlayerCoreHost` 显式绑定输入。
 - 生命周期门禁已落地：远端 `PlayerExpressionController` 不订阅本地 EventBus；远端 `PlayerActivityHost` 不创建本地 ActivityRuntime、不 Tick Logic，也不会消费余火或发布本地 Activity 事实；本地路径保持不变。
-- 观星迁移后，下一步可以选择并安装实时联机 SDK/Transport。SDK 只负责连接、生成 Player 和传输请求/事实，Activity/Flame 的权威执行仍留在现有 Host/Module 边界内。
+- 观星迁移后，实时联机进入 SDK 包编译探针阶段；SDK 只负责连接、生成 Player 和传输请求/事实，Activity/Flame 的权威执行仍留在现有 Host/Module 边界内。

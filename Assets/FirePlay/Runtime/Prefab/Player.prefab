@@ -1,5 +1,386 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &9000000000000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9000000000000002}
+  m_Layer: 0
+  m_Name: Modules
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9000000000000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 9000000000000004}
+  - {fileID: 9000000000000007}
+  - {fileID: 9000000000000010}
+  m_Father: {fileID: 8922695638565747190}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &9000000000000003
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9000000000000004}
+  - component: {fileID: 9000000000000005}
+  - component: {fileID: 1088538406894554522}
+  - component: {fileID: 1518005239310531485}
+  - component: {fileID: 656637033389967464}
+  - component: {fileID: 1536743572776703721}
+  - component: {fileID: 1467539416060756229}
+  - component: {fileID: 5291183042340213138}
+  - component: {fileID: 8662161886728232265}
+  m_Layer: 0
+  m_Name: FlameModule
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9000000000000004
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000003}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9000000000000002}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9000000000000005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f901a2b3c4d56e7f8a901a2b3c4d5e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.FlameModule
+  _resourceController: {fileID: 1518005239310531485}
+  _playerFlameController: {fileID: 1088538406894554522}
+  _campfirePlacement: {fileID: 656637033389967464}
+  _campfireUpgrade: {fileID: 1536743572776703721}
+--- !u!114 &1088538406894554522
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec121e4c14365fb40913efe1dbc2f21b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerFlameController
+  _ownedFlames: []
+  _activeFlame: {fileID: 0}
+--- !u!114 &1518005239310531485
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e52401429fae45bb9048d39c6158031e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Flame.FlameResourceController
+  _config: {fileID: 11400000, guid: d780d19d1ccd4897a676e37d0bab72dc, type: 2}
+  _nightDrainActive: 1
+  _debugStep: 10
+--- !u!114 &656637033389967464
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d135bb7edcd64675853a79c3197da258, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.CampfirePlacement
+  _resourceController: {fileID: 0}
+  _placementCamera: {fileID: 0}
+  _config: {fileID: 11400000, guid: d24ad6320c394959bd02f4f26a87211e, type: 2}
+  _smallFirePrefab: {fileID: 8542682576192916304, guid: 6820af6efa36512438d65dc4e8d4567e, type: 3}
+  _preview: {fileID: 0}
+  _modeController: {fileID: 0}
+  _createPreviewWhenMissing: 1
+  _validPreviewColor: {r: 1, g: 0.72, b: 0.28, a: 1}
+  _invalidPreviewColor: {r: 0.9, g: 0.18, b: 0.08, a: 1}
+--- !u!114 &1536743572776703721
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca738504d03c40a3bb70c7c986c0a645, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.CampfireUpgradeController
+  _resourceController: {fileID: 0}
+  _campfirePrefab: {fileID: 6920482071578527915, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
+  _maximumActiveRuntimeCampfires: 4
+--- !u!114 &1467539416060756229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a62b843274034ef88c88020b5ac6a99f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Flame.FlameResourceVisualBridge
+  _resourceController: {fileID: 1518005239310531485}
+  _playerFlameController: {fileID: 1088538406894554522}
+  _receiverMinimumIntensity: 0.22
+  _giverMaximumIntensity: 1.15
+  _receiverOverrideVisualLevel: 0.15
+  _responseSpeed: 5
+--- !u!114 &5291183042340213138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c97179540d87436cb7eff51a09a18f57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Flame.FlameContractionController
+  _input: {fileID: 7708806687425791670}
+  _resourceController: {fileID: 1518005239310531485}
+  _modeController: {fileID: 0}
+--- !u!114 &8662161886728232265
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09acf5d138c94ef3a32f657e479e0052, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Rendering.PlayerAtmosphereBridge
+  _resourceController: {fileID: 0}
+  _restInteraction: {fileID: 0}
+  _ambientBed: {fileID: 4001918051062010403}
+  _warmthLayer: {fileID: 1819187283265437000}
+  _restLayer: {fileID: 6940529471801507619}
+  _blendSpeed: 2
+  _ambientMinimumVolume: 0.35
+  _warmthMaximumVolume: 0.8
+  _restMaximumVolume: 1
+--- !u!1 &9000000000000006
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9000000000000007}
+  - component: {fileID: 9000000000000008}
+  - component: {fileID: 9016949396252110027}
+  m_Layer: 0
+  m_Name: ActivityModule
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9000000000000007
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000006}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9000000000000002}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9000000000000008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000006}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b8f1a2c3d4e5f60718293a4b5c6d7e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.ActivityModule
+  _activityHost: {fileID: 6467109789447716751}
+  _presentationHost: {fileID: 523296443919546474}
+--- !u!114 &9016949396252110027
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000006}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2b7c9d1f4a63850b6d8e0c2f7a91543, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.FishingActivityVisuals
+  _activityHost: {fileID: 0}
+  _animationController: {fileID: 0}
+  _fishingRodProp: {fileID: 943385649231640846}
+--- !u!1 &9000000000000009
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9000000000000010}
+  - component: {fileID: 9000000000000011}
+  - component: {fileID: 5522832255115861586}
+  - component: {fileID: 7750000000000000006}
+  m_Layer: 0
+  m_Name: InteractionModule
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9000000000000010
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000009}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9000000000000002}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9000000000000011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000009}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a7c9e1b2d3f40568192a4b5c6d7e8f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.InteractionModule
+  _scanner: {fileID: 5522832255115861586}
+  _router: {fileID: 7750000000000000006}
+--- !u!114 &5522832255115861586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000009}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2da766bb8fb14b448712ff8edca2b0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerInteraction
+  _flameController: {fileID: 1088538406894554522}
+  _interactionLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  _modeController: {fileID: 0}
+--- !u!114 &7750000000000000006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9000000000000009}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dca478a9c8c5b914298ce515315761a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.InteractionRouter
+--- !u!1 &445207503305674350
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8341862442784270056}
+  m_Layer: 0
+  m_Name: CinemachineAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8341862442784270056
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 445207503305674350}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 7824119972009465243}
+  - {fileID: 7405655564242794545}
+  - {fileID: 2204901666775286147}
+  m_Father: {fileID: 8922695638565747190}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &563845095565482331
 GameObject:
   m_ObjectHideFlags: 0
@@ -25,11 +406,11 @@ Transform:
   m_GameObject: {fileID: 563845095565482331}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.4, z: 0}
+  m_LocalPosition: {x: 0, y: 1.4000001, z: 0}
   m_LocalScale: {x: 1, y: 30, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 8922695638565747190}
+  m_Father: {fileID: 8341862442784270056}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1265292373115192994
 GameObject:
@@ -735,7 +1116,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 8922695638565747190}
+  m_Father: {fileID: 8341862442784270056}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3546247766599223979
 GameObject:
@@ -852,11 +1233,11 @@ Transform:
   m_GameObject: {fileID: 4053693355442544542}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.9335804, z: -0, w: 0.35836807}
-  m_LocalPosition: {x: 0, y: 1.2, z: 0}
+  m_LocalPosition: {x: 0, y: 1.1999998, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 8922695638565747190}
+  m_Father: {fileID: 8341862442784270056}
   m_LocalEulerAnglesHint: {x: 0, y: 138, z: 0}
 --- !u!1 &5119281042774077098
 GameObject:
@@ -1068,10 +1449,8 @@ Transform:
   m_Children:
   - {fileID: 4874883494619926104}
   - {fileID: 7512999131663255409}
+  - {fileID: 8341862442784270056}
   - {fileID: 1842617405757612812}
-  - {fileID: 7824119972009465243}
-  - {fileID: 7405655564242794545}
-  - {fileID: 2204901666775286147}
   - {fileID: 2123541160011506919}
   - {fileID: 9000000000000002}
   m_Father: {fileID: 0}
@@ -1147,106 +1526,6 @@ MonoBehaviour:
   _cameraPivot: {fileID: 7512999131663255409}
   _sensitivity: 0.12
   _pitchLimits: {x: -55, y: 70}
---- !u!114 &1088538406894554522
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9000000000000003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec121e4c14365fb40913efe1dbc2f21b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerFlameController
-  _ownedFlames: []
-  _activeFlame: {fileID: 0}
---- !u!114 &5522832255115861586
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9000000000000009}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f2da766bb8fb14b448712ff8edca2b0c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerInteraction
-  _flameController: {fileID: 1088538406894554522}
-  _interactionLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  _modeController: {fileID: 0}
---- !u!114 &1518005239310531485
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9000000000000003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e52401429fae45bb9048d39c6158031e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Flame.FlameResourceController
-  _config: {fileID: 11400000, guid: d780d19d1ccd4897a676e37d0bab72dc, type: 2}
-  _nightDrainActive: 1
-  _debugStep: 10
---- !u!114 &1467539416060756229
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9000000000000003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a62b843274034ef88c88020b5ac6a99f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Flame.FlameResourceVisualBridge
-  _resourceController: {fileID: 1518005239310531485}
-  _playerFlameController: {fileID: 1088538406894554522}
-  _receiverMinimumIntensity: 0.22
-  _giverMaximumIntensity: 1.15
-  _receiverOverrideVisualLevel: 0.15
-  _responseSpeed: 5
---- !u!114 &5291183042340213138
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9000000000000003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c97179540d87436cb7eff51a09a18f57, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Flame.FlameContractionController
-  _input: {fileID: 7708806687425791670}
-  _resourceController: {fileID: 1518005239310531485}
-  _modeController: {fileID: 0}
---- !u!114 &656637033389967464
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9000000000000003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d135bb7edcd64675853a79c3197da258, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.CampfirePlacement
-  _resourceController: {fileID: 0}
-  _placementCamera: {fileID: 0}
-  _config: {fileID: 11400000, guid: d24ad6320c394959bd02f4f26a87211e, type: 2}
-  _smallFirePrefab: {fileID: 8542682576192916304, guid: 6820af6efa36512438d65dc4e8d4567e, type: 3}
-  _preview: {fileID: 0}
-  _modeController: {fileID: 0}
-  _createPreviewWhenMissing: 1
-  _validPreviewColor: {r: 1, g: 0.72, b: 0.28, a: 1}
-  _invalidPreviewColor: {r: 0.9, g: 0.18, b: 0.08, a: 1}
 --- !u!114 &1743969675154280312
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1265,21 +1544,6 @@ MonoBehaviour:
   _resourceController: {fileID: 0}
   _cameraDrop: 0.55
   _cameraTransitionSpeed: 5
---- !u!114 &1536743572776703721
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9000000000000003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ca738504d03c40a3bb70c7c986c0a645, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.CampfireUpgradeController
-  _resourceController: {fileID: 0}
-  _campfirePrefab: {fileID: 6920482071578527915, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
-  _maximumActiveRuntimeCampfires: 4
 --- !u!114 &1357382950971186938
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1311,42 +1575,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bc2cda1ec9b4abe938b4455c3ef190d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerModeController
---- !u!114 &8662161886728232265
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9000000000000003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 09acf5d138c94ef3a32f657e479e0052, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Rendering.PlayerAtmosphereBridge
-  _resourceController: {fileID: 0}
-  _restInteraction: {fileID: 0}
-  _ambientBed: {fileID: 4001918051062010403}
-  _warmthLayer: {fileID: 1819187283265437000}
-  _restLayer: {fileID: 6940529471801507619}
-  _blendSpeed: 2
-  _ambientMinimumVolume: 0.35
-  _warmthMaximumVolume: 0.8
-  _restMaximumVolume: 1
---- !u!114 &9016949396252110027
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9000000000000006}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e2b7c9d1f4a63850b6d8e0c2f7a91543, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.FishingActivityVisuals
-  _activityHost: {fileID: 0}
-  _animationController: {fileID: 0}
-  _fishingRodProp: {fileID: 943385649231640846}
 --- !u!114 &2884395103448089037
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1360,6 +1588,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerAnimationController
   _animator: {fileID: 0}
+  _guitarKeyTriggerPrefix: GuitarKey
   _boolBindings:
   - stateId: resting
     parameterName: IsResting
@@ -1528,18 +1757,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b7a4f83c2d94d34b56e8e74c289f461, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.WorldCommandExecutor
---- !u!114 &7750000000000000006
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9000000000000009}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dca478a9c8c5b914298ce515315761a9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.InteractionRouter
 --- !u!114 &7750000000000000007
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1556,188 +1773,6 @@ MonoBehaviour:
   _frameTarget: {fileID: 7405655564242794545}
   _lookAtTarget: {fileID: 2465744658530655391}
   _inputPivot: {fileID: 7512999131663255409}
---- !u!1 &9000000000000001
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 9000000000000002}
-  m_Layer: 0
-  m_Name: Modules
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &9000000000000002
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9000000000000001}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 9000000000000004}
-  - {fileID: 9000000000000007}
-  - {fileID: 9000000000000010}
-  m_Father: {fileID: 8922695638565747190}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &9000000000000003
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 9000000000000004}
-  - component: {fileID: 9000000000000005}
-  - component: {fileID: 1088538406894554522}
-  - component: {fileID: 1518005239310531485}
-  - component: {fileID: 656637033389967464}
-  - component: {fileID: 1536743572776703721}
-  - component: {fileID: 1467539416060756229}
-  - component: {fileID: 5291183042340213138}
-  - component: {fileID: 8662161886728232265}
-  m_Layer: 0
-  m_Name: FlameModule
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &9000000000000004
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9000000000000003}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 9000000000000002}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &9000000000000005
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9000000000000003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8f901a2b3c4d56e7f8a901a2b3c4d5e6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.FlameModule
-  _resourceController: {fileID: 1518005239310531485}
-  _playerFlameController: {fileID: 1088538406894554522}
-  _campfirePlacement: {fileID: 656637033389967464}
-  _campfireUpgrade: {fileID: 1536743572776703721}
---- !u!1 &9000000000000006
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 9000000000000007}
-  - component: {fileID: 9000000000000008}
-  - component: {fileID: 9016949396252110027}
-  m_Layer: 0
-  m_Name: ActivityModule
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &9000000000000007
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9000000000000006}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 9000000000000002}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &9000000000000008
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9000000000000006}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b8f1a2c3d4e5f60718293a4b5c6d7e8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.ActivityModule
-  _activityHost: {fileID: 6467109789447716751}
-  _presentationHost: {fileID: 523296443919546474}
---- !u!1 &9000000000000009
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 9000000000000010}
-  - component: {fileID: 9000000000000011}
-  - component: {fileID: 5522832255115861586}
-  - component: {fileID: 7750000000000000006}
-  m_Layer: 0
-  m_Name: InteractionModule
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &9000000000000010
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9000000000000009}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 9000000000000002}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &9000000000000011
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9000000000000009}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4a7c9e1b2d3f40568192a4b5c6d7e8f0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.InteractionModule
-  _scanner: {fileID: 5522832255115861586}
-  _router: {fileID: 7750000000000000006}
 --- !u!82 &8918313119764425079
 AudioSource:
   m_ObjectHideFlags: 0

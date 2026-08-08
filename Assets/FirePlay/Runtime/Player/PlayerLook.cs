@@ -17,13 +17,18 @@ namespace DemonViglu.FirePlay.Player
         private float _pitch;
         private int _framesToIgnoreLookInput;
         private bool _cursorCaptured;
+        private bool _localControl = true;
 
         public Transform CameraPivot => _cameraPivot;
         public bool LookLocked { get; private set; }
+        public bool HasLocalControl => _localControl;
 
         private void Awake()
         {
             _input = GetComponent<FirePlayPlayerInput>();
+            var playerContext = GetComponent<LocalPlayerContext>();
+            if (playerContext != null)
+                _localControl = playerContext.IsLocalPlayer;
 
             if (_cameraPivot == null)
             {
@@ -51,6 +56,11 @@ namespace DemonViglu.FirePlay.Player
 
         private void Update()
         {
+            if (!_localControl)
+            {
+                return;
+            }
+
 #if UNITY_EDITOR
             if (UnityEngine.InputSystem.Keyboard.current?.f1Key.wasPressedThisFrame == true)
             {
@@ -87,6 +97,13 @@ namespace DemonViglu.FirePlay.Player
         }
 
         public void SetLookLocked(bool locked) => LookLocked = locked;
+
+        public void SetLocalControl(bool enabled)
+        {
+            _localControl = enabled;
+            if (enabled)
+                SetCursorCaptured(true);
+        }
 
         public bool TryFaceTarget(Transform target)
         {

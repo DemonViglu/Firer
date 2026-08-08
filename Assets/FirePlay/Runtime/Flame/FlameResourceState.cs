@@ -68,6 +68,16 @@ namespace DemonViglu.FirePlay.Flame
             return true;
         }
 
+        /// <summary>
+        /// Applies an exact value received from an authoritative snapshot.
+        /// The same clamp, fuel notification and hysteresis rules used by
+        /// normal gameplay mutations remain in force.
+        /// </summary>
+        public void ApplySnapshot(float currentFuel)
+        {
+            SetFuel(currentFuel);
+        }
+
         public void SetReceiverOverride(bool active)
         {
             if (IsReceiverOverride == active)

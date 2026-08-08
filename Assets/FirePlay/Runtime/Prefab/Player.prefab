@@ -87,6 +87,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.FlameModule
   _resourceController: {fileID: 1518005239310531485}
   _playerFlameController: {fileID: 1088538406894554522}
+  _flameAnchor: {fileID: 1842617405757612812}
   _campfirePlacement: {fileID: 656637033389967464}
   _campfireUpgrade: {fileID: 1536743572776703721}
 --- !u!114 &1088538406894554522
@@ -1770,6 +1771,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerCameraTargetSet
   _followTarget: {fileID: 546559225208236123}
+  _activityFollowTarget: {fileID: 7824119972009465243}
   _frameTarget: {fileID: 7405655564242794545}
   _lookAtTarget: {fileID: 2465744658530655391}
   _inputPivot: {fileID: 7512999131663255409}
@@ -1785,7 +1787,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
-  m_PlayOnAwake: 1
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 0
@@ -1983,8 +1985,12 @@ MonoBehaviour:
   _activityHost: {fileID: 0}
   _guitarProp: {fileID: 5200876784428586955}
   _renderers: []
-  _audioSource: {fileID: 0}
+  _audioSource: {fileID: 8918313119764425079}
   _keyClips: []
+  _useProceduralFallback: 1
+  _proceduralVolume: 0.22
+  _proceduralDuration: 0.65
+  _lowestFrequency: 196
 --- !u!1 &7288205605736068481
 GameObject:
   m_ObjectHideFlags: 0

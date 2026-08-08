@@ -60,6 +60,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.ActivityAnchorNode
   _anchorId: fishing.restpot
+  _displayName: 池边
   _regionId: fishing
   _tags: []
   _activities:

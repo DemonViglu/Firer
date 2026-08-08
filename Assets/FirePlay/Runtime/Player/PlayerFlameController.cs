@@ -28,10 +28,14 @@ namespace DemonViglu.FirePlay.Player
                 _activeFlame = _ownedFlames[0];
             }
 
+        }
+
+        private void Start()
+        {
+            // Network-spawned Players receive their Flame during
+            // NetworkBehaviour.OnNetworkSpawn, which runs after Awake.
             if (_activeFlame == null)
-            {
                 Debug.LogWarning("[PlayerFlameController] 玩家当前没有可用火苗。", this);
-            }
         }
 
         /// <summary>

@@ -53,14 +53,10 @@ namespace DemonViglu.FirePlay.Activity
             if (interaction == null || _anchor == null)
                 return;
 
-            var localContext = LocalPlayerContext.Current;
-            if (localContext == null || localContext.RestInteraction != interaction)
-                return;
-
-            var host = PlayerActivityHost.Local;
+            var host = ResolveAuthorityHost(interaction);
             if (host == null)
             {
-                Debug.LogWarning("[StargazingActivityTrigger] 本地 PlayerActivityHost 尚未就绪。", this);
+                Debug.LogWarning("[StargazingActivityTrigger] Rest Player 的权威 ActivityHost 尚未就绪。", this);
                 return;
             }
 
@@ -73,16 +69,22 @@ namespace DemonViglu.FirePlay.Activity
 
         private void OnRestEnded(RestInteraction interaction)
         {
-            var localContext = LocalPlayerContext.Current;
-            if (localContext == null || localContext.RestInteraction != interaction)
-                return;
-
-            var host = PlayerActivityHost.Local;
+            var host = ResolveAuthorityHost(interaction);
             if (host != null && host.HasActiveActivity
                 && host.ActiveActivityId == StargazingActivityLogic.ActivityId)
             {
                 host.End(ActivityEndReason.StateChanged);
             }
+        }
+
+        private static PlayerActivityHost ResolveAuthorityHost(RestInteraction interaction)
+        {
+            if (interaction == null) return null;
+            var context = interaction.GetComponentInParent<LocalPlayerContext>();
+            var host = context?.ActivityModule?.ActivityHost
+                ?? interaction.GetComponentInParent<PlayerActivityHost>()
+                ?? interaction.GetComponentInChildren<PlayerActivityHost>(true);
+            return host != null && host.HasAuthority ? host : null;
         }
     }
 }

@@ -7,9 +7,11 @@ namespace DemonViglu.FirePlay.Activity
     /// the marshmallow prop, animation and dedicated UI belong to the
     /// presentation layer that receives this state from the activity host.
     /// </summary>
-    public sealed class MarshmallowActivityLogic : IActivityLogic, IActivityTickable, IActivityPresentationLifecycle
+    public sealed class MarshmallowActivityLogic : IActivityLogic, IActivityTickable,
+        IActivityPresentationLifecycle, IActivityNetworkStateProvider
     {
         public const string ActivityId = "marshmallow";
+        public const string RoastingStateId = "marshmallow.roasting";
 
         private readonly float _materializeFuelCost;
         private readonly int _turnsRequired;
@@ -23,6 +25,7 @@ namespace DemonViglu.FirePlay.Activity
 
         private MarshmallowRoastState _roast;
         private MarshmallowActivityResult? _completedResult;
+        private int _publishedNeedlePercent = -1;
 
         public bool HasMaterialized => _roast != null;
         public bool IsRoasting => _roast != null && !_roast.IsReadyToEat;
@@ -31,7 +34,10 @@ namespace DemonViglu.FirePlay.Activity
         public int PerfectTurns => _roast?.PerfectTurns ?? 0;
         public float NeedlePosition => _roast?.NeedlePosition ?? 0f;
         public float TargetCenter => _roast?.TargetCenter ?? 0f;
+        public float PerfectZoneWidth => _perfectZoneWidth;
         public MarshmallowActivityResult? CompletedResult => _completedResult;
+        public int TurnsRequired => _roast?.TurnsRequired ?? _turnsRequired;
+        public uint NetworkStateRevision { get; private set; }
 
         public MarshmallowActivityLogic(
             float materializeFuelCost = 3f,
@@ -93,13 +99,28 @@ namespace DemonViglu.FirePlay.Activity
         public void Tick(IActivityContext context, float deltaTime)
         {
             if (_roast != null && !_roast.IsReadyToEat)
+            {
                 _roast.Advance(deltaTime);
+                MarkNetworkStateChangedWhenNeedleMoves();
+            }
         }
 
         public void End(IActivityContext context, ActivityEndReason reason)
         {
             ResetState();
         }
+
+        public string CaptureNetworkState() => new MarshmallowActivityStateSnapshot(
+            HasMaterialized,
+            IsReadyToEat,
+            CompletedTurns,
+            PerfectTurns,
+            TurnsRequired,
+            _completedResult.HasValue,
+            _completedResult?.Quality ?? MarshmallowRoastQuality.Scorched,
+            NeedlePosition,
+            TargetCenter,
+            PerfectZoneWidth).Serialize();
 
         public void OnPresentationStarted(IActivityContext context, uint sessionRevision)
         {
@@ -111,6 +132,14 @@ namespace DemonViglu.FirePlay.Activity
                 ActivityId,
                 string.Empty,
                 string.Empty,
+                active: true,
+                sessionRevision));
+            context.Presentation.RequestPlayer(new ActivityPlayerRequest(
+                ActivityPlayerRequestKind.AnimationState,
+                context.PlayerId,
+                ActivityId,
+                string.Empty,
+                RoastingStateId,
                 active: true,
                 sessionRevision));
 
@@ -147,6 +176,14 @@ namespace DemonViglu.FirePlay.Activity
                 string.Empty,
                 active: false,
                 sessionRevision));
+            context.Presentation.RequestPlayer(new ActivityPlayerRequest(
+                ActivityPlayerRequestKind.AnimationState,
+                context.PlayerId,
+                ActivityId,
+                string.Empty,
+                RoastingStateId,
+                active: false,
+                sessionRevision));
         }
 
         private ActivityActionResult Materialize(IActivityContext context)
@@ -163,6 +200,7 @@ namespace DemonViglu.FirePlay.Activity
                 _targetEdgePadding,
                 _random);
             _completedResult = null;
+            MarkNetworkStateChanged();
             return ActivityActionResult.Consume("Marshmallow materialized");
         }
 
@@ -177,11 +215,13 @@ namespace DemonViglu.FirePlay.Activity
             if (_roast.IsReadyToEat)
             {
                 _completedResult = CreateResult(_roast);
+                MarkNetworkStateChanged();
                 return ActivityActionResult.Consume(perfect
                     ? "Perfect final turn; marshmallow is ready"
                     : "Final turn; marshmallow is ready");
             }
 
+            MarkNetworkStateChanged();
             return ActivityActionResult.Consume(perfect ? "Perfect turn" : "Turn accepted");
         }
 
@@ -221,7 +261,27 @@ namespace DemonViglu.FirePlay.Activity
         {
             _roast = null;
             _completedResult = null;
+            MarkNetworkStateChanged();
         }
+
+        private void MarkNetworkStateChanged()
+        {
+            _publishedNeedlePercent = ToPercent(NeedlePosition);
+            NetworkStateRevision = NetworkStateRevision == uint.MaxValue
+                ? 1u
+                : NetworkStateRevision + 1u;
+        }
+
+        private void MarkNetworkStateChangedWhenNeedleMoves()
+        {
+            var needlePercent = ToPercent(NeedlePosition);
+            if (Math.Abs(needlePercent - _publishedNeedlePercent) < 3)
+                return;
+            MarkNetworkStateChanged();
+        }
+
+        private static int ToPercent(float value) =>
+            (int)Math.Round(Clamp(value, 0f, 1f) * 100f);
 
         private static float Clamp(float value, float minimum, float maximum)
         {
@@ -254,6 +314,99 @@ namespace DemonViglu.FirePlay.Activity
             TurnsRequired = turnsRequired;
             FuelRefund = fuelRefund;
         }
+    }
+
+    /// <summary>
+    /// Marshmallow-owned wire payload. PlayerActivityHost and the network layer
+    /// transport this string without knowing any marshmallow fields.
+    /// </summary>
+    public readonly struct MarshmallowActivityStateSnapshot
+    {
+        public bool HasMaterialized { get; }
+        public bool IsReadyToEat { get; }
+        public int CompletedTurns { get; }
+        public int PerfectTurns { get; }
+        public int TurnsRequired { get; }
+        public bool HasResult { get; }
+        public MarshmallowRoastQuality Quality { get; }
+        public int NeedlePercent { get; }
+        public int TargetCenterPercent { get; }
+        public int PerfectZonePercent { get; }
+
+        public MarshmallowActivityStateSnapshot(
+            bool hasMaterialized,
+            bool isReadyToEat,
+            int completedTurns,
+            int perfectTurns,
+            int turnsRequired,
+            bool hasResult,
+            MarshmallowRoastQuality quality,
+            float needlePosition,
+            float targetCenter,
+            float perfectZoneWidth)
+        {
+            HasMaterialized = hasMaterialized;
+            IsReadyToEat = isReadyToEat;
+            CompletedTurns = Math.Max(0, completedTurns);
+            PerfectTurns = Math.Max(0, perfectTurns);
+            TurnsRequired = Math.Max(1, turnsRequired);
+            HasResult = hasResult;
+            Quality = quality;
+            NeedlePercent = ToPercent(needlePosition);
+            TargetCenterPercent = ToPercent(targetCenter);
+            PerfectZonePercent = Math.Max(1, ToPercent(perfectZoneWidth));
+        }
+
+        public string Serialize() =>
+            $"{(HasMaterialized ? 1 : 0)}|{(IsReadyToEat ? 1 : 0)}|{CompletedTurns}|{PerfectTurns}|{TurnsRequired}|{(HasResult ? 1 : 0)}|{(int)Quality}|{NeedlePercent}|{TargetCenterPercent}|{PerfectZonePercent}";
+
+        public static bool TryParse(string payload, out MarshmallowActivityStateSnapshot snapshot)
+        {
+            snapshot = default;
+            if (string.IsNullOrWhiteSpace(payload)) return false;
+
+            var parts = payload.Split('|');
+            if (parts.Length != 10
+                || !TryParseFlag(parts[0], out var hasMaterialized)
+                || !TryParseFlag(parts[1], out var isReadyToEat)
+                || !int.TryParse(parts[2], out var completedTurns)
+                || !int.TryParse(parts[3], out var perfectTurns)
+                || !int.TryParse(parts[4], out var turnsRequired)
+                || !TryParseFlag(parts[5], out var hasResult)
+                || !int.TryParse(parts[6], out var qualityValue)
+                || !Enum.IsDefined(typeof(MarshmallowRoastQuality), qualityValue)
+                || !int.TryParse(parts[7], out var needlePercent)
+                || !int.TryParse(parts[8], out var targetCenterPercent)
+                || !int.TryParse(parts[9], out var perfectZonePercent))
+            {
+                return false;
+            }
+
+            snapshot = new MarshmallowActivityStateSnapshot(
+                hasMaterialized,
+                isReadyToEat,
+                completedTurns,
+                perfectTurns,
+                turnsRequired,
+                hasResult,
+                (MarshmallowRoastQuality)qualityValue,
+                ClampPercent(needlePercent),
+                ClampPercent(targetCenterPercent),
+                ClampPercent(perfectZonePercent));
+            return true;
+        }
+
+        private static bool TryParseFlag(string value, out bool result)
+        {
+            result = value == "1";
+            return result || value == "0";
+        }
+
+        private static float ClampPercent(int value) =>
+            Math.Clamp(value, 0, 100) / 100f;
+
+        private static int ToPercent(float value) =>
+            (int)Math.Round(Math.Clamp(value, 0f, 1f) * 100f);
     }
 
     /// <summary>不依赖 Unity 的烘烤时序状态。</summary>

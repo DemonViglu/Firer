@@ -7,6 +7,30 @@ using UnityEngine;
 
 namespace DemonViglu.FirePlay.World
 {
+    public readonly struct SmallFirePlacementRequestResult
+    {
+        public bool Accepted { get; }
+        public string Reason { get; }
+
+        public SmallFirePlacementRequestResult(bool accepted, string reason)
+        {
+            Accepted = accepted;
+            Reason = reason ?? string.Empty;
+        }
+
+        public static SmallFirePlacementRequestResult Accept(string reason) => new(true, reason);
+        public static SmallFirePlacementRequestResult Reject(string reason) => new(false, reason);
+    }
+
+    /// <summary>
+    /// Optional authority boundary for a locally controlled network Player.
+    /// Preview and local candidate validation remain in CampfirePlacement.
+    /// </summary>
+    public interface ISmallFirePlacementRequestTransport
+    {
+        SmallFirePlacementRequestResult RequestSmallFirePlacement(Vector3 requestedPoint);
+    }
+
     /// <summary>
     /// 小火种放置状态机。公开方法可由移动端 UI/触摸调用，键盘仅作原型验证。
     /// </summary>
@@ -29,6 +53,7 @@ namespace DemonViglu.FirePlay.World
         private Renderer[] _previewRenderers;
         private MaterialPropertyBlock _previewProperties;
         private IEventPublisher _events;
+        private ISmallFirePlacementRequestTransport _requestTransport;
 
         public bool IsPlacing { get; private set; }
         public bool IsPlacementValid { get; private set; }
@@ -178,34 +203,101 @@ namespace DemonViglu.FirePlay.World
                 return false;
             }
 
-            var instance = Instantiate(_smallFirePrefab, _candidate.point, Quaternion.identity);
-            // A placed fire is a live world object. Keep this invariant here as
-            // well as in the prefab so an accidentally inactive authoring prefab
-            // cannot silently consume fuel without registering in ActiveCount.
-            instance.gameObject.SetActive(true);
-            var stableId = instance.GetComponent<StableSceneId>() ?? instance.gameObject.AddComponent<StableSceneId>();
-            if (!stableId.TryAssignRuntimeSpawnValue($"smallfire.{Guid.NewGuid():N}"))
+            if (_requestTransport != null)
+            {
+                var requestResult = _requestTransport.RequestSmallFirePlacement(_candidate.point);
+                PlacementStatus = requestResult.Reason;
+                if (!requestResult.Accepted)
+                    return false;
+
+                FinishPlacement(requestResult.Reason);
+                return true;
+            }
+
+            if (!TryPreparePlacement(_candidate, transform.position, out var instance, out var reason))
+            {
+                PlacementStatus = reason;
+                return false;
+            }
+
+            var stableId = instance.GetComponent<StableSceneId>();
+            if (stableId == null || !stableId.TryAssignRuntimeSpawnValue($"smallfire.{Guid.NewGuid():N}"))
             {
                 Destroy(instance.gameObject);
                 PlacementStatus = "Stable ID assignment failed";
                 return false;
             }
-            // Stable ID 已就绪后才写入资源，避免生成失败却扣除余火。
-            if (!_resourceController.TryConsume(_config.FuelCost))
+
+            if (!TryCommitPreparedPlacement(instance, out reason))
             {
                 Destroy(instance.gameObject);
-                PlacementStatus = "Not enough fuel";
+                PlacementStatus = reason;
                 return false;
             }
-            instance.AlignToSurface(_candidate.point, _candidate.normal);
-            instance.Initialize(_config);
 
-            IsPlacing = false;
-            _modeController?.Exit(PlayerMode.Placing);
-            IsPlacementValid = false;
-            PlacementStatus = "Placed";
-            SetPreviewVisible(false);
+            FinishPlacement("Placed");
             return true;
+        }
+
+        public void ConfigureRequestTransport(ISmallFirePlacementRequestTransport requestTransport)
+        {
+            _requestTransport = requestTransport;
+        }
+
+        /// <summary>
+        /// The Host resolves the ground again from the authoritative Player pose.
+        /// The uploaded point is only a request, never the final world transform.
+        /// </summary>
+        public bool TryPrepareAuthorityPlacement(
+            Vector3 authorityPlayerPosition,
+            Vector3 requestedPoint,
+            out SmallFire instance,
+            out string reason)
+        {
+            instance = null;
+            if (!IsFinite(authorityPlayerPosition) || !IsFinite(requestedPoint))
+            {
+                reason = "Invalid placement coordinates";
+                return false;
+            }
+
+            if (!TryFindAuthorityPlacementHit(requestedPoint, out var hit))
+            {
+                reason = "No valid ground near requested point";
+                return false;
+            }
+
+            return TryPreparePlacement(hit, authorityPlayerPosition, out instance, out reason);
+        }
+
+        /// <summary>
+        /// Completes the resource side of a prepared placement. Network callers
+        /// publish identity and spawn immediately before this commit, then revoke
+        /// the object if fuel cannot be committed.
+        /// </summary>
+        public bool TryCommitPreparedPlacement(SmallFire instance, out string reason)
+        {
+            if (instance == null || _resourceController == null || _config == null)
+            {
+                reason = "Placement authority is unavailable";
+                return false;
+            }
+
+            if (!_resourceController.TryConsume(_config.FuelCost))
+            {
+                reason = "Not enough fuel";
+                return false;
+            }
+
+            reason = "Placed";
+            return true;
+        }
+
+        public void ApplyAuthorityPlacementResult(bool accepted, string reason)
+        {
+            PlacementStatus = string.IsNullOrWhiteSpace(reason)
+                ? accepted ? "Placed" : "Placement rejected"
+                : reason;
         }
 
         public void CancelPlacement()
@@ -216,6 +308,88 @@ namespace DemonViglu.FirePlay.World
             PlacementStatus = "Cancelled";
             SetPreviewVisible(false);
         }
+
+        private bool TryPreparePlacement(
+            RaycastHit hit,
+            Vector3 authorityPlayerPosition,
+            out SmallFire instance,
+            out string reason)
+        {
+            instance = null;
+            if (!HasRequiredSetup)
+            {
+                reason = "Missing setup";
+                return false;
+            }
+            if (SmallFire.ActiveCount >= _config.MaximumActiveCount)
+            {
+                reason = "Fire limit reached";
+                return false;
+            }
+            if (_resourceController.State == null || _resourceController.State.CurrentFuel < _config.FuelCost)
+            {
+                reason = "Not enough fuel";
+                return false;
+            }
+            if (!CampfireSiteValidator.TryValidate(hit, authorityPlayerPosition, _config, out reason))
+                return false;
+
+            instance = Instantiate(_smallFirePrefab, hit.point, Quaternion.identity);
+            // A placed fire is a live world object. An inactive authoring prefab
+            // must never consume fuel without entering the active-fire registry.
+            instance.gameObject.SetActive(true);
+            instance.AlignToSurface(hit.point, hit.normal);
+            instance.Initialize(_config);
+            return true;
+        }
+
+        private bool TryFindAuthorityPlacementHit(Vector3 requestedPoint, out RaycastHit placementHit)
+        {
+            placementHit = default;
+            if (_config == null)
+                return false;
+
+            const float verticalProbeOffset = 1.5f;
+            const float verticalProbeDistance = 3f;
+            const float maximumPointError = 0.75f;
+            var origin = requestedPoint + Vector3.up * verticalProbeOffset;
+            var hits = Physics.RaycastAll(
+                origin,
+                Vector3.down,
+                verticalProbeDistance,
+                _config.PlacementLayers,
+                QueryTriggerInteraction.Ignore);
+            var closestSquaredDistance = maximumPointError * maximumPointError;
+
+            foreach (var hit in hits)
+            {
+                if (hit.collider.GetComponentInParent<CampfirePlacementSurface>() == null)
+                    continue;
+
+                var squaredDistance = (hit.point - requestedPoint).sqrMagnitude;
+                if (squaredDistance > closestSquaredDistance)
+                    continue;
+
+                placementHit = hit;
+                closestSquaredDistance = squaredDistance;
+            }
+
+            return placementHit.collider != null;
+        }
+
+        private void FinishPlacement(string status)
+        {
+            IsPlacing = false;
+            _modeController?.Exit(PlayerMode.Placing);
+            IsPlacementValid = false;
+            PlacementStatus = string.IsNullOrWhiteSpace(status) ? "Placed" : status;
+            SetPreviewVisible(false);
+        }
+
+        private static bool IsFinite(Vector3 value) =>
+            !float.IsNaN(value.x) && !float.IsInfinity(value.x)
+            && !float.IsNaN(value.y) && !float.IsInfinity(value.y)
+            && !float.IsNaN(value.z) && !float.IsInfinity(value.z);
 
         private void UpdatePreview(RaycastHit hit)
         {

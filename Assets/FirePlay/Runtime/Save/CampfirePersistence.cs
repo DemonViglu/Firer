@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using DemonViglu.FirePlay.Core;
 using DemonViglu.FirePlay.World;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.Save
@@ -17,6 +18,12 @@ namespace DemonViglu.FirePlay.Save
 
         private void Start()
         {
+            if (!HasWorldWriteAuthority())
+            {
+                Status = "Client mirror: persistence disabled";
+                return;
+            }
+
             if (_loadOnStart)
             {
                 LoadNow();
@@ -38,13 +45,19 @@ namespace DemonViglu.FirePlay.Save
         [ContextMenu("Save Now")]
         public void SaveNow()
         {
+            if (!HasWorldWriteAuthority())
+            {
+                Status = "Client mirror: save skipped";
+                return;
+            }
+
             var data = new FirePlaySaveData();
             data.campfires.AddRange(_retiredRuntimeCampfires);
             foreach (var campfire in Campfire.ActiveInstances)
             {
                 data.campfires.Add(campfire.CreateRecord());
             }
-            var worldTree = FindFirstObjectByType<WorldTreeContribution>();
+            var worldTree = FindAnyObjectByType<WorldTreeContribution>();
             if (worldTree != null)
             {
                 data.worldTree = worldTree.CreateRecord();
@@ -59,6 +72,12 @@ namespace DemonViglu.FirePlay.Save
         [ContextMenu("Load Now")]
         public void LoadNow()
         {
+            if (!HasWorldWriteAuthority())
+            {
+                Status = "Client mirror: load skipped";
+                return;
+            }
+
             if (_campfirePrefab == null)
             {
                 Status = "Load failed: Missing CampFire Prefab";
@@ -77,7 +96,7 @@ namespace DemonViglu.FirePlay.Save
             {
                 Campfire.ClearRuntimeInstances();
                 _retiredRuntimeCampfires.Clear();
-                var worldTree = FindFirstObjectByType<WorldTreeContribution>();
+                var worldTree = FindAnyObjectByType<WorldTreeContribution>();
                 worldTree?.ApplySavedState(data.worldTree);
                 var loaded = 0;
                 foreach (var record in data.campfires)
@@ -110,6 +129,7 @@ namespace DemonViglu.FirePlay.Save
                     var instance = Instantiate(_campfirePrefab, record.position, record.rotation);
                     if (instance.RestoreRuntime(record))
                     {
+                        SpawnNetworkCampfireIfNeeded(instance);
                         loaded++;
                     }
                     else
@@ -158,6 +178,22 @@ namespace DemonViglu.FirePlay.Save
         private void OnApplicationQuit()
         {
             SaveNow();
+        }
+
+        private static bool HasWorldWriteAuthority()
+        {
+            var manager = NetworkManager.Singleton;
+            return manager == null || !manager.IsListening || manager.IsServer;
+        }
+
+        private static void SpawnNetworkCampfireIfNeeded(Campfire campfire)
+        {
+            var manager = NetworkManager.Singleton;
+            if (campfire == null || manager == null || !manager.IsListening || !manager.IsServer)
+                return;
+
+            if (campfire.TryGetComponent<NetworkObject>(out var networkObject) && !networkObject.IsSpawned)
+                networkObject.Spawn(true);
         }
     }
 }

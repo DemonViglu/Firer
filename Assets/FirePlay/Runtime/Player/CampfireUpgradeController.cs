@@ -50,37 +50,76 @@ namespace DemonViglu.FirePlay.Player
 
         public bool TryTendSmallFire(SmallFire smallFire)
         {
+            if (!TryPrepareAuthorityUpgrade(smallFire, out var instance, out var reason))
+            {
+                LastUpgradeStatus = reason;
+                return false;
+            }
+
+            if (!TryCommitPreparedUpgrade(instance, smallFire, out reason))
+            {
+                LastUpgradeStatus = reason;
+                Destroy(instance.gameObject);
+                return false;
+            }
+
+            LastUpgradeStatus = "Started a public fire";
+            return true;
+        }
+
+        public bool TryPrepareAuthorityUpgrade(
+            SmallFire smallFire,
+            out Campfire instance,
+            out string reason)
+        {
+            instance = null;
             if (!HasValidSetup || smallFire == null)
             {
-                LastUpgradeStatus = "Missing setup";
+                reason = "Missing setup";
                 return false;
             }
 
             if (!CanStartPublicFire)
             {
-                LastUpgradeStatus = $"Public fire limit reached ({ActiveRuntimeCampfireCount}/{_maximumActiveRuntimeCampfires})";
+                reason = $"Public fire limit reached ({ActiveRuntimeCampfireCount}/{_maximumActiveRuntimeCampfires})";
                 return false;
             }
 
-            var instance = Instantiate(_campfirePrefab, smallFire.transform.position, smallFire.transform.rotation);
+            instance = Instantiate(_campfirePrefab, smallFire.transform.position, smallFire.transform.rotation);
             var runtimeId = $"campfire.{Guid.NewGuid():N}";
             var sourceId = smallFire.GetComponent<StableSceneId>();
             if (!instance.InitializeRuntime(runtimeId, sourceId != null && sourceId.IsValid ? sourceId.Value : null))
             {
-                LastUpgradeStatus = "Create failed";
+                reason = "Create failed";
                 Destroy(instance.gameObject);
+                instance = null;
+                return false;
+            }
+
+            reason = "Prepared";
+            return true;
+        }
+
+        public bool TryCommitPreparedUpgrade(
+            Campfire instance,
+            SmallFire sourceSmallFire,
+            out string reason)
+        {
+            if (instance == null || sourceSmallFire == null || _resourceController == null)
+            {
+                reason = "Upgrade authority is unavailable";
                 return false;
             }
 
             if (!instance.TryTend(_resourceController))
             {
-                LastUpgradeStatus = instance.LastUpgradeStatus;
-                Destroy(instance.gameObject);
+                reason = instance.LastUpgradeStatus;
                 return false;
             }
 
-            Destroy(smallFire.gameObject);
+            sourceSmallFire.ReleaseAuthorityObject();
             LastUpgradeStatus = "Started a public fire";
+            reason = LastUpgradeStatus;
             return true;
         }
 

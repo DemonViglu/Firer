@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using DemonViglu.FirePlay.Data;
 using DemonViglu.FirePlay.Flame;
 using DemonViglu.FirePlay.Core;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.World
@@ -10,6 +11,7 @@ namespace DemonViglu.FirePlay.World
     /// 临时小火种生命周期。表现组件均为可选，状态不依赖特定素材。
     /// </summary>
     [RequireComponent(typeof(StableSceneId))]
+    [RequireComponent(typeof(NetworkObject))]
     public sealed class SmallFire : MonoBehaviour, IWorldCommandVersioned
     {
         private static readonly List<SmallFire> ActiveFires = new();
@@ -24,6 +26,7 @@ namespace DemonViglu.FirePlay.World
         private bool _initialized;
         private Renderer[] _visualRenderers;
         private MaterialPropertyBlock _visualProperties;
+        private NetworkObject _networkObject;
 
         public static int ActiveCount
         {
@@ -81,6 +84,7 @@ namespace DemonViglu.FirePlay.World
             _fireVfx ??= GetComponentInChildren<ParticleSystem>(true);
             _visualRenderers = GetComponentsInChildren<Renderer>(true);
             _visualProperties = new MaterialPropertyBlock();
+            _networkObject = GetComponent<NetworkObject>();
         }
 
         private void OnDisable()
@@ -90,6 +94,7 @@ namespace DemonViglu.FirePlay.World
 
         private void Start()
         {
+            EnsureNetworkStableId();
             if (!_initialized && _config != null)
             {
                 Initialize(_config);
@@ -131,10 +136,49 @@ namespace DemonViglu.FirePlay.World
             {
                 return false;
             }
+            if (_networkObject != null && _networkObject.IsSpawned && !_networkObject.NetworkManager.IsServer)
+                return false;
 
             resourceController.Restore(_config.ReclaimFuel);
-            Destroy(gameObject);
+            ReleaseAuthorityObject();
             return true;
+        }
+
+        public bool TryAssignNetworkStableId(out string reason)
+        {
+            if (_networkObject == null || !_networkObject.IsSpawned)
+            {
+                reason = "SmallFire NetworkObject is not spawned";
+                return false;
+            }
+
+            var value = $"smallfire.net.{_networkObject.NetworkObjectId}";
+            var stableId = GetComponent<StableSceneId>();
+            if (stableId != null && stableId.Value == value)
+            {
+                reason = string.Empty;
+                return true;
+            }
+            if (stableId == null || !stableId.TryAssignRuntimeSpawnValue(value))
+            {
+                reason = "SmallFire stable network ID assignment failed";
+                return false;
+            }
+
+            reason = string.Empty;
+            return true;
+        }
+
+        public void ReleaseAuthorityObject()
+        {
+            if (_networkObject != null && _networkObject.IsSpawned)
+            {
+                if (_networkObject.NetworkManager.IsServer)
+                    _networkObject.Despawn(true);
+                return;
+            }
+
+            Destroy(gameObject);
         }
 
         public void AlignToSurface(Vector3 surfacePoint, Vector3 surfaceNormal)
@@ -166,6 +210,10 @@ namespace DemonViglu.FirePlay.World
 
         private void Update()
         {
+            EnsureNetworkStableId();
+            if (_networkObject != null && _networkObject.IsSpawned && !_networkObject.NetworkManager.IsServer)
+                return;
+
             if (_remainingSeconds <= 0f)
             {
                 return;
@@ -179,8 +227,14 @@ namespace DemonViglu.FirePlay.World
 
             if (_remainingSeconds <= 0f)
             {
-                Destroy(gameObject);
+                ReleaseAuthorityObject();
             }
+        }
+
+        private void EnsureNetworkStableId()
+        {
+            if (_networkObject != null && _networkObject.IsSpawned)
+                TryAssignNetworkStableId(out _);
         }
 
         private void ApplyVisualReadability()

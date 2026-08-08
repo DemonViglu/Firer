@@ -12,7 +12,8 @@ namespace DemonViglu.FirePlay.UI
     /// this host is the only adapter that is allowed to do so.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerActivityPresentationHost : MonoBehaviour, IActivityPresentationRequests, IActivityPlayerRequestExecutor
+    public sealed class PlayerActivityPresentationHost : MonoBehaviour, IActivityPresentationRequests,
+        IActivityPlayerRequestExecutor, IActivityObserverPlayerRequestExecutor
     {
         [SerializeField] private MonoBehaviour _cameraExecutorBehaviour;
         [SerializeField] private MonoBehaviour _vfxExecutorBehaviour;
@@ -33,11 +34,30 @@ namespace DemonViglu.FirePlay.UI
         private bool _previousMovementLocked;
         private bool _previousLookLocked;
 
+        public bool ConfigureSceneExecutors(
+            MonoBehaviour cameraExecutorBehaviour,
+            MonoBehaviour vfxExecutorBehaviour = null)
+        {
+            if (cameraExecutorBehaviour is not IActivityCameraRequestExecutor)
+                return false;
+            if (vfxExecutorBehaviour != null
+                && vfxExecutorBehaviour is not IActivityVfxRequestExecutor)
+            {
+                return false;
+            }
+
+            _cameraExecutorBehaviour = cameraExecutorBehaviour;
+            _vfxExecutorBehaviour = vfxExecutorBehaviour;
+            _cameraExecutor = (IActivityCameraRequestExecutor)cameraExecutorBehaviour;
+            _vfxExecutor = vfxExecutorBehaviour as IActivityVfxRequestExecutor;
+            return true;
+        }
+
         private void Awake()
         {
-            _movement ??= GetComponent<PlayerMovement>();
-            _look ??= GetComponent<PlayerLook>();
-            _animation ??= GetComponent<PlayerAnimationController>();
+            _movement ??= GetComponentInParent<PlayerMovement>();
+            _look ??= GetComponentInParent<PlayerLook>();
+            _animation ??= GetComponentInParent<PlayerAnimationController>();
             _vfxExecutor = _vfxExecutorBehaviour as IActivityVfxRequestExecutor;
         }
 
@@ -141,6 +161,25 @@ namespace DemonViglu.FirePlay.UI
             }
         }
 
+        public bool ExecuteObserver(ActivityPlayerRequest request)
+        {
+            switch (request.Kind)
+            {
+                case ActivityPlayerRequestKind.AnimationState:
+                case ActivityPlayerRequestKind.AnimationCue:
+                    return Execute(request);
+
+                case ActivityPlayerRequestKind.VfxCue:
+                    _vfxExecutor ??= _vfxExecutorBehaviour as IActivityVfxRequestExecutor;
+                    return _vfxExecutor != null && _vfxExecutor.Execute(request);
+
+                // Observer presentation never owns this device's movement,
+                // look, UI or camera state.
+                default:
+                    return false;
+            }
+        }
+
         private bool OpenUi(ActivityUiRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.UiPrefabKey))
@@ -205,6 +244,22 @@ namespace DemonViglu.FirePlay.UI
                     _shownUiKey,
                     _shownRevision));
             }
+
+            ReleasePlayerRequests();
+        }
+
+        private void ReleasePlayerRequests()
+        {
+            if (_movementLockRequested && _movement != null)
+                _movement.SetMovementLocked(_previousMovementLocked);
+            if (_lookLockRequested && _look != null)
+                _look.SetLookLocked(_previousLookLocked);
+
+            _movementLockRequested = false;
+            _lookLockRequested = false;
+            _hasPlayerRequestSession = false;
+            _playerRequestActivityId = string.Empty;
+            _playerRequestRevision = 0;
         }
     }
 }

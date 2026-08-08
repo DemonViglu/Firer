@@ -17,7 +17,7 @@ MonoBehaviour:
   _scope: 0
   _participationMode: 0
   _uiPrefab: {fileID: 0}
-  _uiPrefabKey: 
+  _uiPrefabKey: EmoteActivityForms
   _inputActionMap: Activity_Emote
   _cameraProfileId: 
   _logicKey: emote

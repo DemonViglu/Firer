@@ -11,10 +11,23 @@ namespace DemonViglu.FirePlay.UI
     /// </summary>
     public sealed class FirePlayUiBootstrap : MonoBehaviour
     {
+        [SerializeField] private bool _showNetworkConnectionOnStart;
+
         private void Awake()
         {
             UIManager.GetInstance();
             ConfigureUiInput();
+        }
+
+        private void Start()
+        {
+            if (_showNetworkConnectionOnStart)
+                ShowNetworkConnection();
+        }
+
+        public void ShowNetworkConnection()
+        {
+            UIManager.GetInstance().ShowUIForms("NetworkConnectionForms");
         }
 
         private static void ConfigureUiInput()

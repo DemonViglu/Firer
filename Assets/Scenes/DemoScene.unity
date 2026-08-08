@@ -300,11 +300,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fcf242d1ab61d34fb6dbc9b0c1ea41f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Flame.FlameBrush
---- !u!4 &126113406 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 7405655564242794545, guid: eec6e1aec17847342866ab072f314136, type: 3}
-  m_PrefabInstance: {fileID: 948333775}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &131168077
 GameObject:
   m_ObjectHideFlags: 0
@@ -388,8 +383,8 @@ MonoBehaviour:
   m_StreamingVersion: 20241001
   m_LegacyPriority: 0
   Target:
-    TrackingTarget: {fileID: 1705205850}
-    LookAtTarget: {fileID: 861247000}
+    TrackingTarget: {fileID: 0}
+    LookAtTarget: {fileID: 0}
     CustomLookAtTarget: 1
   Lens:
     FieldOfView: 60.000004
@@ -491,8 +486,8 @@ MonoBehaviour:
   m_StreamingVersion: 20241001
   m_LegacyPriority: 0
   Target:
-    TrackingTarget: {fileID: 1705205850}
-    LookAtTarget: {fileID: 861247000}
+    TrackingTarget: {fileID: 0}
+    LookAtTarget: {fileID: 0}
     CustomLookAtTarget: 1
   Lens:
     FieldOfView: 60.000004
@@ -630,11 +625,6 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 3efc57806e257e949a8f6664bae5a25b, type: 3}
   m_PrefabInstance: {fileID: 148492972}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &163541243 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 7824119972009465243, guid: eec6e1aec17847342866ab072f314136, type: 3}
-  m_PrefabInstance: {fileID: 948333775}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &166808707
 PrefabInstance:
@@ -1522,6 +1512,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 857e8ff5f2e8483e8244819f0e2a1696, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.FirePlayUiBootstrap
+  _showNetworkConnectionOnStart: 0
 --- !u!1001 &427272027
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1641,6 +1632,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1083239233}
     m_Modifications:
+    - target: {fileID: 7000000000000201, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 2412295717
+      objectReference: {fileID: 0}
+    - target: {fileID: 7000000000000201, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: SceneMigrationSynchronization
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7000000000000201, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: InScenePlacedSourceGlobalObjectIdHash
+      value: 2463002109
+      objectReference: {fileID: 0}
     - target: {fileID: 1419990807003707074, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
       propertyPath: m_LocalPosition.x
       value: -2.81
@@ -1791,6 +1794,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 923815048}
     m_Modifications:
+    - target: {fileID: 7000000000000101, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 328372734
+      objectReference: {fileID: 0}
+    - target: {fileID: 7000000000000101, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
+      propertyPath: SceneMigrationSynchronization
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7000000000000101, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
+      propertyPath: InScenePlacedSourceGlobalObjectIdHash
+      value: 1756135309
+      objectReference: {fileID: 0}
     - target: {fileID: 1917531652596367429, guid: 1b3f09ffa4c2881448256eb6c1e5abd5, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -2102,6 +2117,10 @@ PrefabInstance:
     - target: {fileID: 6592060137045838519, guid: 2166c6fd03445c248a00741cee482721, type: 3}
       propertyPath: m_Name
       value: Flame
+      objectReference: {fileID: 0}
+    - target: {fileID: 6592060137045838519, guid: 2166c6fd03445c248a00741cee482721, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -2608,6 +2627,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 7000000000000001, guid: 6820af6efa36512438d65dc4e8d4567e, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 3393035847
+      objectReference: {fileID: 0}
+    - target: {fileID: 7000000000000001, guid: 6820af6efa36512438d65dc4e8d4567e, type: 3}
+      propertyPath: SceneMigrationSynchronization
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7000000000000001, guid: 6820af6efa36512438d65dc4e8d4567e, type: 3}
+      propertyPath: InScenePlacedSourceGlobalObjectIdHash
+      value: 1156549450
+      objectReference: {fileID: 0}
     - target: {fileID: 1362091146816636917, guid: 6820af6efa36512438d65dc4e8d4567e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 20.921898
@@ -3215,11 +3246,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5546368970521514861, guid: eec6e1aec17847342866ab072f314136, type: 3}
       propertyPath: m_Name
-      value: Player
+      value: Player_Deprecated
       objectReference: {fileID: 0}
     - target: {fileID: 5546368970521514861, guid: eec6e1aec17847342866ab072f314136, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6467109789447716751, guid: eec6e1aec17847342866ab072f314136, type: 3}
       propertyPath: _logicFactoryBehaviour
@@ -3295,8 +3326,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 971497440}
-  - component: {fileID: 971497442}
   - component: {fileID: 971497443}
+  - component: {fileID: 971497442}
   - component: {fileID: 971497444}
   - component: {fileID: 971497445}
   - component: {fileID: 971497447}
@@ -3526,6 +3557,132 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: cf280b77dc735534fa5fc14b03beffed, type: 3}
   m_PrefabInstance: {fileID: 983349108}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &995841169
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 995841170}
+  - component: {fileID: 995841171}
+  - component: {fileID: 995841172}
+  - component: {fileID: 995841173}
+  m_Layer: 0
+  m_Name: NetworkBootstrap
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &995841170
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 995841169}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &995841171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 995841169}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 593a2fe42fa9d37498c96f9a383b6521, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkManager
+  NetworkManagerExpanded: 0
+  NetworkConfig:
+    ProtocolVersion: 0
+    NetworkTransport: {fileID: 995841172}
+    PlayerPrefab: {fileID: 1292492784500737, guid: 2d1e3f5a7b9c4d6e8f0123456789abcd, type: 3}
+    Prefabs:
+      NetworkPrefabsLists:
+      - {fileID: 11400000, guid: d5647039ca517fe4b97ec76c96f07211, type: 2}
+    TickRate: 30
+    ClientConnectionBufferTimeout: 10
+    ConnectionApproval: 1
+    ConnectionData: 
+    EnableTimeResync: 0
+    TimeResyncInterval: 30
+    EnsureNetworkVariableLengthSafety: 0
+    EnableSceneManagement: 1
+    ForceSamePrefabs: 1
+    RecycleNetworkIds: 1
+    NetworkIdRecycleDelay: 120
+    RpcHashSize: 0
+    LoadSceneTimeOut: 120
+    SpawnTimeout: 10
+    EnableNetworkLogs: 1
+    NetworkTopology: 0
+    UseCMBService: 0
+    AutoSpawnPlayerPrefabClientSide: 1
+    NetworkProfilingMetrics: 1
+    OldPrefabList: []
+  RunInBackground: 1
+  LogLevel: 1
+--- !u!114 &995841172
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 995841169}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6960e84d07fb87f47956e7a81d71c4e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Transports.UTP.UnityTransport
+  m_ProtocolType: 0
+  m_UseWebSockets: 0
+  m_UseEncryption: 0
+  m_MaxPacketQueueSize: 128
+  m_MaxPayloadSize: 6144
+  m_HeartbeatTimeoutMS: 500
+  m_ConnectTimeoutMS: 1000
+  m_MaxConnectAttempts: 60
+  m_DisconnectTimeoutMS: 30000
+  ConnectionData:
+    Address: 127.0.0.1
+    Port: 7777
+    ServerListenAddress: 127.0.0.1
+    ClientBindPort: 0
+  DebugSimulator:
+    PacketDelayMS: 0
+    PacketJitterMS: 0
+    PacketDropRate: 0
+--- !u!114 &995841173
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 995841169}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82b9a5a7a15b6b64a97d75f2f6128888, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Network.FirePlayNetworkBootstrap
+  _networkManager: {fileID: 995841171}
+  _transport: {fileID: 995841172}
+  _autoStart: 1
+  _serverAddress: 127.0.0.1
+  _listenAddress: 0.0.0.0
+  _port: 7777
+  _allowCommandLineOverrides: 1
+  _maximumPlayers: 4
 --- !u!1 &1049254082
 GameObject:
   m_ObjectHideFlags: 0
@@ -4672,7 +4829,7 @@ Light:
   serializedVersion: 13
   m_Type: 1
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
-  m_Intensity: 1
+  m_Intensity: 0
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -5981,12 +6138,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.CameraSystem.ActivityCameraRigExecutor
   _exploreCamera: {fileID: 1450952974}
-  _fallbackPlayerFrameTarget: {fileID: 126113406}
+  _fallbackPlayerFrameTarget: {fileID: 0}
   _profiles:
   - _profileId: activity.ritual
     _camera: {fileID: 146968241}
     _targetGroup: {fileID: 1165691988}
-    _followAnchor: {fileID: 163541243}
+    _followAnchor: {fileID: 0}
     _lookTarget: {fileID: 0}
     _priority: 20
     _playerWeight: 1
@@ -5996,7 +6153,7 @@ MonoBehaviour:
   - _profileId: custom.fishing
     _camera: {fileID: 131168081}
     _targetGroup: {fileID: 979459603}
-    _followAnchor: {fileID: 163541243}
+    _followAnchor: {fileID: 0}
     _lookTarget: {fileID: 0}
     _priority: 20
     _playerWeight: 0.75
@@ -6134,6 +6291,88 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 2d4a8e2e438fe5a43b78a7dbfaa3d261, type: 3}
   m_PrefabInstance: {fileID: 1982053359}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1990000011
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1990000012}
+  - component: {fileID: 1990000013}
+  m_Layer: 0
+  m_Name: PlayerSceneServices
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1990000012
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1990000011}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1990000015}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1990000013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1990000011}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a7d1c9e3b5f4820a6e8d2c4f7b91356, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerSceneServiceBindings
+  _activityLogicFactory: {fileID: 971497443}
+  _activityCameraExecutor: {fileID: 1900000003}
+  _activityVfxExecutor: {fileID: 0}
+  _playerFlamePrefab: {fileID: 717587634032829789, guid: 2166c6fd03445c248a00741cee482721, type: 3}
+  _networkPlayerSpawnPoint: {fileID: 1990000015}
+  _networkPlayerSpawnSpacing: 1.5
+--- !u!1 &1990000014
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1990000015}
+  m_Layer: 0
+  m_Name: NetworkPlayerSpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1990000015
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1990000014}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 3, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1990000012}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &2009458551
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6409,6 +6648,78 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 3dfb7c8db88a46445b3634185a585725, type: 3}
   m_PrefabInstance: {fileID: 2132944818}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &9100000000000300
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9100000000000301}
+  - component: {fileID: 9100000000000302}
+  - component: {fileID: 9100000000000303}
+  m_Layer: 0
+  m_Name: NetworkWorldState
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9100000000000301
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9100000000000300}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9100000000000302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9100000000000300}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 1573885004
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 0
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 0
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
+--- !u!114 &9100000000000303
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9100000000000300}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f2a4c6e8b0d42f1a3c5e7f901b2d468, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Network.FirePlayNetworkWorldState
+  ShowTopMostFoldoutHeaderGroup: 1
+  _sourceDiscoveryInterval: 0.5
 --- !u!1001 &522362552851157798
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8507,3 +8818,6 @@ SceneRoots:
   - {fileID: 175905987}
   - {fileID: 834687284}
   - {fileID: 971497440}
+  - {fileID: 995841170}
+  - {fileID: 1990000012}
+  - {fileID: 9100000000000301}

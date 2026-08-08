@@ -15,7 +15,11 @@ namespace DemonViglu.FirePlay.UI
         [SerializeField] private Text _statusText;
         [SerializeField] private Button _primaryButton;
         [SerializeField] private Button _reelButton;
+        [SerializeField] private Button _easeButton;
         [SerializeField] private Button _closeButton;
+        [SerializeField] private GameObject _fightPanel;
+        [SerializeField] private Image _tensionFill;
+        [SerializeField] private Image _progressFill;
 
         private Text _primaryLabel;
         private Text _reelLabel;
@@ -53,8 +57,6 @@ namespace DemonViglu.FirePlay.UI
         private void ResolveRequester()
         {
             _requester = PlayerActivityHost.Local;
-            if (_requester == null)
-                _requester = FindAnyObjectByType<PlayerActivityHost>();
         }
 
         private void Refresh()
@@ -62,21 +64,57 @@ namespace DemonViglu.FirePlay.UI
             ResolveRequester();
             var host = _requester as PlayerActivityHost;
             var logic = host?.ActiveSession?.Logic as FishingActivityLogic;
-            if (logic == null)
+            if (logic != null)
             {
-                SetStatus("钓鱼活动未开始");
-                SetInteractable(_primaryButton, false);
-                SetInteractable(_reelButton, false);
+                ApplyState(new FishingActivityStateSnapshot(
+                    logic.HasRod,
+                    logic.IsLineCast,
+                    logic.IsFishBiting,
+                    logic.IsFighting,
+                    logic.Catches,
+                    logic.CatchesPerRod,
+                    logic.Tension01,
+                    logic.CatchProgress01,
+                    logic.Status));
                 return;
             }
 
-            SetStatus(logic.Status);
+            if (host != null
+                && host.TryGetActiveStatePayload(FishingActivityLogic.ActivityId, out var payload)
+                && FishingActivityStateSnapshot.TryParse(payload, out var snapshot))
+            {
+                ApplyState(snapshot);
+                return;
+            }
+
+            SetStatus("等待主机同步钓鱼状态");
+            SetInteractable(_primaryButton, false);
+            SetInteractable(_reelButton, false);
+            SetInteractable(_easeButton, false);
+            SetFightPanel(false);
+        }
+
+        private void ApplyState(FishingActivityStateSnapshot state)
+        {
+            SetStatus(state.HasRod
+                ? $"{state.Status}\n本轮收获 {state.Catches}/{state.CatchesPerRod}"
+                : state.Status);
             if (_primaryLabel != null)
-                _primaryLabel.text = logic.HasRod ? "抛竿" : "拟造鱼竿";
+                _primaryLabel.text = !state.HasRod
+                    ? "拟造鱼竿"
+                    : state.IsFishBiting
+                        ? "提竿"
+                        : "抛竿";
             if (_reelLabel != null)
                 _reelLabel.text = "收线";
-            SetInteractable(_primaryButton, !logic.IsLineCast);
-            SetInteractable(_reelButton, logic.IsFishBiting);
+            SetInteractable(_primaryButton, !state.IsLineCast || state.IsFishBiting);
+            SetInteractable(_reelButton, state.IsFighting);
+            SetInteractable(_easeButton, state.IsFighting);
+            SetFightPanel(state.IsFighting);
+            if (_tensionFill != null)
+                _tensionFill.fillAmount = state.TensionPercent / 100f;
+            if (_progressFill != null)
+                _progressFill.fillAmount = state.CatchProgressPercent / 100f;
         }
 
         private void ResolveControls()
@@ -84,7 +122,11 @@ namespace DemonViglu.FirePlay.UI
             _statusText ??= FindText("Status");
             _primaryButton ??= FindButton("PrimaryButton");
             _reelButton ??= FindButton("ReelButton");
+            _easeButton ??= FindButton("EaseButton");
             _closeButton ??= FindButton("CloseButton");
+            _fightPanel ??= FindChild("FightPanel");
+            _tensionFill ??= FindImage("TensionFill");
+            _progressFill ??= FindImage("ProgressFill");
             _primaryLabel ??= FindButtonLabel(_primaryButton);
             _reelLabel ??= FindButtonLabel(_reelButton);
             var closeLabel = FindButtonLabel(_closeButton);
@@ -96,6 +138,7 @@ namespace DemonViglu.FirePlay.UI
             UnbindButtons();
             _primaryButton?.onClick.AddListener(OnPrimaryClicked);
             _reelButton?.onClick.AddListener(OnReelClicked);
+            _easeButton?.onClick.AddListener(OnEaseClicked);
             _closeButton?.onClick.AddListener(OnCloseClicked);
         }
 
@@ -103,11 +146,13 @@ namespace DemonViglu.FirePlay.UI
         {
             _primaryButton?.onClick.RemoveListener(OnPrimaryClicked);
             _reelButton?.onClick.RemoveListener(OnReelClicked);
+            _easeButton?.onClick.RemoveListener(OnEaseClicked);
             _closeButton?.onClick.RemoveListener(OnCloseClicked);
         }
 
         private void OnPrimaryClicked() => Submit("fishing.primary");
         private void OnReelClicked() => Submit("fishing.reel");
+        private void OnEaseClicked() => Submit("fishing.ease");
         private void OnCloseClicked() => Submit("activity.exit");
 
         private void Submit(string actionId)
@@ -137,6 +182,12 @@ namespace DemonViglu.FirePlay.UI
             if (button != null) button.interactable = value;
         }
 
+        private void SetFightPanel(bool visible)
+        {
+            if (_fightPanel != null && _fightPanel.activeSelf != visible)
+                _fightPanel.SetActive(visible);
+        }
+
         private Text FindText(string childName)
         {
             foreach (var text in GetComponentsInChildren<Text>(true))
@@ -148,6 +199,20 @@ namespace DemonViglu.FirePlay.UI
         {
             foreach (var button in GetComponentsInChildren<Button>(true))
                 if (button.gameObject.name == childName) return button;
+            return null;
+        }
+
+        private GameObject FindChild(string childName)
+        {
+            foreach (var child in GetComponentsInChildren<Transform>(true))
+                if (child.gameObject.name == childName) return child.gameObject;
+            return null;
+        }
+
+        private Image FindImage(string childName)
+        {
+            foreach (var image in GetComponentsInChildren<Image>(true))
+                if (image.gameObject.name == childName) return image;
             return null;
         }
 

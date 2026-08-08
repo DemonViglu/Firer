@@ -25,6 +25,7 @@ namespace DemonViglu.FirePlay.Player
         private InputAction _emoteAction;
         private InputAction _cycleTreeLightColorAction;
         private InputAction _pauseAction;
+        private bool _acceptInput = true;
 
         // Virtual controls are intentionally routed through the same input facade as
         // keyboard/gamepad. Gameplay systems never need to know whether a command
@@ -33,13 +34,22 @@ namespace DemonViglu.FirePlay.Player
         private Vector2 _virtualLook;
         public event Action<RawPlayerInput> RawInputPerformed;
 
-        public Vector2 Move => Vector2.ClampMagnitude((_moveAction?.ReadValue<Vector2>() ?? Vector2.zero) + _virtualMove, 1f);
-        public bool SprintHeld => _sprintAction != null && _sprintAction.IsPressed();
-        public bool ConstrictFlameHeld => _constrictFlameAction != null && _constrictFlameAction.IsPressed();
+        public bool AcceptInput => _acceptInput;
+        public Vector2 Move => !_acceptInput
+            ? Vector2.zero
+            : Vector2.ClampMagnitude((_moveAction?.ReadValue<Vector2>() ?? Vector2.zero) + _virtualMove, 1f);
+        public bool SprintHeld => _acceptInput && _sprintAction != null && _sprintAction.IsPressed();
+        public bool ConstrictFlameHeld => _acceptInput && _constrictFlameAction != null && _constrictFlameAction.IsPressed();
         public Vector2 Look
         {
             get
             {
+                if (!_acceptInput)
+                {
+                    _virtualLook = Vector2.zero;
+                    return Vector2.zero;
+                }
+
                 var look = (_lookAction?.ReadValue<Vector2>() ?? Vector2.zero) + _virtualLook;
                 _virtualLook = Vector2.zero;
                 return look;
@@ -109,12 +119,29 @@ namespace DemonViglu.FirePlay.Player
 
         public void SetVirtualMove(Vector2 value)
         {
-            _virtualMove = Vector2.ClampMagnitude(value, 1f);
+            _virtualMove = _acceptInput ? Vector2.ClampMagnitude(value, 1f) : Vector2.zero;
         }
 
         public void AddVirtualLookDelta(Vector2 delta)
         {
-            _virtualLook += delta;
+            if (_acceptInput)
+                _virtualLook += delta;
+        }
+
+        /// <summary>
+        /// Network ownership gate. The action map remains configured on the
+        /// object, but non-owned Players cannot expose input values or enqueue
+        /// local intents. This avoids disabling a shared InputActionAsset for
+        /// the actual local Player when remote instances exist.
+        /// </summary>
+        public void SetLocalControl(bool enabled)
+        {
+            _acceptInput = enabled;
+            if (!enabled)
+            {
+                _virtualMove = Vector2.zero;
+                _virtualLook = Vector2.zero;
+            }
         }
 
         public void RequestVirtualPlaceFire() => Queue(RawPlayerInput.PlaceFire);
@@ -179,6 +206,7 @@ namespace DemonViglu.FirePlay.Player
 
         private void Queue(RawPlayerInput input)
         {
+            if (!_acceptInput) return;
             RawInputPerformed?.Invoke(input);
         }
     }

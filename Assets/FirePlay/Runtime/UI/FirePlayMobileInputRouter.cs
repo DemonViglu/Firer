@@ -169,8 +169,6 @@ namespace DemonViglu.FirePlay.UI
         private void ResolveActivityHost()
         {
             _activityHost ??= PlayerActivityHost.Local;
-            if (_activityHost == null)
-                _activityHost = FindAnyObjectByType<PlayerActivityHost>();
         }
 
         private void EnsureEventBus()

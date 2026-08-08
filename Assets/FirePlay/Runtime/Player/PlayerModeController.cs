@@ -47,5 +47,15 @@ namespace DemonViglu.FirePlay.Player
                 CurrentMode = PlayerMode.Exploring;
             }
         }
+
+        /// <summary>Applies a Host-confirmed semantic mode on a network mirror.</summary>
+        public bool ApplyAuthoritativeMode(PlayerMode mode)
+        {
+            if (!Enum.IsDefined(typeof(PlayerMode), mode) || CurrentMode == mode)
+                return false;
+
+            CurrentMode = mode;
+            return true;
+        }
     }
 }

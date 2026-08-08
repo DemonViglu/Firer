@@ -26,7 +26,9 @@ namespace DemonViglu.FirePlay.Player
         {
             _context = context;
             ResolveReferences();
-            IsReady = _context != null;
+            IsReady = _context != null
+                && _activityHost != null
+                && _presentationHost != null;
         }
 
         public void Shutdown()

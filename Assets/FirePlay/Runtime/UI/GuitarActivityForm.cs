@@ -3,6 +3,7 @@ using DemonViglu.FirePlay.Activity;
 using SUIFW;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace DemonViglu.FirePlay.UI
@@ -13,6 +14,13 @@ namespace DemonViglu.FirePlay.UI
     /// </summary>
     public sealed class GuitarActivityForm : BaseUIForms
     {
+        private static readonly Key[] KeyboardKeys =
+        {
+            Key.Q, Key.W, Key.E, Key.R, Key.T, Key.Y, Key.U,
+            Key.A, Key.S, Key.D, Key.F, Key.G, Key.H, Key.J,
+            Key.Z, Key.X, Key.C, Key.V, Key.B, Key.N, Key.M
+        };
+
         [SerializeField] private Text _statusText;
         [SerializeField] private Button _closeButton;
         [SerializeField] private Button[] _keyButtons;
@@ -43,8 +51,11 @@ namespace DemonViglu.FirePlay.UI
 
         private void Update()
         {
-            if (gameObject.activeInHierarchy)
-                Refresh();
+            if (!gameObject.activeInHierarchy)
+                return;
+
+            ProcessKeyboardInput();
+            Refresh();
         }
 
         private void ResolveControls()
@@ -72,7 +83,7 @@ namespace DemonViglu.FirePlay.UI
                 _keyButtons[keyIndex - 1] = button;
                 var label = button.GetComponentInChildren<Text>(true);
                 if (label != null)
-                    label.text = keyIndex.ToString("00");
+                    label.text = $"{KeyboardKeys[keyIndex - 1]}\n{keyIndex:00}";
             }
 
             var closeLabel = _closeButton != null
@@ -85,8 +96,6 @@ namespace DemonViglu.FirePlay.UI
         private void ResolveRequester()
         {
             _requester = PlayerActivityHost.Local;
-            if (_requester == null)
-                _requester = FindAnyObjectByType<PlayerActivityHost>();
         }
 
         private void BindButtons()
@@ -130,18 +139,56 @@ namespace DemonViglu.FirePlay.UI
 
         private void Refresh()
         {
-            ResolveRequester();
-            var host = _requester as PlayerActivityHost;
-            var logic = host?.ActiveSession?.Logic as GuitarActivityLogic;
-            var active = logic != null;
+            var stateReady = TryGetActiveState(out var playedKeyCount);
+            var active = (_requester as PlayerActivityHost)?.ActiveActivityId
+                         == GuitarActivityLogic.ActivityId;
 
-            SetStatus(active
-                ? $"已演奏 {logic.PlayedKeyCount}/{GuitarActivityLogic.KeyCount}"
-                : "吉他活动未开始");
+            SetStatus(!active
+                ? "吉他活动未开始"
+                : stateReady
+                    ? $"已演奏 {playedKeyCount} 次 · 21 个音位"
+                    : "等待主机同步");
 
             if (_keyButtons == null) return;
             foreach (var button in _keyButtons)
-                if (button != null) button.interactable = active;
+                if (button != null) button.interactable = active && stateReady;
+        }
+
+        private void ProcessKeyboardInput()
+        {
+            var keyboard = Keyboard.current;
+            if (keyboard == null || !TryGetActiveState(out _))
+                return;
+
+            for (var i = 0; i < KeyboardKeys.Length; i++)
+            {
+                if (keyboard[KeyboardKeys[i]].wasPressedThisFrame)
+                    Submit(GuitarActivityLogic.GetKeyActionId(i + 1));
+            }
+        }
+
+        private bool TryGetActiveState(out int playedKeyCount)
+        {
+            playedKeyCount = 0;
+            ResolveRequester();
+            var host = _requester as PlayerActivityHost;
+            if (host?.ActiveActivityId != GuitarActivityLogic.ActivityId)
+                return false;
+
+            if (host.ActiveSession?.Logic is GuitarActivityLogic logic)
+            {
+                playedKeyCount = logic.PlayedKeyCount;
+                return true;
+            }
+
+            if (!host.TryGetActiveStatePayload(
+                    GuitarActivityLogic.ActivityId,
+                    out var payload)
+                || !GuitarActivityStateSnapshot.TryParse(payload, out var state))
+                return false;
+
+            playedKeyCount = state.PlayedKeyCount;
+            return true;
         }
 
         private void Submit(string actionId)

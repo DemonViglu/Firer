@@ -23,6 +23,7 @@ namespace DemonViglu.FirePlay.World
         [SerializeField] private bool _hasLocalContribution;
         [SerializeField] private TreePersonalLightVisuals _personalLightVisuals;
         private readonly List<TreePersonalLightRecord> _personalLights = new();
+        private bool _simulateAuthority = true;
 
         public float ContributionCost => _contributionCost;
         public float TotalContribution => _totalContribution;
@@ -37,10 +38,10 @@ namespace DemonViglu.FirePlay.World
 
         private void Awake()
         {
-            var stableId = GetComponent<StableSceneId>() ?? gameObject.AddComponent<StableSceneId>();
-            if (!stableId.IsValid)
+            var stableId = GetComponent<StableSceneId>();
+            if (stableId == null || !stableId.IsValid)
             {
-                stableId.TryAssignRuntimeSpawnValue("world.tree.main");
+                Debug.LogError("[WorldTreeContribution] 需要显式配置 StableSceneId。", this);
             }
             ApplyPersonalLightVisuals();
         }
@@ -57,6 +58,20 @@ namespace DemonViglu.FirePlay.World
 
         public bool TryContribute(string actorId, FlameResourceController resourceController, FlameBrush flame)
         {
+            return TryContribute(actorId, resourceController, flame, _selectedLightColor);
+        }
+
+        public bool TryContribute(
+            string actorId,
+            FlameResourceController resourceController,
+            FlameBrush flame,
+            Color selectedLightColor)
+        {
+            if (!_simulateAuthority)
+            {
+                LastContributionStatus = "Host authority required";
+                return false;
+            }
             if (string.IsNullOrWhiteSpace(actorId) || resourceController == null || resourceController.State == null || flame == null)
             {
                 LastContributionStatus = "Missing setup";
@@ -83,6 +98,7 @@ namespace DemonViglu.FirePlay.World
 
             _totalContribution += _contributionCost;
             _contributionCount++;
+            _selectedLightColor = ClampColor(selectedLightColor);
             _personalLights.RemoveAll(record => record.playerId == actorId);
             _personalLights.Add(new TreePersonalLightRecord { playerId = actorId, color = _selectedLightColor, positionSeed = CreatePositionSeed(actorId) });
             _hasLocalContribution = HasLocalContribution;
@@ -91,6 +107,45 @@ namespace DemonViglu.FirePlay.World
             ApplyPersonalLightVisuals();
             Contributed?.Invoke(this, _selectedLightColor);
             return true;
+        }
+
+        public void ConfigureSimulation(bool simulateAuthority)
+        {
+            _simulateAuthority = simulateAuthority;
+        }
+
+        public void ApplyNetworkSnapshot(
+            float totalContribution,
+            int contributionCount,
+            IReadOnlyList<TreePersonalLightRecord> personalLights,
+            uint commandVersion)
+        {
+            _totalContribution = Mathf.Max(0f, totalContribution);
+            _contributionCount = Mathf.Max(0, contributionCount);
+            CommandVersion = commandVersion;
+            _personalLights.Clear();
+            if (personalLights != null)
+            {
+                foreach (var record in personalLights)
+                {
+                    if (record == null || string.IsNullOrWhiteSpace(record.playerId))
+                        continue;
+                    _personalLights.Add(new TreePersonalLightRecord
+                    {
+                        playerId = record.playerId,
+                        color = ClampColor(record.color),
+                        positionSeed = Mathf.Clamp01(record.positionSeed)
+                    });
+                }
+            }
+
+            var localPlayerId = ResolveLocalPlayerId();
+            var localRecord = _personalLights.Find(record => record.playerId == localPlayerId);
+            _hasLocalContribution = localRecord != null;
+            if (localRecord != null)
+                _selectedLightColor = localRecord.color;
+            LastContributionStatus = _hasLocalContribution ? "Contributed" : "Synchronized";
+            ApplyPersonalLightVisuals();
         }
 
         public TreeProgressData CreateRecord() => new()
@@ -173,5 +228,11 @@ namespace DemonViglu.FirePlay.World
                 return (hash & 0x00FFFFFF) / 16777215f;
             }
         }
+
+        private static Color ClampColor(Color color) => new(
+            Mathf.Clamp01(color.r),
+            Mathf.Clamp01(color.g),
+            Mathf.Clamp01(color.b),
+            Mathf.Clamp01(color.a));
     }
 }

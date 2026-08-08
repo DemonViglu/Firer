@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using DemonViglu.FirePlay.Core;
 using DemonViglu.FirePlay.Flame;
 using UnityEngine;
@@ -11,8 +13,10 @@ namespace DemonViglu.FirePlay.World
     /// </summary>
     [RequireComponent(typeof(Collider))]
     [RequireComponent(typeof(StableSceneId))]
-    public sealed class FlameSource : MonoBehaviour
+    public sealed class FlameSource : MonoBehaviour, IWorldCommandVersioned
     {
+        private static readonly List<FlameSource> Active = new();
+
         [SerializeField, Min(0.01f)] private float _restoreAmount = 20f;
         [Header("Respawn")]
         [SerializeField] private bool _respawnEnabled = true;
@@ -25,9 +29,13 @@ namespace DemonViglu.FirePlay.World
         private Collider _interactionCollider;
         private bool _collected;
         private float _respawnRemainingSeconds;
+        private bool _simulateAuthority = true;
 
+        public static IReadOnlyList<FlameSource> ActiveInstances => Active;
         public bool IsAvailable => !_collected;
+        public uint CommandVersion { get; private set; }
         public string SourceId => GetComponent<StableSceneId>().Value;
+        public event Action<FlameSource> StateChanged;
 
         private void Reset()
         {
@@ -50,25 +58,60 @@ namespace DemonViglu.FirePlay.World
                 }
                 _renderersToHide = collectibleRenderers.ToArray();
             }
+
+            ApplyAvailabilityVisuals();
+        }
+
+        private void OnEnable()
+        {
+            if (!Active.Contains(this))
+                Active.Add(this);
+        }
+
+        private void OnDisable()
+        {
+            Active.Remove(this);
         }
 
         public bool TryRestore(FlameResourceController resourceController)
         {
-            if (resourceController == null || !IsAvailable || !resourceController.Restore(_restoreAmount))
+            if (!_simulateAuthority || resourceController == null || !IsAvailable || !resourceController.Restore(_restoreAmount))
             {
                 return false;
             }
 
             _collected = true;
             _respawnRemainingSeconds = _respawnEnabled ? _respawnSeconds : 0f;
+            CommandVersion++;
             PlayFeedback();
-            HideCollectedSource();
+            ApplyAvailabilityVisuals();
+            StateChanged?.Invoke(this);
             return true;
+        }
+
+        public void ConfigureSimulation(bool simulateAuthority)
+        {
+            _simulateAuthority = simulateAuthority;
+        }
+
+        /// <summary>Applies a Host snapshot without restoring fuel or replaying local gameplay.</summary>
+        public void ApplyNetworkSnapshot(bool isAvailable, uint commandVersion, bool playCollectedFeedback)
+        {
+            if (_simulateAuthority)
+                return;
+
+            var wasAvailable = IsAvailable;
+            _collected = !isAvailable;
+            _respawnRemainingSeconds = 0f;
+            CommandVersion = commandVersion;
+            if (playCollectedFeedback && wasAvailable && !isAvailable)
+                PlayFeedback();
+            ApplyAvailabilityVisuals();
         }
 
         private void Update()
         {
-            if (!_collected || !_respawnEnabled)
+            if (!_simulateAuthority || !_collected || !_respawnEnabled)
             {
                 return;
             }
@@ -80,18 +123,18 @@ namespace DemonViglu.FirePlay.World
             }
         }
 
-        private void HideCollectedSource()
+        private void ApplyAvailabilityVisuals()
         {
             if (_interactionCollider != null)
             {
-                _interactionCollider.enabled = false;
+                _interactionCollider.enabled = IsAvailable;
             }
 
             foreach (var sourceRenderer in _renderersToHide)
             {
                 if (sourceRenderer != null)
                 {
-                    sourceRenderer.enabled = false;
+                    sourceRenderer.enabled = IsAvailable;
                 }
             }
         }
@@ -100,18 +143,9 @@ namespace DemonViglu.FirePlay.World
         {
             _collected = false;
             _respawnRemainingSeconds = 0f;
-            if (_interactionCollider != null)
-            {
-                _interactionCollider.enabled = true;
-            }
-
-            foreach (var sourceRenderer in _renderersToHide)
-            {
-                if (sourceRenderer != null)
-                {
-                    sourceRenderer.enabled = true;
-                }
-            }
+            CommandVersion++;
+            ApplyAvailabilityVisuals();
+            StateChanged?.Invoke(this);
         }
 
         private void OnValidate()
@@ -133,6 +167,12 @@ namespace DemonViglu.FirePlay.World
             {
                 _restoreAudio.Play();
             }
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetActiveInstances()
+        {
+            Active.Clear();
         }
     }
 }

@@ -4,9 +4,9 @@ using UnityEngine;
 namespace DemonViglu.FirePlay.Player
 {
     /// <summary>
-    /// Presentation for the marshmallow activity. The prop reads the typed
-    /// ActivityLogic state through PlayerActivityHost; it never consumes fuel,
-    /// handles actions or depends on RestInteraction.
+    /// Presentation for the marshmallow activity. Host/single-player reads the
+    /// typed Logic directly; a network Client reads the same activity-owned
+    /// snapshot mirrored by PlayerActivityHost.
     /// </summary>
     public sealed class MarshmallowVisuals : MonoBehaviour
     {
@@ -31,7 +31,8 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField] private AudioClip _cancelClip;
 
         private MaterialPropertyBlock _propertyBlock;
-        private MarshmallowActivityLogic _logic;
+        private Quaternion _authoredLocalRotation;
+        private bool _hasActivityState;
         private bool _wasMaterialized;
         private bool _wasReadyToEat;
         private int _completedTurns;
@@ -42,6 +43,7 @@ namespace DemonViglu.FirePlay.Player
         {
             ResolveReferences();
             _marshmallowProp ??= transform;
+            _authoredLocalRotation = _marshmallowProp.localRotation;
             if (_renderers == null || _renderers.Length == 0)
                 _renderers = _marshmallowProp.GetComponentsInChildren<Renderer>(true);
 
@@ -73,8 +75,7 @@ namespace DemonViglu.FirePlay.Player
             if (_activityHost == null)
                 return;
 
-            var session = _activityHost.ActiveSession;
-            if (session == null)
+            if (!TryReadState(out var state))
             {
                 if (_wasMaterialized)
                 {
@@ -84,24 +85,13 @@ namespace DemonViglu.FirePlay.Player
                     PlayOneShot(_wasReadyToEat ? _eatClip : _cancelClip);
                 }
 
-                if (_logic != null || _wasMaterialized)
+                if (_hasActivityState || _wasMaterialized)
                     ResetPresentation();
                 return;
             }
 
-            var nextLogic = session.Definition.ActivityId == MarshmallowActivityLogic.ActivityId
-                ? session.Logic as MarshmallowActivityLogic
-                : null;
-
-            if (nextLogic == null)
-            {
-                if (_logic != null || _wasMaterialized)
-                    ResetPresentation();
-                return;
-            }
-
-            _logic = nextLogic;
-            if (!_wasMaterialized && _logic.HasMaterialized)
+            _hasActivityState = true;
+            if (!_wasMaterialized && state.HasMaterialized)
             {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 Debug.Log($"[MarshmallowVisuals] 显示棉花糖：prop={_marshmallowProp.name}，renderers={_renderers.Length}", this);
@@ -110,23 +100,26 @@ namespace DemonViglu.FirePlay.Player
                 PlayOneShot(_materializeClip);
             }
 
-            if (_logic.CompletedTurns > _completedTurns)
+            if (state.CompletedTurns > _completedTurns)
             {
                 _animationController?.Play(PlayerAnimationCueIds.MarshmallowTurn);
-                _marshmallowProp.Rotate(0f, 0f, 90f, Space.Self);
+                _marshmallowProp.Rotate(
+                    0f,
+                    0f,
+                    90f * (state.CompletedTurns - _completedTurns),
+                    Space.Self);
             }
 
-            if (!_hasResult && _logic.CompletedResult.HasValue)
+            if (!_hasResult && state.HasResult)
             {
-                var result = _logic.CompletedResult.Value;
-                var resultColor = result.Quality switch
+                var resultColor = state.Quality switch
                 {
                     MarshmallowRoastQuality.Perfect => _perfectColor,
                     MarshmallowRoastQuality.Toasted => _toastedColor,
                     _ => _scorchedColor
                 };
                 ApplyColor(resultColor);
-                PlayOneShot(result.Quality switch
+                PlayOneShot(state.Quality switch
                 {
                     MarshmallowRoastQuality.Perfect => _perfectClip,
                     MarshmallowRoastQuality.Toasted => _toastedClip,
@@ -135,33 +128,63 @@ namespace DemonViglu.FirePlay.Player
                 _hasResult = true;
             }
 
-            if (!_logic.HasMaterialized)
+            if (!state.HasMaterialized)
                 ApplyColor(_rawColor);
             else if (!_hasResult)
                 ApplyColor(_roastingColor);
 
-            SetVisible(_logic.HasMaterialized);
-            _wasMaterialized = _logic.HasMaterialized;
-            _wasReadyToEat = _logic.IsReadyToEat;
-            _completedTurns = _logic.CompletedTurns;
+            SetVisible(state.HasMaterialized);
+            _wasMaterialized = state.HasMaterialized;
+            _wasReadyToEat = state.IsReadyToEat;
+            _completedTurns = state.CompletedTurns;
+        }
+
+        private bool TryReadState(out MarshmallowActivityStateSnapshot state)
+        {
+            state = default;
+            var session = _activityHost?.ActiveSession;
+            if (session?.Definition?.ActivityId != MarshmallowActivityLogic.ActivityId)
+                return false;
+
+            if (session.Logic is MarshmallowActivityLogic logic)
+            {
+                state = new MarshmallowActivityStateSnapshot(
+                    logic.HasMaterialized,
+                    logic.IsReadyToEat,
+                    logic.CompletedTurns,
+                    logic.PerfectTurns,
+                    logic.TurnsRequired,
+                    logic.CompletedResult.HasValue,
+                    logic.CompletedResult?.Quality ?? MarshmallowRoastQuality.Scorched,
+                    logic.NeedlePosition,
+                    logic.TargetCenter,
+                    logic.PerfectZoneWidth);
+                return true;
+            }
+
+            return _activityHost.TryGetActiveStatePayload(
+                       MarshmallowActivityLogic.ActivityId,
+                       out var payload)
+                   && MarshmallowActivityStateSnapshot.TryParse(payload, out state);
         }
 
         private void ResolveReferences()
         {
             _activityHost ??= GetComponentInParent<PlayerActivityHost>();
             _activityHost ??= PlayerActivityHost.Local;
-            _activityHost ??= FindAnyObjectByType<PlayerActivityHost>();
             _animationController ??= GetComponentInParent<PlayerAnimationController>();
             _audioSource ??= GetComponent<AudioSource>();
         }
 
         private void ResetPresentation()
         {
-            _logic = null;
+            _hasActivityState = false;
             _wasMaterialized = false;
             _wasReadyToEat = false;
             _completedTurns = 0;
             _hasResult = false;
+            if (_marshmallowProp != null)
+                _marshmallowProp.localRotation = _authoredLocalRotation;
             ApplyColor(_rawColor);
             SetVisible(false);
         }

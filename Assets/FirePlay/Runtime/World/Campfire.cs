@@ -28,6 +28,7 @@ namespace DemonViglu.FirePlay.World
         [SerializeField] private string _sourceSmallFireId;
         private uint _commandVersion;
         private CampfireAuthorityState _authorityState;
+        private bool _simulateAuthority = true;
 
         public string CampfireId => GetComponent<StableSceneId>().Value;
         public int Level => _authorityState?.Level ?? _level;
@@ -51,6 +52,7 @@ namespace DemonViglu.FirePlay.World
         public static IReadOnlyList<Campfire> ActiveInstances => ActiveCampfires;
         public static event Action<Campfire> StateChanged;
         public static event Action<Campfire> Retired;
+        public event Action<Campfire> RetirementRequested;
 
         public static void ClearRuntimeInstances()
         {
@@ -160,6 +162,9 @@ namespace DemonViglu.FirePlay.World
 
         private void Update()
         {
+            if (!_simulateAuthority)
+                return;
+
             _authorityState?.Tick(Time.deltaTime);
             SyncSerializedState();
 
@@ -209,6 +214,49 @@ namespace DemonViglu.FirePlay.World
             };
         }
 
+        public CampfireAuthoritySnapshot CreateAuthoritySnapshot() =>
+            _authorityState?.CreateSnapshot()
+            ?? new CampfireAuthoritySnapshot(_level, _totalContribution, _warmth);
+
+        public void ConfigureSimulation(bool simulateAuthority)
+        {
+            _simulateAuthority = simulateAuthority;
+        }
+
+        /// <summary>
+        /// Applies a Host-confirmed state without replaying resource operations.
+        /// Visuals and UI keep reading the regular Campfire properties/events.
+        /// </summary>
+        public void ApplyNetworkSnapshot(
+            CampfireAuthoritySnapshot snapshot,
+            bool isRuntimeCreated,
+            bool isRetired,
+            string sourceSmallFireId,
+            uint commandVersion)
+        {
+            var previousLevel = Level;
+            _isRuntimeCreated = isRuntimeCreated;
+            _isRetired = isRetired;
+            _sourceSmallFireId = sourceSmallFireId ?? string.Empty;
+            _warmthInitialized = true;
+            _commandVersion = commandVersion;
+            _authorityState ??= new CampfireAuthorityState(
+                _config.CreateLevelThresholdSnapshot(),
+                _config.MaximumWarmth,
+                _config.WarmthDecayPerSecond,
+                _config.WarmthPerTend,
+                _config.TendFuelCost,
+                _config.EmergencyWithdrawFuel,
+                _config.EmergencyWithdrawWarmthCost,
+                snapshot);
+            _authorityState.Restore(snapshot);
+            SyncSerializedState();
+            LastUpgradeStatus = IsMaxLevel ? "Maximum level" : "Synchronized";
+            if (Level > previousLevel)
+                Upgraded?.Invoke(this);
+            StateChanged?.Invoke(this);
+        }
+
         public bool RestoreRuntime(CampfireRecord record)
         {
             if (record == null || !InitializeRuntime(record.id, record.sourceSmallFireId))
@@ -238,6 +286,11 @@ namespace DemonViglu.FirePlay.World
 
         public bool TryTend(FlameResourceController resourceController)
         {
+            if (!_simulateAuthority)
+            {
+                LastUpgradeStatus = "Host authority required";
+                return false;
+            }
             if (!HasValidSetup)
             {
                 LastUpgradeStatus = "Missing setup";
@@ -275,6 +328,11 @@ namespace DemonViglu.FirePlay.World
 
         public bool TryWithdrawEmergencyFuel(FlameResourceController resourceController)
         {
+            if (!_simulateAuthority)
+            {
+                LastUpgradeStatus = "Host authority required";
+                return false;
+            }
             if (!HasValidSetup || _authorityState == null || IsExtinguished)
             {
                 LastUpgradeStatus = "Fire is out";
@@ -323,7 +381,10 @@ namespace DemonViglu.FirePlay.World
             ActiveCampfires.Remove(this);
             LastUpgradeStatus = "Fire faded away";
             Retired?.Invoke(this);
-            Destroy(gameObject);
+            if (RetirementRequested != null)
+                RetirementRequested(this);
+            else
+                Destroy(gameObject);
         }
 
         private void RestoreWarmth(CampfireRecord record)

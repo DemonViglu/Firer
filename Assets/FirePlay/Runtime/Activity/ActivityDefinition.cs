@@ -43,6 +43,17 @@ namespace DemonViglu.FirePlay.Activity
         ActivityActionResult RequestAction(string actionId, string payload = null);
     }
 
+    /// <summary>
+    /// Optional activity-owned state snapshot. The network layer treats the
+    /// payload as opaque data; only the activity Logic and its own UI know the
+    /// schema. Revision changes only when presentation-relevant state changes.
+    /// </summary>
+    public interface IActivityNetworkStateProvider
+    {
+        uint NetworkStateRevision { get; }
+        string CaptureNetworkState();
+    }
+
     public readonly struct ActivityActionResult
     {
         public bool Consumed { get; }

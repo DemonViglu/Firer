@@ -42,7 +42,7 @@ namespace DemonViglu.FirePlay.Player
         private void OnIntentRequested(PlayerIntentRequested intent)
         {
             var local = LocalPlayerContext.Current;
-            if (local == null || local.gameObject != gameObject || intent.PlayerId != local.PlayerId) return;
+            if (local == null || transform.root != local.transform.root || intent.PlayerId != local.PlayerId) return;
             if (intent.Kind != PlayerIntentKind.CycleTreeLightColor || (_modeController != null && !_modeController.IsExploring)) return;
             var worldTree = _interaction != null ? _interaction.NearestWorldTree : null;
             if (worldTree == null || worldTree.HasLocalContribution) return;

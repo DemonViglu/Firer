@@ -1,179 +1,177 @@
 # FirePlay 当前开发状态
 
-> 本文只保留当前事实、已验收能力、已知缺口和下一阶段计划。历史迁移日志以 Git 提交为准。
+> 本文只记录当前事实、待验收项、已知风险和下一步。设计契约见 `FirePlay_活动系统重构契约.md`；历史迁移以 Git 提交为准，不再追加到本文。
 
-## 1. 当前基线
+## 1. 当前目标与技术基线
 
 - Unity `6000.5.5f1`，URP `17.5.0`，Input System `1.19.0`。
-- 当前 Demo 已保存可运行版本，单机功能已由用户验收通过。
-- 当前目标顺序：先接入实时联机，再将实时活动产生的必要数据用于异步保存。
-- NGO/UTP 兼容候选已确认并完成包解析：Unity `6000.5` 使用 NGO `2.10.0` + 内置 Transport `6.5.0`；当前只完成 SDK 导入，尚未向场景加入 NetworkManager 或网络 Player。之前的 NGO `2.7.0` 已撤销。
+- 当前优先级：**暂停不阻塞游戏性的网络收口，优先补齐活动玩法、UI 和反馈**。
+- 实时联机代码保留现状；在用户明确开始联机验收前，不以重连、异常恢复或网络优化阻塞内容开发。
+- 异步功能只保存实时游戏产生的必要数据，不维护第二套玩法兼容逻辑。
+- 当前工作树包含一轮尚未提交的大型重构；不得使用破坏性 Git 命令覆盖用户已有改动。
 
-## 2. 已验收能力
+## 2. 当前可依赖的架构事实
+
+### 活动系统
+
+- `ActivityDefinitionAsset + ActivityCatalogAsset` 保存可复用活动定义；同一活动不因地点不同而复制。
+- `ActivityAnchorNode` 只保存稳定地点身份、活动引用和规则引用；一个地点可组合多个活动。
+- `ActivityRuntime / ActivitySystem / ActivitySession` 负责 Preflight、Prepare、Commit、Action、Tick 和 End。
+- `PlayerActivityHost` 是 Player 唯一活动宿主；不保存具体玩法字段，也不动态生成玩法组件。
+- 每个具体玩法拥有自己的 `Logic + Factory + Form + Visuals`；通用 Host、Player Router 和网络层不写玩法分支。
+- 活动只请求 UI、Camera、Movement、Look、Animation 和 VFX；具体 Unity 组件由 Player/场景表现执行器拥有。
+- `GameEventBus` 传递跨模块请求与事实；`GameInstanceSubsystem` 显式定位全局服务。
+- 活动状态快照属于对应玩法，通用 Host/Transport 只搬运不透明 payload。
+
+### Player 与场景组合
+
+- Player 不再运行时 `AddComponent` 核心服务；缺少显式组件时直接报告配置错误。
+- `PlayerCoreOnly.prefab` 用于基础移动、视角、重力和最小模块实验。
+- `Player.prefab` 是旧完整单机场景组合；`PlayerNetworkGameplay.prefab` 是当前包含活动、火焰、Rest 和交互模块的网络 Gameplay 组合。
+- Player 功能按 `FlameModule / ActivityModule / RestModule / InteractionModule` 放在可见层级中，具体玩法 Logic 不挂在 Player 上。
+- `PlayerCameraTargetSet` 只暴露语义镜头目标，不引用 Cinemachine。
+- 场景级 `ActivityCameraRigExecutor` 统一拥有 Marshmallow、Fishing、Stargazing 等 Cinemachine Profile 和 TargetGroup。
+- `PlayerActivityPresentationHost` 负责请求与执行器之间的唯一转发；远端观察者不能获得本机 UI、Camera 或 MovementLock。
 
 ### 火焰与世界
 
-- 玩家余火、篝火成长、SmallFire 放置/上限、世界树贡献和存档基础链路可运行。
-- 活动拟造通过 `IActivityFlameResource` / 玩家 `TryConsume` 消耗余火；余火不足不会部分扣除。
-- 火焰数值、篝火状态、世界进度与视觉表现分离，视觉只读取状态。
+- 玩家余火、篝火成长、SmallFire 放置/上限、FlameSource、世界树贡献和存档属于独立火焰/世界链路。
+- 活动只能通过 `IActivityFlameResource.TryConsume/Restore` 消耗或返还余火；余火不足不得部分扣除。
+- 火焰数值与视觉分离；材质表现通过 `MaterialPropertyBlock` 读取状态。
+- 稳定对象使用 `StableSceneId`，不使用 GameObject 名称、层级路径或 Instance ID 作为存档/网络身份。
 
-### 活动
-
-- Marshmallow：独立 Logic、Factory、Definition、Form、Visuals；支持拟造、翻面、食用、余火返还和表现请求。
-- Fishing：独立 Logic、Factory、Definition、Form、Visuals；支持拟造、抛竿、咬钩、收线和镜头请求。
-- Emote：Anywhere 活动，只发送动画 Cue，不依赖 Anchor 或坐姿。
-- Guitar：Anywhere 活动，固定 `guitar.key.01`～`guitar.key.21` 语义动作，独立 UI 和道具 Visuals 已建立，动画/音频资源可后补。
-- Stargazing：已迁移为独立 Activity；`StargazingActivityTrigger` 只负责把指定 RestSpot 的坐下事实组合为 `stargazing` Session，Logic 自己校验 `resting` 状态并处理生命周期。
-
-### 活动基础设施
-
-- `ActivityDefinition` / `ActivityDefinitionAsset`：玩法元数据。
-- `ActivityCatalogAsset`：全局活动目录。
-- `ActivityAnchorNode`：地点身份、活动引用和规则引用；优先使用 `StableSceneId.Value` 作为 AnchorId。
-- `ActivityRuntime` / `ActivitySystem`：定义查找、预检、Commit、Session、Action、Tick、End。
-- `PlayerActivityHost`：Player 侧唯一活动宿主，不保存具体玩法字段，也不动态创建玩法组件。
-- `ActivitySelectionForms`：当前为列表式选择面板，后续可替换为轮盘布局。
-- `PlayerActivityPresentationHost`：统一转发 UI、Camera、移动锁、朝向、动画和 VFX 请求。
-- 旧 `World.ActivityAnchor`、旧 Offer 类型、旧 Ritual Panel 和已迁移的玩法 Interaction 已删除。
-
-## 3. 当前核心逻辑链路
+## 3. 当前运行链路
 
 ```text
-输入 / 活动 UI
-    -> GameEventBus: ActivitySelectionRequested
+活动轮盘 / 活动 UI / 输入
+    -> GameEventBus: ActivitySelectionRequested / ActivityActionRequested
     -> PlayerActivityHost
     -> ActivityRuntime / ActivitySystem
-    -> Catalog + Anchor + Rule Providers + Player State
+    -> Definition + Anchor + Rules + PlayerState + Flame
     -> Preflight -> Prepare -> Commit
     -> ActivitySession
-    -> PresentationHost 打开活动 UI / Camera / Player 能力
-
-活动 UI / 独立输入
-    -> ActivityActionRequested
-    -> PlayerActivityHost
-    -> 当前 Session 消费语义动作
-    -> ActivityInteractionOccurred
-    -> Logic 状态变化 -> Visuals / UI / 动画 / 音频
-
-退出、状态失效或权威拒绝
-    -> ActivitySessionEnded
-    -> PresentationHost 对称释放表现请求
+    -> ActivityStateChanged / InteractionOccurred / SessionEnded
+    -> Form / Visuals / PlayerActivityPresentationHost
 ```
 
-火焰链路独立运行：
+```text
+Activity Presentation Request
+    -> PlayerActivityPresentationHost
+    -> UIManager / ActivityCameraRigExecutor / PlayerAnimationController
+    -> UI、相机、移动锁、朝向、动画或 VFX
+```
 
 ```text
 Player / Campfire / Activity
-    -> FlameResourceController 或 IActivityFlameResource
-    -> FlameStateChanged
-    -> Visuals / UI / Save / Network
+    -> FlameResourceController 或 Host 世界命令
+    -> Flame / Campfire / SmallFire / WorldTree 权威状态
+    -> Visuals / HUD / Save / Network Snapshot
 ```
 
-## 4. 当前代码分层
+所有 Session 结束都必须对称关闭 UI、退出 Activity Camera、释放活动拥有的 Player 请求并发布一次结束事实。
 
-| 层 | 主要入口 | 评价 |
+## 4. 内容能力与验收状态
+
+| 内容 | 当前实现 | 验收状态 |
 |---|---|---|
-| Activity Domain | `ActivitySystem`、`ActivityRuntime`、`ActivitySession`、`ActivityRuleResolver` | 纯 C#，可测试，已形成稳定核心 |
-| Activity Composition | `DefinitionAsset`、`CatalogAsset`、`AnchorNode`、Logic Registry | 新增活动和地点组合路径清晰 |
-| Player Boundary | `PlayerActivityHost`、`PlayerActivityPresentationHost` | 活动与 Player/UI/Camera 的边界明确 |
-| Global Services | `GameInstanceSubsystem`、`GameEventBus` | 可定位核心服务，跨模块事件统一 |
-| Flame/World | `FlameResourceController`、`Campfire`、`SmallFire`、`WorldTreeContribution`、Save | 独立于活动，但仍需网络权威适配 |
-| Rest 基础层 | `RestInteraction`、`RestSpot` | 只负责坐下/起身和通用休息表现；具体活动通过地点触发器组合 |
-| Input/UI | `FirePlayMobileInputRouter`、各 Activity Form、SUIFW UIManager | 活动 UI 已分离，轮盘尚为列表选择 |
+| 火焰资源与单机世界循环 | 余火、篝火、SmallFire、FlameSource、世界树、存档 | 重构前后核心单机功能已多轮人工验收；最新网络权威版本暂不作为当前验收门槛 |
+| 活动轮盘 | 径向布局；打开期间每 `0.15s` 刷新最近 Anchor；Anywhere 与 Anchor 候选并存；真实开始结果回执 | 新逻辑与透明简约样式待本轮 Play Mode 验收 |
+| Emote | Anywhere；独立四项表情 UI；只发送 `expression.*` Cue；不锁移动 | 待本轮 Play Mode 验收 |
+| Marshmallow | 独立拟造、火候指针、随机亮区、两次翻面、品质、食用与余火返还 | 纯逻辑探针通过；新版时机 UI 待 Play Mode 验收 |
+| Fishing | 独立拟造、抛竿、咬钩、提竿、收/放线、张力与捕获进度 | 纯逻辑探针通过；新版搏鱼 UI 待 Play Mode 验收 |
+| Guitar | Anywhere；独立 21 键 UI；PC 三排键盘；Android 触控；可替换程序化拨弦占位音 | 待本轮 Play Mode 验收 |
+| Stargazing | RestSpot 组合出的共享休息氛围；观星相机、伙伴 TargetGroup 与起身退出 | 既有休息/相机恢复已验收；明确不增加计分、胜负或独立小游戏 UI |
 
-### Player Core Services 收口
+### Stargazing 产品边界
 
-- `LocalPlayerContext` 仍是 Player 通用服务的组合入口，但不再动态 `AddComponent`。
-- `Player.prefab` 已显式挂载并绑定 `PlayerSharedStateAdapter`、`PlayerExpressionController`、`PlayerProximityEffects`、`WorldCommandExecutor` 和 `InteractionRouter`。
-- 缺少任一核心服务时，启动会明确报错并将 `CoreServicesReady` 置为 false，而不是静默生成组件。
-- `InteractionRouter` 在显式服务初始化完成后重新绑定输入事件，避免组件 Awake 顺序导致输入丢失。
-- `LocalPlayerContext.IsLocalPlayer` 与 `PlayerActivityHost.IsLocalPlayer` 明确本地/远端边界；远端对象不会覆盖 `Current`/`Local`，也不会注册本地输入路由或世界命令执行器。
+Stargazing 是“一起休息、看天空”的放松方式，不是小玩法。它可以使用轻量 Activity Session 管理：
 
-## 5. 客观架构评估
+- `resting` 前提；
+- 参与者事实；
+- 观星 Camera Profile；
+- 伙伴 TargetGroup；
+- 起身后的对称退出。
 
-### 优点
+它不拥有星图记忆、操作循环、计分、奖励或专属玩法面板。
 
-1. **活动扩展路径正确**：新增玩法主要增加 `Definition + Logic + Factory + Form + Visuals`，不需要修改棉花糖、钓鱼或通用 Player Router。
-2. **组合能力足够**：同一活动可挂到多个 Anchor；同一 Anchor 可提供多个活动；是否坐下、是否飞行、是否游泳由规则提供者决定，而不是写死在活动定义中。
-3. **表现边界清楚**：活动只发 UI/Camera/Player 请求，具体执行在 Player 侧；因此补动画、特效、音频通常只改对应活动的 Visuals 或新增执行器。
-4. **资源域独立**：余火、篝火和世界树不被某个活动类型污染，拟造机制也通过接口复用。
-5. **联机切入点已经存在**：Host 已发布带稳定 ID、Action、Payload、Revision 的 Started/Interaction/Ended 事实事件；请求 DTO、事实 DTO 和 `IActivityAuthority` 已落地，未来可序列化而不传 Unity 引用。
-6. **旧兼容层已明显收口**：旧 ActivityAnchor、旧 Offer 和通用 Ritual 面板已经移除，新增活动不再依赖历史入口。
+## 5. 本轮新增但尚待人工验收
 
-### 目前的不足与风险
+### 活动轮盘视觉
 
-1. **实时联机还没有权威执行链**：现在的 `PlayerActivityHost` 是本地宿主，事实事件是本地提交后的通知；没有 Network SDK、Host DTO、请求确认、远端 Session 和远端表现回放。因此“可扩展到联机”成立，但“已经联机就绪”不成立。
-2. **规则框架比实际接线更完整**：`ActivityRuleResolver` 支持优先级和 Host 权威，但当前 Demo 的 Player 状态规则、目标规则和 Anchor 规则还没有形成完整的统一注册/刷新管线。下一阶段必须先建立权威规则输入，再做多人活动。
-3. **Player 仍有多个通用 MonoBehaviour**：动态创建已经移除，依赖现在能在 Prefab 上看见并验收；本地/远端所有权也已分开，但输入、世界命令、表达和邻近效果仍是多个组件，未来可进一步合并为单一 Player Service Host。当前风险已从“隐藏创建”降为“组件边界较多”。
-4. **全局服务定位器有初始化风险**：`GameInstanceSubsystem.GetOrCreate` 很方便，但可能掩盖注册顺序错误；EventBus 的订阅/取消订阅也应减少“未订阅即警告”的噪声。联机后必须在启动阶段显式注册 Host、Transport 和权限服务。
-5. **Unity 工程边界仍偏粗**：当前没有按 Core、Activity、World、Network 拆分 asmdef，主要代码仍编译在 `Assembly-CSharp`；短期开发快，长期会降低编译隔离和依赖约束。
-6. **UI 和 Camera 仍有字符串/配置约定**：UIManager 窗体键和 Camera Profile 使用稳定字符串，能用但缺少编译期检查；后续应把请求结果、缺失配置和生命周期日志标准化。
-7. **选择表现尚未完成产品形态**：当前活动选择是列表式 `ActivitySelectionForms`，移动中动态刷新和真正的活动轮盘仍属于 UI 工作，不需要改 Activity Domain。
+- `ActivitySelectionForms.prefab` 使用半透明深蓝灰色切片面板，不依赖背景贴图。
+- 轮盘信息层级由标题、活动按钮与关闭按钮构成；视觉重点来自透明度、留白和按钮状态，不叠加插画纹理。
+- 当前样式可直接适配 PC 与 Android，不增加贴图导入、缩放和压缩维护成本。
 
-### 结论评分
+### Marshmallow 时机玩法
 
-| 维度 | 当前评价 | 结论 |
-|---|---:|---|
-| 新活动接入 | 8/10 | 适合快速增加独立小玩法 |
-| 地点组合与规则 | 7/10 | 契约清晰，实际规则注册仍需补全 |
-| UI/Camera/动画扩展 | 7.5/10 | 边界正确，主要受配置和执行器完整度影响 |
-| Player 结构 | 6.5/10 | 动态创建已移除，但通用服务组件仍可进一步合并 |
-| 实时联机准备度 | 4/10 | 事实事件已准备，权威 Transport 尚未接入 |
-| 长期维护性 | 6.5/10 | 方向正确，但需补 asmdef、显式依赖和网络边界 |
+- `Needle / TargetCenter / PerfectZone` 保存在 Marshmallow 自有快照中。
+- UI 显示火候轨道、亮区和指针；翻面时按命中情况记录品质。
+- 纯逻辑验证：Perfect 路径正确扣除/返还余火；Scorched 路径不错误返还。
 
-**总体判断：** 当前项目已经从“玩法脚本堆叠”进入“可组合活动核心”的阶段，适合继续扩展本地活动；它还不是可以直接开多人测试的代码框架。Player 的隐式动态服务已经收口，接入联机前最重要的工作转为 Host 权威、规则输入、DTO/Transport 和远端表现边界。
+### Fishing 搏鱼玩法
 
-## 6. 联机前的唯一待办
+- 咬钩后进入 Fighting；收线提高进度与张力，放线降低张力并损失少量进度。
+- 张力 100% 断线，捕获进度 100% 才结算鱼和余火返还。
+- UI 显示捕获进度、鱼线张力和独立放线按钮。
+- 两条显示条使用显式内置 UI Sprite 与 `Filled/Horizontal` 模式；`fillAmount` 可正确驱动画面宽度。
+- 纯逻辑验证：交替收放可以捕获；连续猛收会断线且不错误结算。
 
-1. 选择并安装实时网络 Transport/SDK；
-2. 将 `ActivitySelectionRequestDto`、`ActivityActionRequestDto` 接入 Transport 的请求消息；
-3. 使用 `IActivityAuthority` 调用 `PlayerActivityHost` 的权威入口；本地 EventBus 和未来网络请求已共用同一条执行路径。
-4. Host 执行统一 Preflight/Commit，向客户端广播 `ActivityFactDto`（Started/Interaction/Ended）；
-5. 建立远端 Player 的 Activity Presentation，不在远端复制本地 Logic；
-6. 为共享 Anchor 状态和 Targeted Interaction 增加明确的 Group/Target 状态；
-7. 联机稳定后，再把需要持久化的实时事实接入异步保存。
+### 世界树贡献链
 
-## 7. 验证基线
+- 世界交互扫描与 Host 权威距离校验现在都以目标 Collider 表面为准，不再用大型物体的 Transform 原点否决合法交互。
+- Host 本地命令被拒绝时会输出意图、目标 Stable ID 与具体原因，避免世界动作静默失效。
+- 大树贡献仍由 `WorldTreeContribution` 原子扣除余火、记录玩家光点并推进世界树阶段；本轮只修复网络 Player 的距离门禁。
 
-- Unity Play Mode：当前 Demo、活动 UI、活动表现、Rest/观星、篝火和火焰资源已由用户验收通过。
-- 命令行编译：`dotnet build Assembly-CSharp.csproj --nologo --no-restore`，0 错误；仅有 `CampfirePersistence` 的 2 个既有 API 过时警告。
-- Unity Prefab 空序列化字段造成的 `git diff --check` 尾随空白属于 YAML 格式噪声，不是逻辑错误。
+### Guitar 演奏
 
-## 8. 本次联机前切片：请求与事实 DTO
+- PC：`QWERTYU / ASDFGHJ / ZXCVBNM` 对应 21 个语义音位。
+- 鼠标与 Android 继续使用同一组 21 个 UI Button。
+- 未配置 AudioClip 时使用 Inspector 可关闭的程序化拨弦声；正式 Clip 自动优先。
+- 两种完整玩法 Player prefab 均显式绑定 AudioSource，不运行时添加组件。
 
-- `ActivitySelectionRequestDto` 和 `ActivityActionRequestDto` 只携带 Player、Anchor、Activity、Action、Payload 与 Session revision 等稳定数据。
-- `IActivityAuthority` 是网络适配器的唯一活动入口；`PlayerActivityHost` 同时实现本地 EventBus 与未来网络请求。
-- 动作必须携带当前 Session revision；旧 Session、错误 Player、错误 Anchor 或错误 Activity 会在进入 Logic 前拒绝。
-- `ActivityFactDto` 可由 Started/Interaction/Ended 事实事件映射得到，后续可直接序列化为 SDK 消息。
-- 本切片没有引入 Network SDK、Transport 或远端 Logic；生命周期门禁完成后，下一步才是选定 SDK 并实现传输适配器。
+## 6. 当前网络事实（暂缓专项验收）
 
-## 9. Player 收口门禁
+- NGO/UTP 已导入；DemoScene 包含 `NetworkManager + UnityTransport + FirePlayNetworkBootstrap`。
+- `PlayerNetworkGameplay.prefab` 是当前网络 Player；本地/远端输入、UI、相机和活动宿主边界已分开。
+- 活动请求、事实 DTO、Host 权威入口、远端状态镜像与 late-join 快照代码已经存在。
+- SmallFire、Campfire、FlameSource 世界状态和 WorldTree 已有显式网络适配器与稳定 ID 链路。
+- Android/Windows Client 可通过连接窗体或命令行配置地址与端口；协议准入与最大人数配置已存在。
+- `NetworkConnectionForms.prefab` 的截断损坏已修复。
+- **以上只代表代码与静态配置存在；用户已明确暂不验收具体联机功能，因此不得宣称联机完成。**
 
-- 已完成 `Player.prefab` 根组件审计：当前根节点 18 个 Unity 组件，其中 15 个是自定义脚本；`Modules/FlameModule` 子节点挂载火焰逻辑、火焰表现和音景桥接，`Modules/ActivityModule` 子节点挂载活动服务，`Modules/InteractionModule` 子节点挂载扫描与输入路由。问题是职责混合，不是单纯数量问题。
-- 已确认 `LocalPlayerContext`、5 个通用服务、`PlayerInteraction`/`InteractionRouter` 重复入口和 Player 根上的 `FishingActivityVisuals` 是收口重点。
-- 已建立非 `MonoBehaviour` 的 `PlayerCoreHost` 组合宿主：集中服务依赖、缺失配置诊断和初始化顺序，暂不删除现有组件。
-- `PlayerSharedStateService` 已迁入 `PlayerCoreHost`，`PlayerSharedStateAdapter` 暂作为兼容外观保留；状态 Tick、远端快照和 Changed 通知均保持可用。
-- 收口目标已调整为“基础移动 Player + 可插拔 FlameModule + 可插拔 ActivityModule”；不能继续把火焰、活动和表情服务当作 Player Core 的必需组件。
-- `IPlayerModule`、`PlayerModuleContext` 和可选模块查询已加入 `PlayerCoreHost`；缺少可选服务不会阻止基础 Player Core 就绪。
-- 基础输入现在只要求 `Move`、`Look`；`PlayerMovement` 通过 `IPlayerSprintPolicy` 接入可选余火冲刺消耗，Player 没有 FlameModule 时仍可运行基础移动。
-- 已新增 `Assets/FirePlay/Runtime/Prefab/PlayerCoreOnly.prefab`：只包含 CharacterController、基础输入、移动、视角和 LocalPlayerContext，不挂火焰、活动、交互、Rest 或表现服务；移动无 FlameModule 时保留无限冲刺作为基础能力。
-- 已新增 `PlayerCameraTargetSet` 与 `IPlayerCameraTargetProvider`：Player 只暴露 Follow、Frame、LookAt、InputPivot 四类语义目标，不引用 Cinemachine；完整 Player 和 Core-only prefab 均已配置。
-- `PlayerModuleContext.CameraTargets` 可供 Flame/Activity/Presentation 模块读取通用目标；活动专属相机仍由 CameraSystem/ActivityCameraRig 提供额外 TargetGroup、FollowAnchor 和 LookTarget。
-- `PlayerCoreOnly.prefab` 已通过静态 Prefab 结构检查和命令行编译；仍需在 Unity Play Mode 中确认移动、视角、重力和缺少可选模块时无启动错误。
-- 已新增场景级 `ActivityCameraRig`（`ActivityCameraRigExecutor`），并将 DemoScene 的 `PlayerActivityPresentationHost` 改为请求该执行器；烤棉花、钓鱼和观星的 Activity profile 统一由此执行器拥有。
-- `ActivityCameraRig` 当前复用已有 Cinemachine 相机、TargetGroup 和稳定 profile ID，行为不变；仍需在 Unity Play Mode 验证烤棉花和钓鱼的进入、退出、镜头优先级与目标组清理。
-- `StargazingActivityLogic`、`StargazingActivityLogicFactory`、`StargazingActivityTrigger` 已接入全局活动注册表；`RestPot` 显式配置 `ActivityAnchorNode`、观星定义和天空/伙伴相机目标。
-- 观星不再重复申请 MovementLock；RestInteraction 在 Activity 结束回调完成后才释放基础坐下锁，避免起身后活动锁覆盖移动恢复。
-- `RestPot` 的伙伴目标已在 prefab 中保留显式序列化槽位，DemoScene 只将该槽位覆写为 `AnotherPlayer`，由 `ActivityCameraRigExecutor` 动态加入/移除 `CM_Stargazing_TargetGroup`。
-- 场景相机审计已完成：`Cameras` 下有 `Main Camera + CinemachineBrain`、`CM_Explore`、`CM_Marshmallow`、`CM_Fishing`、`CM_Stargazing`、三个 TargetGroup 和 `ActivityCameraRig`；它通过 Player 场景覆盖注入 `PlayerActivityPresentationHost`，再按 Activity 的 `CameraProfileId` 驱动这些相机。
-- 已清理 `RitualCameraDirector`、`RestLookTargetRitual` 和 `StargazingRitual` 的旧源码与 DemoScene 对象；`ActivityCameraRig` 已移动到 `Cameras` 下，`CM_Stargazing` 不再有第二个控制者。
-- 旧禁用 `Camera` 根对象仍存在；它不参与运行，但会增加场景编辑噪声，后续可在单独的场景清理切片中删除。
-- 已新增 Player 子节点 `Modules/FlameModule` 与 `FlameModule` 组件，注册到 `PlayerCoreHost`；模块承接 `IPlayerSprintPolicy`，并挂载 `CampfirePlacement`、`CampfireUpgradeController` 作为火焰世界操作入口。
-- `PlayerMovement` 的冲刺策略引用已从 `FlameResourceController` 改为 `FlameModule`，基础 Player 不挂模块时仍可自由冲刺；火焰资源扣除路径未改变。
-- `LocalPlayerContext`、`PlayerInteraction`、`WorldCommandExecutor` 和放置 UI 已支持从 Player 子树解析火焰世界操作；`CampfirePlacement` 的输入归属改为按 Player 根节点判断，移动层级不改变事件语义。
-- `FlameResourceController`、`PlayerFlameController` 已迁入 `Modules/FlameModule`；交互、休息、邻近效果、火焰表现和音景桥接均改为从 Player 子树解析，余火状态与存档/活动接口保持不变。
-- `FlameResourceVisualBridge`、`FlameContractionController`、`PlayerAtmosphereBridge` 已迁入 FlameModule；Atmosphere 对 Rest 只读，不再要求与 Rest 组件同层。ActivityModule 已建立，`FishingActivityVisuals` 不再占用 Player 根节点。
-- `PlayerInteraction` 现在只负责扫描、目标排序和提示；余火/篝火字段已移除并改从 FlameModule 读取。`InteractionRouter` 是唯一 RawInput -> PlayerIntentRequested 入口，二者不再共享世界执行职责。
-- `InteractionModule` 已建立并承载 `PlayerInteraction`、`InteractionRouter`；子节点组件统一通过父级 `LocalPlayerContext` 初始化，本地 Router 仍由 `PlayerCoreHost` 显式绑定输入。
-- 生命周期门禁已落地：远端 `PlayerExpressionController` 不订阅本地 EventBus；远端 `PlayerActivityHost` 不创建本地 ActivityRuntime、不 Tick Logic，也不会消费余火或发布本地 Activity 事实；本地路径保持不变。
-- 观星迁移后，实时联机进入 SDK 包编译探针阶段；SDK 只负责连接、生成 Player 和传输请求/事实，Activity/Flame 的权威执行仍留在现有 Host/Module 边界内。
+## 7. 已知风险与明确不做
+
+1. 最新轮盘、Emote、Marshmallow、Fishing、Guitar 尚缺本轮 Unity Play Mode 人工验收。
+2. 正式角色模型、Animator、活动动作、粒子和大部分正式音频尚未接入；占位表现不能当成最终美术。
+3. 活动轮盘透明度与按钮对比度仍需根据实际 Game View 验收；不再使用背景贴图。
+4. “烤好的棉花糖交给伙伴”不能只增加一个按钮：当前产物没有跨 Session 的稳定持有状态，Target 又在 Session 开始时确定。实现前需选择完整的“可携带活动产物”或“动作级权威目标”契约，禁止用 payload 绕过目标校验。
+5. Stargazing 不扩成小游戏；网络异常恢复、重连和非阻塞优化继续后置。
+6. 旧 `ColorSource / RestorableNode` 仍是早期实验视觉链路，不继续扩展颜色解谜。
+7. 其他操作手册中仍可能残留迁移前措辞；以活动契约和本文为准，发现时按当前事实修正，不建立兼容层。
+8. 世界树 Collider 距离门禁已修复，但仍需 Play Mode 验收贡献按钮、余火扣除、个人光点和阶段切换。
+
+## 8. 下一步顺序
+
+### 当前唯一验收批次
+
+1. 活动轮盘：透明度、中文可读性、按钮点击、移动中 Anchor 候选增减。
+2. Emote：四个 Cue 可重复触发，移动不锁，关闭正常。
+3. Marshmallow：拟造、亮区计时、Perfect/Toasted/Scorched、食用返还、退出恢复。
+4. Fishing：拟造、抛竿、提竿、断线、交替收放捕获、退出恢复。
+5. Guitar：21 个 UI 键与 PC 键盘均可演奏、有占位音、道具显隐和移动恢复正确。
+6. 世界树：靠近大树贡献一次，确认扣除 10 余火、按钮隐藏/提示已贡献、个人光点出现且树阶段推进。
+
+### 该批次通过后
+
+1. 只修复验收暴露的问题并完成参数调优；
+2. 为已有活动补正式 UI 图标、过渡动画、音效、VFX 和角色动作资源；
+3. 设计可复用的社交产物/目标交互契约，再实现棉花糖赠送等伙伴互动；
+4. 游戏性稳定后恢复 Host/Client、Windows/Android 专项联机验收；
+5. 最后选择需要异步持久化的实时事实。
+
+## 9. 当前验证证据
+
+- `dotnet build Assembly-CSharp.csproj --nologo --no-restore`：0 错误、0 警告。
+- Marshmallow 与 Fishing 的纯逻辑探针已通过；一次性探针和 Prefab 生成器已删除。
+- ActivitySelection、Fishing、Marshmallow、Emote、NetworkConnection Prefab 已做本地 fileID/引用静态检查。
+- 静态检查不能代替 Unity Play Mode；第 8 节验收完成前，本轮内容保持“待验收”。

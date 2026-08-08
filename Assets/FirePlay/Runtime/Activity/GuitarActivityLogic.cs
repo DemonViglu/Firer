@@ -7,7 +7,8 @@ namespace DemonViglu.FirePlay.Activity
     /// semantic action, so a future guitar UI can bind buttons, keyboard
     /// input or network messages without changing the activity core.
     /// </summary>
-    public sealed class GuitarActivityLogic : IActivityLogic, IActivityPresentationLifecycle
+    public sealed class GuitarActivityLogic : IActivityLogic, IActivityPresentationLifecycle,
+        IActivityNetworkStateProvider
     {
         public const string ActivityId = "guitar";
         public const int KeyCount = 21;
@@ -15,6 +16,7 @@ namespace DemonViglu.FirePlay.Activity
 
         public int LastKeyIndex { get; private set; }
         public int PlayedKeyCount { get; private set; }
+        public uint NetworkStateRevision { get; private set; }
 
         public ActivityStartCheck CheckStart(IActivityContext context)
         {
@@ -47,6 +49,7 @@ namespace DemonViglu.FirePlay.Activity
 
             LastKeyIndex = keyIndex;
             PlayedKeyCount++;
+            MarkNetworkStateChanged();
             context.Presentation?.RequestPlayer(new ActivityPlayerRequest(
                 ActivityPlayerRequestKind.AnimationCue,
                 context.PlayerId,
@@ -119,6 +122,9 @@ namespace DemonViglu.FirePlay.Activity
             ResetState();
         }
 
+        public string CaptureNetworkState() =>
+            new GuitarActivityStateSnapshot(LastKeyIndex, PlayedKeyCount).Serialize();
+
         public static string GetKeyActionId(int keyIndex)
         {
             if (keyIndex < 1 || keyIndex > KeyCount)
@@ -143,6 +149,50 @@ namespace DemonViglu.FirePlay.Activity
         {
             LastKeyIndex = 0;
             PlayedKeyCount = 0;
+            MarkNetworkStateChanged();
+        }
+
+        private void MarkNetworkStateChanged()
+        {
+            NetworkStateRevision = NetworkStateRevision == uint.MaxValue
+                ? 1u
+                : NetworkStateRevision + 1u;
+        }
+    }
+
+    /// <summary>Guitar-owned wire state; the network layer treats it as opaque.</summary>
+    public readonly struct GuitarActivityStateSnapshot
+    {
+        public int LastKeyIndex { get; }
+        public int PlayedKeyCount { get; }
+
+        public GuitarActivityStateSnapshot(int lastKeyIndex, int playedKeyCount)
+        {
+            LastKeyIndex = lastKeyIndex;
+            PlayedKeyCount = Math.Max(0, playedKeyCount);
+        }
+
+        public string Serialize() => $"{LastKeyIndex}|{PlayedKeyCount}";
+
+        public static bool TryParse(string payload, out GuitarActivityStateSnapshot snapshot)
+        {
+            snapshot = default;
+            if (string.IsNullOrWhiteSpace(payload)) return false;
+            var parts = payload.Split('|');
+            if (parts.Length != 2
+                || !int.TryParse(parts[0], out var lastKeyIndex)
+                || !int.TryParse(parts[1], out var playedKeyCount)
+                || lastKeyIndex < 0
+                || lastKeyIndex > GuitarActivityLogic.KeyCount
+                || playedKeyCount < 0
+                || (playedKeyCount == 0 && lastKeyIndex != 0)
+                || (playedKeyCount > 0 && lastKeyIndex == 0))
+            {
+                return false;
+            }
+
+            snapshot = new GuitarActivityStateSnapshot(lastKeyIndex, playedKeyCount);
+            return true;
         }
     }
 }

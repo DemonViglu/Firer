@@ -36,5 +36,11 @@
 ,{"Key":"GuitarActivityForms",
 "Value":"SUIFW/UIPrefabs/GuitarActivityForms"}
 
+,{"Key":"EmoteActivityForms",
+"Value":"SUIFW/UIPrefabs/EmoteActivityForms"}
+
+,{"Key":"NetworkConnectionForms",
+"Value":"SUIFW/UIPrefabs/NetworkConnectionForms"}
+
 ]
 }

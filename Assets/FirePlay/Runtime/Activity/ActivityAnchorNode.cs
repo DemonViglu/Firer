@@ -15,6 +15,7 @@ namespace DemonViglu.FirePlay.Activity
         private static readonly List<ActivityAnchorNode> ActiveNodes = new();
 
         [SerializeField] private string _anchorId;
+        [SerializeField] private string _displayName;
         [SerializeField] private string _regionId;
         [SerializeField] private string[] _tags = Array.Empty<string>();
         [SerializeField] private ActivityDefinitionAsset[] _activities = Array.Empty<ActivityDefinitionAsset>();
@@ -34,6 +35,9 @@ namespace DemonViglu.FirePlay.Activity
                 return _resolvedAnchorId;
             }
         }
+        public string DisplayName => string.IsNullOrWhiteSpace(_displayName)
+            ? "附近活动"
+            : _displayName;
         public string RegionId => _regionId;
         public IReadOnlyList<ActivityDefinitionAsset> Activities => _activities ?? Array.Empty<ActivityDefinitionAsset>();
         public IActivityLocationView Location
@@ -49,6 +53,7 @@ namespace DemonViglu.FirePlay.Activity
         private void Awake()
         {
             _stableSceneId = GetComponent<StableSceneId>();
+            _displayName = _displayName?.Trim() ?? string.Empty;
             _regionId = _regionId?.Trim() ?? string.Empty;
             RefreshIdentity();
             RefreshRuleProviders();

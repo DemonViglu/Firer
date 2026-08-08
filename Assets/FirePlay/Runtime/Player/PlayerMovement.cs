@@ -25,9 +25,11 @@ namespace DemonViglu.FirePlay.Player
         private FirePlayPlayerInput _input;
         private IPlayerSprintPolicy _sprintPolicy;
         private float _verticalVelocity;
+        private bool _localControl = true;
 
         public bool IsSprinting { get; private set; }
         public bool MovementLocked { get; private set; }
+        public bool HasLocalControl => _localControl;
 
         private void Awake()
         {
@@ -50,6 +52,12 @@ namespace DemonViglu.FirePlay.Player
 
         private void Update()
         {
+            if (!_localControl)
+            {
+                IsSprinting = false;
+                return;
+            }
+
             if (_cameraTransform == null)
             {
                 return;
@@ -82,6 +90,13 @@ namespace DemonViglu.FirePlay.Player
             {
                 IsSprinting = false;
             }
+        }
+
+        public void SetLocalControl(bool enabled)
+        {
+            _localControl = enabled;
+            if (!enabled)
+                IsSprinting = false;
         }
 
         public void BindSprintPolicy(MonoBehaviour behaviour)

@@ -34,6 +34,8 @@ FirePlay 的核心由三条相互协作但不混淆的链路组成：
 - `Anchor`：需要地点，例如篝火旁的烤棉花、池边钓鱼；
 - `Targeted`：需要可用目标，例如把产物交给另一名玩家。
 
+`Targeted` 必须由调用方提交明确的稳定 `TargetId`，不能用“最近玩家”或“同一 Anchor 的其他人”隐式猜测目标。Host 只接受当前目标目录中仍可用、不是发起者自身且满足 Target Rule 的目标；目标失效时 Session 以 `TargetUnavailable` 结束。目标选择 UI 只能读取稳定目标 ID，不直接遍历 NetworkManager、Player GameObject 或场景层级。
+
 “必须坐下”“不能飞行”“游泳时禁止”等不是定义字段，而是规则提供者读取玩家状态、地点状态和目标状态后给出的结果。
 
 ## 3. 活动与地点的组合
@@ -111,6 +113,10 @@ Requested
 - **Ended**：结束幂等，事实事件只发布一次。
 
 默认每名玩家拥有独立 Session。同一地点的多人活动只有在定义声明 `SharedGroup` 或 `TargetedInteraction` 时才共享局部状态；同一 Anchor 不会自动合并所有玩家。
+
+- `SharedGroup`：成员键固定为 `ActivityId + AnchorId`（Anywhere 活动的 AnchorId 为空）；
+- `TargetedInteraction`：参与者固定为 Owner 与显式 TargetId，不与同地点其他玩家自动合并；
+- `Independent`：`Participants` 永远只包含 Session Owner。
 
 ## 6. 运行时逻辑链路
 

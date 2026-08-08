@@ -10,12 +10,47 @@ namespace DemonViglu.FirePlay.Activity
         public string PlayerId { get; }
         public string AnchorId { get; }
         public string ActivityId { get; }
+        public string TargetId { get; }
 
-        public ActivitySelectionRequested(string playerId, string anchorId, string activityId)
+        public ActivitySelectionRequested(
+            string playerId,
+            string anchorId,
+            string activityId,
+            string targetId = null)
         {
             PlayerId = playerId ?? string.Empty;
             AnchorId = anchorId ?? string.Empty;
             ActivityId = activityId ?? string.Empty;
+            TargetId = targetId ?? string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Local request resolution returned by the owning PlayerActivityHost.
+    /// Selection UI consumes this instead of guessing from the active session.
+    /// A network Client may report that its request was queued; Host facts remain
+    /// the authority for the eventual activity session.
+    /// </summary>
+    public sealed class ActivitySelectionResolved : IGameEvent
+    {
+        public string PlayerId { get; }
+        public string AnchorId { get; }
+        public string ActivityId { get; }
+        public bool Accepted { get; }
+        public string Reason { get; }
+
+        public ActivitySelectionResolved(
+            string playerId,
+            string anchorId,
+            string activityId,
+            bool accepted,
+            string reason)
+        {
+            PlayerId = playerId ?? string.Empty;
+            AnchorId = anchorId ?? string.Empty;
+            ActivityId = activityId ?? string.Empty;
+            Accepted = accepted;
+            Reason = reason ?? string.Empty;
         }
     }
 
@@ -53,6 +88,7 @@ namespace DemonViglu.FirePlay.Activity
         public string PlayerId { get; }
         public string AnchorId { get; }
         public string ActivityId { get; }
+        public string TargetId { get; }
         public ActivityParticipationMode ParticipationMode { get; }
         public uint SessionRevision { get; }
 
@@ -61,11 +97,13 @@ namespace DemonViglu.FirePlay.Activity
             string anchorId,
             string activityId,
             ActivityParticipationMode participationMode,
-            uint sessionRevision)
+            uint sessionRevision,
+            string targetId = null)
         {
             PlayerId = playerId ?? string.Empty;
             AnchorId = anchorId ?? string.Empty;
             ActivityId = activityId ?? string.Empty;
+            TargetId = targetId ?? string.Empty;
             ParticipationMode = participationMode;
             SessionRevision = sessionRevision;
         }
@@ -139,6 +177,50 @@ namespace DemonViglu.FirePlay.Activity
     }
 
     /// <summary>
+    /// Opaque activity-owned state snapshot. Generic hosts and transports do
+    /// not parse Payload; the matching activity UI/visual adapter owns it.
+    /// </summary>
+    public sealed class ActivityStateChanged : IGameEvent
+    {
+        public string PlayerId { get; }
+        public string AnchorId { get; }
+        public string ActivityId { get; }
+        public uint SessionRevision { get; }
+        public uint StateRevision { get; }
+        public string Payload { get; }
+
+        public ActivityStateChanged(
+            string playerId,
+            string anchorId,
+            string activityId,
+            uint sessionRevision,
+            uint stateRevision,
+            string payload)
+        {
+            PlayerId = playerId ?? string.Empty;
+            AnchorId = anchorId ?? string.Empty;
+            ActivityId = activityId ?? string.Empty;
+            SessionRevision = sessionRevision;
+            StateRevision = stateRevision;
+            Payload = payload ?? string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Authority-confirmed semantic Player presentation request. It remains
+    /// transport-neutral and contains no Animator, VFX or movement component.
+    /// </summary>
+    public sealed class ActivityPlayerPresentationRequested : IGameEvent
+    {
+        public ActivityPlayerRequest Request { get; }
+
+        public ActivityPlayerPresentationRequested(ActivityPlayerRequest request)
+        {
+            Request = request;
+        }
+    }
+
+    /// <summary>
     /// Transport-neutral request sent to the activity authority. These DTOs
     /// contain only stable IDs and semantic payloads; they never contain
     /// Unity objects, ActivityLogic instances or Session references.
@@ -148,14 +230,20 @@ namespace DemonViglu.FirePlay.Activity
         public string PlayerId { get; }
         public string AnchorId { get; }
         public string ActivityId { get; }
+        public string TargetId { get; }
         public bool IsValid => !string.IsNullOrWhiteSpace(PlayerId)
             && !string.IsNullOrWhiteSpace(ActivityId);
 
-        public ActivitySelectionRequestDto(string playerId, string anchorId, string activityId)
+        public ActivitySelectionRequestDto(
+            string playerId,
+            string anchorId,
+            string activityId,
+            string targetId = null)
         {
             PlayerId = playerId?.Trim() ?? string.Empty;
             AnchorId = anchorId?.Trim() ?? string.Empty;
             ActivityId = activityId?.Trim() ?? string.Empty;
+            TargetId = targetId?.Trim() ?? string.Empty;
         }
     }
 
@@ -200,11 +288,23 @@ namespace DemonViglu.FirePlay.Activity
         ActivityActionResult HandleAction(ActivityActionRequestDto request);
     }
 
+    /// <summary>
+    /// Player-side request boundary implemented by the active transport.
+    /// A Host can complete a request synchronously; a Client only confirms
+    /// that the request was queued for authority and waits for replicated facts.
+    /// </summary>
+    public interface IActivityRequestTransport
+    {
+        ActivityStartResult RequestSelection(ActivitySelectionRequestDto request);
+        ActivityActionResult RequestAction(ActivityActionRequestDto request);
+    }
+
     public enum ActivityNetworkFactKind
     {
         SessionStarted,
         InteractionOccurred,
-        SessionEnded
+        SessionEnded,
+        StateChanged
     }
 
     /// <summary>
@@ -216,11 +316,13 @@ namespace DemonViglu.FirePlay.Activity
         public ActivityNetworkFactKind Kind { get; }
         public string PlayerId { get; }
         public string AnchorId { get; }
+        public string TargetId { get; }
         public string ActivityId { get; }
         public ActivityParticipationMode ParticipationMode { get; }
         public string ActionId { get; }
         public string Payload { get; }
         public uint SessionRevision { get; }
+        public uint StateRevision { get; }
         public bool EndsSession { get; }
         public ActivityEndReason EndReason { get; }
         public string Reason { get; }
@@ -229,11 +331,13 @@ namespace DemonViglu.FirePlay.Activity
             ActivityNetworkFactKind kind,
             string playerId,
             string anchorId,
+            string targetId,
             string activityId,
             ActivityParticipationMode participationMode,
             string actionId,
             string payload,
             uint sessionRevision,
+            uint stateRevision,
             bool endsSession,
             ActivityEndReason endReason,
             string reason)
@@ -241,11 +345,13 @@ namespace DemonViglu.FirePlay.Activity
             Kind = kind;
             PlayerId = playerId ?? string.Empty;
             AnchorId = anchorId ?? string.Empty;
+            TargetId = targetId ?? string.Empty;
             ActivityId = activityId ?? string.Empty;
             ParticipationMode = participationMode;
             ActionId = actionId ?? string.Empty;
             Payload = payload ?? string.Empty;
             SessionRevision = sessionRevision;
+            StateRevision = stateRevision;
             EndsSession = endsSession;
             EndReason = endReason;
             Reason = reason ?? string.Empty;
@@ -257,11 +363,13 @@ namespace DemonViglu.FirePlay.Activity
                 ActivityNetworkFactKind.SessionStarted,
                 fact.PlayerId,
                 fact.AnchorId,
+                fact.TargetId,
                 fact.ActivityId,
                 fact.ParticipationMode,
                 string.Empty,
                 string.Empty,
                 fact.SessionRevision,
+                0,
                 false,
                 ActivityEndReason.Requested,
                 string.Empty);
@@ -272,11 +380,13 @@ namespace DemonViglu.FirePlay.Activity
                 ActivityNetworkFactKind.InteractionOccurred,
                 fact.PlayerId,
                 fact.AnchorId,
+                string.Empty,
                 fact.ActivityId,
                 ActivityParticipationMode.Independent,
                 fact.ActionId,
                 fact.Payload,
                 fact.SessionRevision,
+                0,
                 fact.EndsSession,
                 fact.EndReason,
                 fact.Reason);
@@ -287,21 +397,73 @@ namespace DemonViglu.FirePlay.Activity
                 ActivityNetworkFactKind.SessionEnded,
                 fact.PlayerId,
                 fact.AnchorId,
+                string.Empty,
                 fact.ActivityId,
                 ActivityParticipationMode.Independent,
                 string.Empty,
                 string.Empty,
                 fact.SessionRevision,
+                0,
                 true,
                 fact.Reason,
                 string.Empty);
+
+        public static ActivityFactDto From(ActivityStateChanged fact) => fact == null
+            ? default
+            : new(
+                ActivityNetworkFactKind.StateChanged,
+                fact.PlayerId,
+                fact.AnchorId,
+                string.Empty,
+                fact.ActivityId,
+                ActivityParticipationMode.Independent,
+                string.Empty,
+                fact.Payload,
+                fact.SessionRevision,
+                fact.StateRevision,
+                false,
+                ActivityEndReason.Requested,
+                string.Empty);
+
+        /// <summary>
+        /// Rehydrates transport data without exposing a public mutable DTO.
+        /// The receiving Player still validates ownership and revision before
+        /// applying the fact to its local presentation mirror.
+        /// </summary>
+        public static ActivityFactDto FromTransport(
+            ActivityNetworkFactKind kind,
+            string playerId,
+            string anchorId,
+            string targetId,
+            string activityId,
+            ActivityParticipationMode participationMode,
+            string actionId,
+            string payload,
+            uint sessionRevision,
+            uint stateRevision,
+            bool endsSession,
+            ActivityEndReason endReason,
+            string reason) => new(
+                kind,
+                playerId,
+                anchorId,
+                targetId,
+                activityId,
+                participationMode,
+                actionId,
+                payload,
+                sessionRevision,
+                stateRevision,
+                endsSession,
+                endReason,
+                reason);
     }
 
     public static class ActivityNetworkMapper
     {
         public static ActivitySelectionRequestDto ToDto(ActivitySelectionRequested request) => request == null
             ? default
-            : new(request.PlayerId, request.AnchorId, request.ActivityId);
+            : new(request.PlayerId, request.AnchorId, request.ActivityId, request.TargetId);
 
         public static ActivityActionRequestDto ToDto(ActivityActionRequested request, uint sessionRevision) => request == null
             ? default

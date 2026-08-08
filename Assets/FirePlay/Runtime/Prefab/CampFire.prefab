@@ -329,8 +329,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1917531652596367429}
+  - component: {fileID: 7000000000000101}
   - component: {fileID: 8758424894588847466}
   - component: {fileID: 6920482071578527915}
+  - component: {fileID: 7000000000000102}
   - component: {fileID: 3161424325882539189}
   - component: {fileID: 8292225297649727681}
   - component: {fileID: 5305289997750256037}
@@ -360,6 +362,31 @@ Transform:
   - {fileID: 6747086765823153306}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7000000000000101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5893462792062315505}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  GlobalObjectIdHash: 1548723096
+  InScenePlacedSourceGlobalObjectIdHash: 0
+  DeferredDespawnTick: 0
+  Ownership: 0
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
 --- !u!114 &8758424894588847466
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -394,6 +421,21 @@ MonoBehaviour:
   _isRuntimeCreated: 0
   _isRetired: 0
   _sourceSmallFireId: 
+--- !u!114 &7000000000000102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5893462792062315505}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c7d9e1f2a4b46c8d0e2f4a6b8c0d135, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Network.FirePlayNetworkCampfire
+  _campfire: {fileID: 6920482071578527915}
+  _snapshotInterval: 0.2
+  _warmthEpsilon: 0.05
 --- !u!114 &3161424325882539189
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -463,6 +505,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.ActivityAnchorNode
   _anchorId: 
+  _displayName: 篝火旁
   _regionId: 
   _tags: []
   _activities:

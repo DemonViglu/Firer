@@ -25,11 +25,12 @@ namespace DemonViglu.FirePlay.Player
         private IWorldObjectRegistry _registry;
         private readonly WorldCommandRateLimiter _rateLimiter = new();
         private const double DuplicateCommandCooldownSeconds = 0.12d;
+        private bool _localExecutionEnabled = true;
 
         public void Initialize(LocalPlayerContext context)
         {
             _context = context;
-            if (_context != null && !_context.IsLocalPlayer) return;
+            if (!_localExecutionEnabled || (_context != null && !_context.IsLocalPlayer)) return;
 
             _flame ??= GetComponentInChildren<PlayerFlameController>(true);
             _campfireUpgrade ??= GetComponentInChildren<CampfireUpgradeController>(true);
@@ -56,6 +57,35 @@ namespace DemonViglu.FirePlay.Player
 
         private void OnDisable()
         {
+            DetachLocalExecution();
+        }
+
+        /// <summary>
+        /// A network Player routes the same semantic intents through its NGO
+        /// authority boundary. Disabling this local executor prevents the Host
+        /// owner from also mutating the world through the single-player path.
+        /// </summary>
+        public void ConfigureLocalExecution(bool enabled)
+        {
+            if (_localExecutionEnabled == enabled)
+                return;
+
+            _localExecutionEnabled = enabled;
+            if (enabled)
+                Initialize(_context ?? GetComponent<LocalPlayerContext>() ?? GetComponentInParent<LocalPlayerContext>());
+            else
+                DetachLocalExecution();
+        }
+
+        private void Subscribe()
+        {
+            if (_subscribed || _events == null) return;
+            _events.Subscribe<PlayerIntentRequested>(OnIntentRequested);
+            _subscribed = true;
+        }
+
+        private void DetachLocalExecution()
+        {
             if (_subscribed && _events != null)
             {
                 _events.Unsubscribe<PlayerIntentRequested>(OnIntentRequested);
@@ -66,13 +96,6 @@ namespace DemonViglu.FirePlay.Player
             _rateLimiter.Clear();
         }
 
-        private void Subscribe()
-        {
-            if (_subscribed || _events == null) return;
-            _events.Subscribe<PlayerIntentRequested>(OnIntentRequested);
-            _subscribed = true;
-        }
-
         private void OnIntentRequested(PlayerIntentRequested intent)
         {
             Execute(intent);
@@ -80,7 +103,7 @@ namespace DemonViglu.FirePlay.Player
 
         public bool Execute(PlayerIntentRequested intent)
         {
-            if (!CanExecute(intent)) return false;
+            if (!_localExecutionEnabled || !CanExecute(intent)) return false;
 
             var resource = _context.FlameResource;
             var activeFlame = _flame != null ? _flame.ActiveFlame : null;

@@ -29,10 +29,23 @@ namespace DemonViglu.FirePlay.CameraSystem
             new System.Collections.Generic.List<Transform>();
         private string _activeProfileId;
         private uint _activeRevision;
+        private PlayerCameraTargetSet _localPlayerTargets;
+        private Transform _authoredExploreFollow;
+        private Transform _authoredExploreLookAt;
 
         public bool HasValidSetup => _exploreCamera != null;
+        public bool HasLocalPlayerTargets => _localPlayerTargets != null;
 
-        private void Awake() => ApplyExplorePriority();
+        private void Awake()
+        {
+            if (_exploreCamera != null)
+            {
+                _authoredExploreFollow = _exploreCamera.Follow;
+                _authoredExploreLookAt = _exploreCamera.LookAt;
+            }
+
+            ApplyExplorePriority();
+        }
 
         private void OnDisable() => End(default);
 
@@ -55,7 +68,7 @@ namespace DemonViglu.FirePlay.CameraSystem
 
             End(default);
 
-            var playerTargets = LocalPlayerContext.Current?.CameraTargets;
+            var playerTargets = _localPlayerTargets;
             var playerTarget = playerTargets?.FrameTarget ?? _fallbackPlayerFrameTarget ?? transform;
             var anchor = ActivityAnchorNode.FindById(request.AnchorId);
             var anchorTargets = anchor != null
@@ -67,7 +80,7 @@ namespace DemonViglu.FirePlay.CameraSystem
                 : anchor != null ? anchor.transform : playerTargets?.LookAtTarget ?? playerTarget;
             var followTarget = profile.FollowAnchor != null
                 ? profile.FollowAnchor
-                : playerTargets?.FollowTarget ?? playerTarget;
+                : playerTargets?.ActivityFollowTarget ?? playerTargets?.FollowTarget ?? playerTarget;
 
             AddMemberIfMissing(profile.TargetGroup, playerTarget, profile.PlayerWeight, profile.PlayerRadius);
             if (lookTarget != playerTarget)
@@ -101,6 +114,46 @@ namespace DemonViglu.FirePlay.CameraSystem
             _activeProfileId = request.CameraProfileId;
             _activeRevision = request.SessionRevision;
             return true;
+        }
+
+        /// <summary>
+        /// Binds the scene-owned Cinemachine rig to the semantic targets of
+        /// this device's local Player. Remote Players must never call this.
+        /// </summary>
+        public bool BindLocalPlayerTargets(PlayerCameraTargetSet targets)
+        {
+            if (!HasValidSetup || targets == null || !targets.HasExplicitTargets)
+                return false;
+
+            if (_localPlayerTargets != null && _localPlayerTargets != targets)
+            {
+                Debug.LogError(
+                    "[ActivityCameraRigExecutor] Another local Player already owns the scene camera rig.",
+                    this);
+                return false;
+            }
+
+            End(default);
+            _localPlayerTargets = targets;
+            _exploreCamera.Follow = targets.FollowTarget;
+            _exploreCamera.LookAt = targets.LookAtTarget;
+            ApplyExplorePriority();
+            return true;
+        }
+
+        public void ReleaseLocalPlayerTargets(PlayerCameraTargetSet targets)
+        {
+            if (_localPlayerTargets == null || _localPlayerTargets != targets)
+                return;
+
+            End(default);
+            _localPlayerTargets = null;
+            if (_exploreCamera != null)
+            {
+                _exploreCamera.Follow = _authoredExploreFollow;
+                _exploreCamera.LookAt = _authoredExploreLookAt;
+            }
+            ApplyExplorePriority();
         }
 
         private bool End(ActivityCameraRequest request)

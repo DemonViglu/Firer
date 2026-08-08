@@ -4,9 +4,9 @@ using UnityEngine;
 namespace DemonViglu.FirePlay.Player
 {
     /// <summary>
-    /// Player-side presentation for FishingActivityLogic. It owns only the rod
-    /// prop and animation cues; fuel, timing and action validation stay in the
-    /// activity logic.
+    /// Player-side presentation for Fishing. Host/single-player reads the
+    /// typed Logic; network Owner/Observer mirrors read Fishing's own opaque
+    /// state payload. Fuel, timing and validation remain in the Logic.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class FishingActivityVisuals : MonoBehaviour
@@ -14,16 +14,17 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField] private PlayerActivityHost _activityHost;
         [SerializeField] private PlayerAnimationController _animationController;
         [SerializeField] private Transform _fishingRodProp;
+        [SerializeField] private Transform _fishingLineProp;
+        [SerializeField] private Transform _biteIndicator;
 
-        private FishingActivityLogic _logic;
+        private bool _hasActivityState;
         private bool _wasLineCast;
-        private int _catches;
         private bool _loggedMissingHost;
 
         private void Awake()
         {
             ResolveReferences();
-            SetVisible(false);
+            ResetPresentation();
         }
 
         private void Update()
@@ -38,41 +39,68 @@ namespace DemonViglu.FirePlay.Player
 #endif
             if (_activityHost == null) return;
 
-            var session = _activityHost.ActiveSession;
-            var nextLogic = session?.Logic as FishingActivityLogic;
-            if (nextLogic == null)
+            if (!TryReadState(out var state))
             {
-                ResetPresentation();
+                if (_hasActivityState)
+                    ResetPresentation();
                 return;
             }
 
-            _logic = nextLogic;
-            if (!_wasLineCast && _logic.IsLineCast)
+            var firstState = !_hasActivityState;
+            _hasActivityState = true;
+            if (!firstState && !_wasLineCast && state.IsLineCast)
                 _animationController?.Play(PlayerAnimationCueIds.FishingCast);
-            if (_logic.Catches > _catches)
-                _animationController?.Play(PlayerAnimationCueIds.FishingReel);
 
-            _animationController?.SetState(PlayerAnimationStateIds.Fishing, _logic.HasRod);
-            SetVisible(_logic.HasRod);
-            _wasLineCast = _logic.IsLineCast;
-            _catches = _logic.Catches;
+            _animationController?.SetState(PlayerAnimationStateIds.Fishing, state.HasRod);
+            SetVisible(state.HasRod);
+            SetLineVisible(state.HasRod && state.IsLineCast);
+            SetBiteVisible(state.HasRod && state.IsFishBiting);
+            _wasLineCast = state.IsLineCast;
+        }
+
+        private bool TryReadState(out FishingActivityStateSnapshot state)
+        {
+            state = default;
+            var session = _activityHost?.ActiveSession;
+            if (session?.Definition?.ActivityId != FishingActivityLogic.ActivityId)
+                return false;
+
+            if (session.Logic is FishingActivityLogic logic)
+            {
+                state = new FishingActivityStateSnapshot(
+                    logic.HasRod,
+                    logic.IsLineCast,
+                    logic.IsFishBiting,
+                    logic.IsFighting,
+                    logic.Catches,
+                    logic.CatchesPerRod,
+                    logic.Tension01,
+                    logic.CatchProgress01,
+                    logic.Status);
+                return true;
+            }
+
+            return _activityHost.TryGetActiveStatePayload(
+                       FishingActivityLogic.ActivityId,
+                       out var payload)
+                   && FishingActivityStateSnapshot.TryParse(payload, out state);
         }
 
         private void ResolveReferences()
         {
             _activityHost ??= GetComponentInParent<PlayerActivityHost>();
             _activityHost ??= PlayerActivityHost.Local;
-            _activityHost ??= FindAnyObjectByType<PlayerActivityHost>();
             _animationController ??= GetComponentInParent<PlayerAnimationController>();
             _fishingRodProp ??= transform.root.Find("Hand/FishingRodPop");
         }
 
         private void ResetPresentation()
         {
-            _logic = null;
+            _hasActivityState = false;
             _wasLineCast = false;
-            _catches = 0;
             _animationController?.SetState(PlayerAnimationStateIds.Fishing, false);
+            SetBiteVisible(false);
+            SetLineVisible(false);
             SetVisible(false);
         }
 
@@ -80,6 +108,18 @@ namespace DemonViglu.FirePlay.Player
         {
             if (_fishingRodProp != null && _fishingRodProp.gameObject.activeSelf != visible)
                 _fishingRodProp.gameObject.SetActive(visible);
+        }
+
+        private void SetLineVisible(bool visible)
+        {
+            if (_fishingLineProp != null && _fishingLineProp.gameObject.activeSelf != visible)
+                _fishingLineProp.gameObject.SetActive(visible);
+        }
+
+        private void SetBiteVisible(bool visible)
+        {
+            if (_biteIndicator != null && _biteIndicator.gameObject.activeSelf != visible)
+                _biteIndicator.gameObject.SetActive(visible);
         }
     }
 }

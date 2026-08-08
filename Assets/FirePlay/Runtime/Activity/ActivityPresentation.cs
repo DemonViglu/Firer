@@ -118,6 +118,16 @@ namespace DemonViglu.FirePlay.Activity
         bool Execute(ActivityPlayerRequest request);
     }
 
+    /// <summary>
+    /// Restricted executor for another Player's replicated presentation.
+    /// Implementations must reject local-control requests such as movement,
+    /// look, UI and camera ownership.
+    /// </summary>
+    public interface IActivityObserverPlayerRequestExecutor
+    {
+        bool ExecuteObserver(ActivityPlayerRequest request);
+    }
+
     public interface IActivityVfxRequestExecutor
     {
         bool Execute(ActivityPlayerRequest request);

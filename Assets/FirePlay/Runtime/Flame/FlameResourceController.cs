@@ -19,6 +19,7 @@ namespace DemonViglu.FirePlay.Flame
         private int _activeRecoverySources;
         private int _activeSafeZones;
         private Campfire _campfireRestSource;
+        private bool _simulationEnabled = true;
 
         public FlameResourceState State { get; private set; }
         public FlameResourceConfig Config => _config;
@@ -26,6 +27,7 @@ namespace DemonViglu.FirePlay.Flame
         public bool NightDrainActive => _nightDrainActive;
         public bool IsRecovering => _activeRecoverySources > 0;
         public bool IsInSafeZone => _activeSafeZones > 0;
+        public bool SimulationEnabled => _simulationEnabled;
         public float CurrentCampfireDrainMultiplier { get; private set; } = 1f;
 
         private void Awake()
@@ -46,7 +48,7 @@ namespace DemonViglu.FirePlay.Flame
 
         private void Update()
         {
-            if (State == null)
+            if (!_simulationEnabled || State == null)
             {
                 return;
             }
@@ -75,14 +77,22 @@ namespace DemonViglu.FirePlay.Flame
             State?.SetReceiverOverride(false);
         }
 
-        public bool TryConsume(float amount) => State != null && State.TryConsume(amount);
-        public bool ConsumeUpTo(float amount) => State != null && State.ConsumeUpTo(amount);
+        public bool TryConsume(float amount) => _simulationEnabled && State != null && State.TryConsume(amount);
+        public bool ConsumeUpTo(float amount) => _simulationEnabled && State != null && State.ConsumeUpTo(amount);
         public bool TryConsumeSprint(float deltaTime)
         {
+            // Client movement must not soft-lock while the Host owns fuel
+            // simulation. The eventual movement request is still validated by
+            // the authoritative side.
+            if (!_simulationEnabled)
+                return true;
+
             var sprintCost = Config != null ? Config.SprintDrainPerSecond * Mathf.Max(0f, deltaTime) : 0f;
             return sprintCost <= 0f || ConsumeUpTo(sprintCost);
         }
-        public bool Restore(float amount) => State != null && State.Restore(amount);
+        public bool Restore(float amount) => _simulationEnabled && State != null && State.Restore(amount);
+        public void ApplyFuelSnapshot(float currentFuel) => State?.ApplySnapshot(currentFuel);
+        public void ConfigureSimulation(bool enabled) => _simulationEnabled = enabled;
         public void SetNightDrainActive(bool active) => _nightDrainActive = active;
         public void SetReceiverOverride(bool active) => State?.SetReceiverOverride(active && IsInSafeZone);
 

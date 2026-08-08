@@ -25,7 +25,10 @@ namespace DemonViglu.FirePlay.Player
         public bool IsLocalPlayer => _isLocalPlayer;
         public bool CoreServicesReady { get; private set; }
         public PlayerCoreHost CoreHost { get; private set; }
-        public string PlayerId => Identity != null ? Identity.LocalPlayerId : _playerId;
+        // The serialized/network-resolved PlayerId is the object's stable
+        // identity. The global IPlayerIdentityService remains a local service
+        // lookup and must not overwrite remote or multi-player IDs.
+        public string PlayerId => _playerId;
         public IPlayerIdentityService Identity { get; private set; }
         public Camera LocalCamera => _localCamera;
         public FirePlayPlayerInput Input { get; private set; }
@@ -45,6 +48,47 @@ namespace DemonViglu.FirePlay.Player
         public PlayerSharedStateAdapter SharedStateAdapter { get; private set; }
         public PlayerExpressionController Expressions { get; private set; }
         public PlayerProximityEffects ProximityEffects { get; private set; }
+
+        /// <summary>
+        /// Applies the role resolved by the network identity component. Network
+        /// prefabs serialize this context as non-local and switch to local only
+        /// after NGO ownership is known in OnNetworkSpawn.
+        /// </summary>
+        public void ConfigureNetworkRole(bool isLocalPlayer, string playerId)
+        {
+            if (!string.IsNullOrWhiteSpace(playerId))
+                _playerId = playerId;
+
+            if (_isLocalPlayer == isLocalPlayer && CoreServicesReady)
+                return;
+
+            if (_isLocalPlayer && !isLocalPlayer && Current == this)
+                Current = null;
+
+            _isLocalPlayer = isLocalPlayer;
+            if (isLocalPlayer)
+            {
+                if (Current != null && Current != this)
+                    Debug.LogError("[LocalPlayerContext] Network ownership resolved to more than one local Player.", this);
+                else
+                    Current = this;
+
+                Identity = GameInstanceSubsystem.GetOrCreate<IPlayerIdentityService>(
+                    () => new LocalPlayerIdentityService(_playerId));
+                GameInstanceSubsystem.GetOrCreate<IWorldObjectRegistry>(
+                    () => new StableIdWorldObjectRegistry());
+            }
+            else
+            {
+                Identity = null;
+            }
+
+            Input?.SetLocalControl(isLocalPlayer);
+            Movement?.SetLocalControl(isLocalPlayer);
+            Look?.SetLocalControl(isLocalPlayer);
+            CoreHost?.Initialize();
+            CoreServicesReady = CoreHost != null && CoreHost.IsReady;
+        }
         public static LocalPlayerContext EnsureFor(Component component)
         {
             if (component == null) return Current;
@@ -92,7 +136,7 @@ namespace DemonViglu.FirePlay.Player
             CameraTargets = _cameraTargets;
             Interaction = GetComponent<PlayerInteraction>() ?? GetComponentInChildren<PlayerInteraction>(true);
             Animation = GetComponent<PlayerAnimationController>();
-            RestInteraction = GetComponent<RestInteraction>();
+            RestInteraction = GetComponent<RestInteraction>() ?? GetComponentInChildren<RestInteraction>(true);
             FlameResource = GetComponent<FlameResourceController>() ?? GetComponentInChildren<FlameResourceController>(true);
             CampfirePlacement = GetComponent<CampfirePlacement>() ?? GetComponentInChildren<CampfirePlacement>(true);
             CampfireUpgrade = GetComponent<CampfireUpgradeController>() ?? GetComponentInChildren<CampfireUpgradeController>(true);
@@ -144,6 +188,9 @@ namespace DemonViglu.FirePlay.Player
                 _proximityEffects,
                 _commandExecutor,
                 _interactionRouter);
+            Input?.SetLocalControl(_isLocalPlayer);
+            Movement?.SetLocalControl(_isLocalPlayer);
+            Look?.SetLocalControl(_isLocalPlayer);
             CoreHost.Initialize();
             CoreServicesReady = CoreHost.IsReady;
         }

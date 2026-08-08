@@ -15,6 +15,13 @@ namespace DemonViglu.FirePlay.Activity
         [SerializeField, Min(0.1f)] private float _minimumBiteDelay = 1.5f;
         [SerializeField, Min(0.1f)] private float _maximumBiteDelay = 4f;
         [SerializeField, Min(0.1f)] private float _hookWindowSeconds = 2f;
+        [Header("Fight Tuning")]
+        [SerializeField, Range(0.01f, 1f)] private float _reelTensionGain = 0.2f;
+        [SerializeField, Range(0.01f, 1f)] private float _reelProgressGain = 0.2f;
+        [SerializeField, Range(0.01f, 1f)] private float _easeTensionDrop = 0.34f;
+        [SerializeField, Range(0f, 1f)] private float _easeProgressLoss = 0.06f;
+        [SerializeField, Min(0f)] private float _fishPullPerSecond = 0.035f;
+        [SerializeField, Min(0f)] private float _fishPullVariance = 0.08f;
 
         public IActivityLogic Create(ActivityDefinition definition)
         {
@@ -27,7 +34,13 @@ namespace DemonViglu.FirePlay.Activity
                 _fuelPerCatch,
                 _minimumBiteDelay,
                 _maximumBiteDelay,
-                _hookWindowSeconds);
+                _hookWindowSeconds,
+                _reelTensionGain,
+                _reelProgressGain,
+                _easeTensionDrop,
+                _easeProgressLoss,
+                _fishPullPerSecond,
+                _fishPullVariance);
         }
 
         private void OnValidate()
@@ -38,6 +51,12 @@ namespace DemonViglu.FirePlay.Activity
             _minimumBiteDelay = Mathf.Max(0.1f, _minimumBiteDelay);
             _maximumBiteDelay = Mathf.Max(_minimumBiteDelay, _maximumBiteDelay);
             _hookWindowSeconds = Mathf.Max(0.1f, _hookWindowSeconds);
+            _reelTensionGain = Mathf.Clamp(_reelTensionGain, 0.01f, 1f);
+            _reelProgressGain = Mathf.Clamp(_reelProgressGain, 0.01f, 1f);
+            _easeTensionDrop = Mathf.Clamp(_easeTensionDrop, 0.01f, 1f);
+            _easeProgressLoss = Mathf.Clamp01(_easeProgressLoss);
+            _fishPullPerSecond = Mathf.Max(0f, _fishPullPerSecond);
+            _fishPullVariance = Mathf.Max(0f, _fishPullVariance);
         }
     }
 }

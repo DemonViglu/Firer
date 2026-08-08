@@ -12,6 +12,7 @@ namespace DemonViglu.FirePlay.Player
     public interface IPlayerCameraTargetProvider
     {
         Transform FollowTarget { get; }
+        Transform ActivityFollowTarget { get; }
         Transform FrameTarget { get; }
         Transform LookAtTarget { get; }
         Transform InputPivot { get; }
@@ -20,6 +21,7 @@ namespace DemonViglu.FirePlay.Player
     public enum PlayerCameraTargetRole
     {
         Follow,
+        ActivityFollow,
         Frame,
         LookAt,
         InputPivot
@@ -30,16 +32,19 @@ namespace DemonViglu.FirePlay.Player
     {
         [Header("Player-owned semantic targets")]
         [SerializeField] private Transform _followTarget;
+        [SerializeField] private Transform _activityFollowTarget;
         [SerializeField] private Transform _frameTarget;
         [SerializeField] private Transform _lookAtTarget;
         [SerializeField] private Transform _inputPivot;
 
         public Transform FollowTarget => _followTarget != null ? _followTarget : transform;
+        public Transform ActivityFollowTarget => _activityFollowTarget != null ? _activityFollowTarget : FrameTarget;
         public Transform FrameTarget => _frameTarget != null ? _frameTarget : transform;
         public Transform LookAtTarget => _lookAtTarget != null ? _lookAtTarget : FrameTarget;
         public Transform InputPivot => _inputPivot != null ? _inputPivot : transform;
 
         public bool HasExplicitTargets => _followTarget != null
+            && _activityFollowTarget != null
             && _frameTarget != null
             && _lookAtTarget != null
             && _inputPivot != null;
@@ -49,6 +54,7 @@ namespace DemonViglu.FirePlay.Player
             return role switch
             {
                 PlayerCameraTargetRole.Follow => FollowTarget,
+                PlayerCameraTargetRole.ActivityFollow => ActivityFollowTarget,
                 PlayerCameraTargetRole.Frame => FrameTarget,
                 PlayerCameraTargetRole.LookAt => LookAtTarget,
                 PlayerCameraTargetRole.InputPivot => InputPivot,
@@ -70,6 +76,8 @@ namespace DemonViglu.FirePlay.Player
 
             _followTarget ??= FindChild("CameraPivot/PlayerCameraFollowTarget");
             _followTarget ??= FindChild("CameraPivot/ExploreCameraAnchor");
+            _activityFollowTarget ??= FindChild("ActivityCameraFollowTarget");
+            _activityFollowTarget ??= FindChild("CinemachineAnchor/RitualCameraFollowAnchor");
             _frameTarget ??= FindChild("PlayerCameraFrameTarget");
             _frameTarget ??= FindChild("RitualCameraFrameTarget");
             _lookAtTarget ??= FindChild("CameraPivot/PlayerCameraLookAtTarget");

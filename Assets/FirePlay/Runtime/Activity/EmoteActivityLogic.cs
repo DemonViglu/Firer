@@ -1,9 +1,11 @@
+using System;
+
 namespace DemonViglu.FirePlay.Activity
 {
     /// <summary>
-    /// Minimal Anywhere activity for emotes. It has no location, camera or
-    /// dedicated UI requirement; an emote wheel can start the session and
-    /// submit semantic cue actions while the Player executes the animation.
+    /// Anywhere activity for emotes. It has no location or camera requirement;
+    /// its independent wheel submits semantic cues while the Player owns the
+    /// actual animation, VFX and audio presentation.
     /// </summary>
     public sealed class EmoteActivityLogic : IActivityLogic
     {
@@ -59,6 +61,8 @@ namespace DemonViglu.FirePlay.Activity
             var cueId = request.Payload?.Trim();
             if (string.IsNullOrWhiteSpace(cueId))
                 return ActivityActionResult.Reject("Emote cue is empty");
+            if (cueId.Length > 64 || !cueId.StartsWith("expression.", StringComparison.Ordinal))
+                return ActivityActionResult.Reject("Emote cue is invalid");
 
             LastCueId = cueId;
             PlayCount++;

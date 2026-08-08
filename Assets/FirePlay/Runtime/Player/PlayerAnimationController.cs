@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.Player
@@ -45,6 +46,9 @@ namespace DemonViglu.FirePlay.Player
         }
 
         [SerializeField] private Animator _animator;
+        [Tooltip("没有 Animator 时用于验证网络姿态的占位模型；配置正式 Animator 后自动停止修改它。")]
+        [SerializeField] private Transform _placeholderVisual;
+        [SerializeField, Min(1f)] private float _placeholderBlendSpeed = 10f;
         [Tooltip("吉他逐键 cue 会映射到此前缀加两位键号，例如 GuitarKey01。没有对应 Animator 参数时会安全忽略。")]
         [SerializeField] private string _guitarKeyTriggerPrefix = "GuitarKey";
         [SerializeField] private BoolBinding[] _boolBindings =
@@ -71,13 +75,84 @@ namespace DemonViglu.FirePlay.Player
             new() { cueId = "expression.sit", parameterName = "EmoteSit" }
         };
 
+        private readonly HashSet<string> _activeStates = new(StringComparer.Ordinal);
+        private Vector3 _placeholderBasePosition;
+        private Vector3 _placeholderBaseScale;
+        private Quaternion _placeholderBaseRotation;
+        private float _placeholderCuePulse;
+
+        public string LastCueId { get; private set; } = string.Empty;
+        public bool IsStateActive(string stateId) =>
+            !string.IsNullOrWhiteSpace(stateId) && _activeStates.Contains(stateId);
+
         private void Awake()
         {
             _animator ??= GetComponentInChildren<Animator>();
+            if (_placeholderVisual != null)
+            {
+                _placeholderBasePosition = _placeholderVisual.localPosition;
+                _placeholderBaseScale = _placeholderVisual.localScale;
+                _placeholderBaseRotation = _placeholderVisual.localRotation;
+            }
+        }
+
+        private void Update()
+        {
+            if (_animator != null || _placeholderVisual == null)
+                return;
+
+            var targetPosition = _placeholderBasePosition;
+            var targetScale = _placeholderBaseScale;
+            var targetRotation = _placeholderBaseRotation;
+
+            if (IsStateActive(PlayerAnimationStateIds.Resting))
+            {
+                targetPosition += Vector3.down * 0.38f;
+                targetScale = Vector3.Scale(targetScale, new Vector3(1.08f, 0.62f, 1.08f));
+            }
+            else if (IsStateActive(PlayerAnimationStateIds.GuitarPlaying))
+            {
+                targetRotation *= Quaternion.Euler(0f, 0f, -8f);
+            }
+            else if (IsStateActive(PlayerAnimationStateIds.Fishing))
+            {
+                targetRotation *= Quaternion.Euler(8f, 0f, 0f);
+            }
+            else if (IsStateActive(PlayerAnimationStateIds.MarshmallowRoasting))
+            {
+                targetRotation *= Quaternion.Euler(-5f, 0f, 0f);
+            }
+
+            if (_placeholderCuePulse > 0f)
+            {
+                targetScale *= 1f + 0.08f * _placeholderCuePulse;
+                _placeholderCuePulse = Mathf.MoveTowards(
+                    _placeholderCuePulse,
+                    0f,
+                    Time.deltaTime * 5f);
+            }
+
+            var blend = 1f - Mathf.Exp(-_placeholderBlendSpeed * Time.deltaTime);
+            _placeholderVisual.localPosition = Vector3.Lerp(
+                _placeholderVisual.localPosition,
+                targetPosition,
+                blend);
+            _placeholderVisual.localScale = Vector3.Lerp(
+                _placeholderVisual.localScale,
+                targetScale,
+                blend);
+            _placeholderVisual.localRotation = Quaternion.Slerp(
+                _placeholderVisual.localRotation,
+                targetRotation,
+                blend);
         }
 
         public void SetState(string stateId, bool active)
         {
+            if (string.IsNullOrWhiteSpace(stateId)) return;
+            if (active) _activeStates.Add(stateId);
+            else _activeStates.Remove(stateId);
+
             foreach (var binding in _boolBindings)
             {
                 if (binding.stateId == stateId)
@@ -91,6 +166,8 @@ namespace DemonViglu.FirePlay.Player
         public void Play(string cueId)
         {
             if (string.IsNullOrWhiteSpace(cueId)) return;
+            LastCueId = cueId;
+            _placeholderCuePulse = 1f;
             if (TryPlayGuitarKeyCue(cueId))
                 return;
 
@@ -120,8 +197,22 @@ namespace DemonViglu.FirePlay.Player
 
         public void ApplySharedState(PlayerSharedStateSnapshot snapshot)
         {
-            foreach (var binding in _boolBindings)
-                SetBool(binding.parameterName, binding.stateId == snapshot.RitualStateId);
+            // PlayerSharedState currently owns only the generic Resting mode.
+            // Activity animation states have an independent Session lifecycle
+            // and must not be cleared every Player tick.
+            SetState(
+                PlayerAnimationStateIds.Resting,
+                snapshot.RitualStateId == PlayerAnimationStateIds.Resting);
+        }
+
+        private void OnDisable()
+        {
+            _activeStates.Clear();
+            _placeholderCuePulse = 0f;
+            if (_placeholderVisual == null) return;
+            _placeholderVisual.localPosition = _placeholderBasePosition;
+            _placeholderVisual.localScale = _placeholderBaseScale;
+            _placeholderVisual.localRotation = _placeholderBaseRotation;
         }
 
         private void SetBool(string parameterName, bool value)

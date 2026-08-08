@@ -26,6 +26,10 @@ namespace DemonViglu.FirePlay.Flame
         public void SetFollowAnchor(Transform anchor)
         {
             _followTarget = anchor;
+            _followVelocity = Vector3.zero;
+
+            if (_followTarget != null && _config != null)
+                transform.position = GetTargetPosition(includeHover: false);
         }
 
         private void Awake()
@@ -37,27 +41,34 @@ namespace DemonViglu.FirePlay.Flame
                 return;
             }
 
-            if (_followTarget == null)
-            {
-                Debug.LogError("[FlameBrush] 未指定 Follow Target。", this);
-                enabled = false;
-                return;
-            }
-
             _state.Initialize(_config.InitialColor, _config.InitialIntensity);
         }
 
         private void Update()
         {
-            var worldOffset = _followTarget.TransformDirection(_localOffset);
-            var hover = Mathf.Sin(Time.time * _hoverFrequency) * _hoverAmplitude;
-            var targetPosition = _followTarget.position + worldOffset + Vector3.up * (_config.FollowHeight + hover);
+            // Runtime-spawned player flames receive their owner anchor after
+            // Instantiate/Awake. An unbound brush is valid but remains still.
+            if (_followTarget == null || _config == null)
+                return;
+
+            var targetPosition = GetTargetPosition(includeHover: true);
 
             transform.position = Vector3.SmoothDamp(
                 transform.position,
                 targetPosition,
                 ref _followVelocity,
                 _config.FollowSmoothTime);
+        }
+
+        private Vector3 GetTargetPosition(bool includeHover)
+        {
+            var worldOffset = _followTarget.TransformDirection(_localOffset);
+            var hover = includeHover
+                ? Mathf.Sin(Time.time * _hoverFrequency) * _hoverAmplitude
+                : 0f;
+            return _followTarget.position
+                + worldOffset
+                + Vector3.up * (_config.FollowHeight + hover);
         }
 
         /// <summary>

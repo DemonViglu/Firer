@@ -194,6 +194,7 @@ MonoBehaviour:
   m_Name: ''
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.ActivityAnchorNode
   _anchorId: stargazing.restpot
+  _displayName: 帐篷旁
   _regionId: stargazing
   _tags: []
   _activities:

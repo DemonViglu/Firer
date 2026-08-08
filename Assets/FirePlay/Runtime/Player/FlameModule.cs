@@ -17,6 +17,7 @@ namespace DemonViglu.FirePlay.Player
     {
         [SerializeField] private FlameResourceController _resourceController;
         [SerializeField] private PlayerFlameController _playerFlameController;
+        [SerializeField] private Transform _flameAnchor;
         [SerializeField] private CampfirePlacement _campfirePlacement;
         [SerializeField] private CampfireUpgradeController _campfireUpgrade;
 
@@ -26,6 +27,7 @@ namespace DemonViglu.FirePlay.Player
         public bool IsReady { get; private set; }
         public FlameResourceController ResourceController => _resourceController;
         public PlayerFlameController PlayerFlameController => _playerFlameController;
+        public Transform FlameAnchor => _flameAnchor;
         public CampfirePlacement CampfirePlacement => _campfirePlacement;
         public CampfireUpgradeController CampfireUpgrade => _campfireUpgrade;
 

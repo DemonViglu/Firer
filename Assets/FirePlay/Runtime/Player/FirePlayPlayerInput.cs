@@ -16,6 +16,7 @@ namespace DemonViglu.FirePlay.Player
         private InputActionMap _playerMap;
         private InputAction _moveAction;
         private InputAction _sprintAction;
+        private InputAction _jumpAction;
         private InputAction _constrictFlameAction;
         private InputAction _placeFireAction;
         private InputAction _restAction;
@@ -32,6 +33,7 @@ namespace DemonViglu.FirePlay.Player
         // originated from a mobile UI button or a physical device.
         private Vector2 _virtualMove;
         private Vector2 _virtualLook;
+        private bool _virtualJumpRequested;
         public event Action<RawPlayerInput> RawInputPerformed;
 
         public bool AcceptInput => _acceptInput;
@@ -76,9 +78,10 @@ namespace DemonViglu.FirePlay.Player
             _moveAction = FindRequiredAction("Move");
             _lookAction = FindRequiredAction("Look");
 
-            // Only Move and Look are part of the base Player contract. Sprint
-            // and all discrete actions belong to optional feature modules.
+            // Move, Look and Jump are the base locomotion contract. Sprint and
+            // gameplay-specific discrete actions belong to optional modules.
             _sprintAction = FindOptionalAction("Sprint");
+            _jumpAction = FindRequiredAction("Jump");
             _constrictFlameAction = FindOptionalAction("ConstrictFlame");
             _placeFireAction = FindOptionalAction("PlaceFire");
             _restAction = FindOptionalAction("Rest");
@@ -99,6 +102,7 @@ namespace DemonViglu.FirePlay.Player
         {
             _playerMap?.Disable();
             UnsubscribePerformedCallbacks();
+            _virtualJumpRequested = false;
         }
 
         private InputAction FindRequiredAction(string actionName)
@@ -128,6 +132,19 @@ namespace DemonViglu.FirePlay.Player
                 _virtualLook += delta;
         }
 
+        public bool ConsumeJumpPressed()
+        {
+            if (!_acceptInput)
+            {
+                _virtualJumpRequested = false;
+                return false;
+            }
+
+            var pressed = _virtualJumpRequested || (_jumpAction != null && _jumpAction.WasPressedThisFrame());
+            _virtualJumpRequested = false;
+            return pressed;
+        }
+
         /// <summary>
         /// Network ownership gate. The action map remains configured on the
         /// object, but non-owned Players cannot expose input values or enqueue
@@ -141,6 +158,7 @@ namespace DemonViglu.FirePlay.Player
             {
                 _virtualMove = Vector2.zero;
                 _virtualLook = Vector2.zero;
+                _virtualJumpRequested = false;
             }
         }
 
@@ -158,6 +176,13 @@ namespace DemonViglu.FirePlay.Player
         public void RequestVirtualInteract() => Queue(RawPlayerInput.Interact);
         public void RequestVirtualEmote() => Queue(RawPlayerInput.Emote);
         public void RequestVirtualCycleTreeLightColor() => Queue(RawPlayerInput.CycleTreeLightColor);
+        public void RequestVirtualJump()
+        {
+            if (_acceptInput)
+            {
+                _virtualJumpRequested = true;
+            }
+        }
 
         private void SubscribePerformedCallbacks()
         {

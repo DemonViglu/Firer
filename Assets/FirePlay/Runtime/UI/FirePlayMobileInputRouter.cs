@@ -37,6 +37,7 @@ namespace DemonViglu.FirePlay.UI
         }
 
         public void Interact() => Request(input => input.RequestVirtualInteract());
+        public void Jump() => Request(input => input.RequestVirtualJump());
         public void Rest() => Request(input => input.RequestVirtualRest());
         public void RitualPrimary()
         {

@@ -1,5 +1,6 @@
 using DemonViglu.FirePlay.Flame;
 using DemonViglu.FirePlay.Player;
+using DemonViglu.FirePlay.Activity;
 using SUIFW;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,6 +19,7 @@ namespace DemonViglu.FirePlay.UI
         [SerializeField] private PlayerInteraction _playerInteraction;
         [SerializeField] private RestInteraction _restInteraction;
         [SerializeField] private LocalPlayerContext _localPlayer;
+        [SerializeField] private PlayerActivityHost _activityHost;
 
         [Header("Fuel")]
         [SerializeField] private GameObject _fuelRoot;
@@ -30,6 +32,10 @@ namespace DemonViglu.FirePlay.UI
         [Header("Prompts")]
         [SerializeField] private GameObject _interactionPromptRoot;
         [SerializeField] private Text _interactionPromptText;
+
+        [Header("Exploration controls")]
+        [SerializeField] private GameObject _explorationControlsRoot;
+        [SerializeField] private GameObject _jumpButtonRoot;
 
         private float _nextReferenceSearchTime;
 
@@ -50,6 +56,7 @@ namespace DemonViglu.FirePlay.UI
 
             UpdateFuel();
             UpdateInteractionPrompt();
+            UpdateExplorationControls();
         }
 
         private void ResolveReferences()
@@ -59,6 +66,7 @@ namespace DemonViglu.FirePlay.UI
             _flameResource ??= _localPlayer.FlameResource;
             _playerInteraction ??= _localPlayer.Interaction;
             _restInteraction ??= _localPlayer.RestInteraction;
+            _activityHost ??= PlayerActivityHost.Local;
         }
 
         private void ResolveUiReferences()
@@ -71,6 +79,8 @@ namespace DemonViglu.FirePlay.UI
             _fuelText ??= FindChild("FuelText")?.GetComponent<Text>();
             _interactionPromptRoot ??= FindChild("InteractionPromptRoot")?.gameObject;
             _interactionPromptText ??= FindText(_interactionPromptRoot);
+            _explorationControlsRoot ??= FindInCanvas("MobileControls")?.gameObject;
+            _jumpButtonRoot ??= FindInCanvas("JumpButton")?.gameObject;
 
             // The original SUIFW sample used a Simple Image. A fuel amount only
             // changes visually when the Image is a horizontal filled image.
@@ -113,13 +123,27 @@ namespace DemonViglu.FirePlay.UI
         private void UpdateInteractionPrompt()
         {
             var prompt = _playerInteraction != null ? _playerInteraction.CurrentInteractPrompt : null;
-            var shouldShow = !string.IsNullOrWhiteSpace(prompt);
+            var shouldShow = !HasActiveActivity() && !string.IsNullOrWhiteSpace(prompt);
             SetActive(_interactionPromptRoot, shouldShow);
             if (shouldShow && _interactionPromptText != null)
             {
                 _interactionPromptText.text = prompt;
             }
         }
+
+        private void UpdateExplorationControls()
+        {
+            // Fixed HUD controls render above normal activity forms in SUIFW.
+            // Hide the jump receiver while an activity owns movement so it
+            // cannot steal clicks from the activity's own UI.
+            var movement = _localPlayer != null ? _localPlayer.Movement : null;
+            var activityActive = HasActiveActivity();
+            var activityOwnsMovement = activityActive && movement != null && movement.MovementLocked;
+            SetActive(_explorationControlsRoot, movement != null && !activityOwnsMovement);
+            SetActive(_jumpButtonRoot, movement != null && !activityOwnsMovement);
+        }
+
+        private bool HasActiveActivity() => _activityHost != null && _activityHost.HasActiveActivity;
 
         private static void SetActive(GameObject target, bool active)
         {
@@ -132,6 +156,25 @@ namespace DemonViglu.FirePlay.UI
         private Transform FindChild(string childName)
         {
             foreach (var child in GetComponentsInChildren<Transform>(true))
+            {
+                if (child.name == childName)
+                {
+                    return child;
+                }
+            }
+
+            return null;
+        }
+
+        private Transform FindInCanvas(string childName)
+        {
+            var root = transform.root;
+            if (root == null)
+            {
+                return null;
+            }
+
+            foreach (var child in root.GetComponentsInChildren<Transform>(true))
             {
                 if (child.name == childName)
                 {

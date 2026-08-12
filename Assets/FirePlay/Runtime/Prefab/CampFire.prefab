@@ -372,9 +372,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
-  GlobalObjectIdHash: 1548723096
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 328372734
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 0
@@ -431,8 +431,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3c7d9e1f2a4b46c8d0e2f4a6b8c0d135, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Network.FirePlayNetworkCampfire
+  ShowTopMostFoldoutHeaderGroup: 1
   _campfire: {fileID: 6920482071578527915}
   _snapshotInterval: 0.2
   _warmthEpsilon: 0.05
@@ -471,6 +472,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.RestSpot
   _interactionRadius: 1.75
+  _restHint: 
+  _shortRestHint: 
 --- !u!135 &5305289997750256037
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -505,7 +508,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.ActivityAnchorNode
   _anchorId: 
-  _displayName: 篝火旁
+  _displayName: "\u7BDD\u706B\u65C1"
   _regionId: 
   _tags: []
   _activities:
@@ -521,15 +524,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 611acf50bc761554fb3fb8fedbced4a7, type: 3}
       propertyPath: m_LocalScale.x
-      value: 5
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 611acf50bc761554fb3fb8fedbced4a7, type: 3}
       propertyPath: m_LocalScale.y
-      value: 5
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 611acf50bc761554fb3fb8fedbced4a7, type: 3}
       propertyPath: m_LocalScale.z
-      value: 5
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 611acf50bc761554fb3fb8fedbced4a7, type: 3}
       propertyPath: m_LocalPosition.x

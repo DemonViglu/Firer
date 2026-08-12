@@ -37,6 +37,15 @@ namespace DemonViglu.FirePlay.World
             }
         }
 
+        public static IReadOnlyList<SmallFire> ActiveInstances
+        {
+            get
+            {
+                CleanupDestroyedFires();
+                return ActiveFires;
+            }
+        }
+
         public bool IsInitialized => _initialized;
         public float RemainingSeconds => Mathf.Max(0f, _remainingSeconds);
         public uint CommandVersion => 0;

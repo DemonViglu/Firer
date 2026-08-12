@@ -18,18 +18,49 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField, Min(0f)] private float _moveSpeed = 4.5f;
         [SerializeField, Min(1f)] private float _sprintSpeedMultiplier = 1.55f;
         [SerializeField, Min(0f)] private float _gravity = 20f;
+        [SerializeField, Min(0f)] private float _groundJumpHeight = 1.25f;
+        [SerializeField, Min(0f)] private float _groundedStickSpeed = 2f;
         [SerializeField] private Transform _cameraTransform;
         [SerializeField] private MonoBehaviour _sprintPolicyBehaviour;
+
+        [Header("Water Movement")]
+        [SerializeField, Range(0.1f, 1f)] private float _waterMoveSpeedMultiplier = 0.62f;
+        [SerializeField, Range(0.1f, 1f)] private float _waterEntryMoveSpeedMultiplier = 0.42f;
+        [SerializeField, Min(0f)] private float _waterEntrySinkDuration = 0.72f;
+        [SerializeField, Min(0f)] private float _waterEntryMinSinkSpeed = 3.6f;
+        [SerializeField, Min(0f)] private float _waterEntryMaxSinkSpeed = 6.2f;
+        [SerializeField, Min(0f)] private float _waterRiseSpeed = 2.8f;
+        [SerializeField, Min(0f)] private float _waterBuoyancyAcceleration = 7.5f;
+        [SerializeField, Min(0f)] private float _waterSurfaceOffset = 1.25f;
+        [SerializeField, Min(0f)] private float _waterJumpDepth = 0.32f;
+        [SerializeField, Min(0f)] private float _waterExitSpeed = 8.2f;
+
+        private enum WaterMotionPhase
+        {
+            None,
+            EntrySubmerge,
+            Buoyant,
+            Exiting
+        }
 
         private CharacterController _controller;
         private FirePlayPlayerInput _input;
         private IPlayerSprintPolicy _sprintPolicy;
         private float _verticalVelocity;
         private bool _localControl = true;
+        private MonoBehaviour _waterSource;
+        private float _waterSurfaceY;
+        private WaterMotionPhase _waterMotionPhase;
+        private float _waterEntryElapsed;
+        private float _waterEntryStartVelocity;
 
         public bool IsSprinting { get; private set; }
         public bool MovementLocked { get; private set; }
         public bool HasLocalControl => _localControl;
+        public bool IsInWater => _waterSource != null;
+        public bool IsGrounded { get; private set; }
+        public bool IsJumping => !IsInWater && !IsGrounded && _verticalVelocity > 0f;
+        public float VerticalVelocity => _verticalVelocity;
 
         private void Awake()
         {
@@ -64,23 +95,87 @@ namespace DemonViglu.FirePlay.Player
             }
 
             var input = MovementLocked ? Vector2.zero : _input.Move;
-            IsSprinting = !MovementLocked && TrySprint(input);
+            var jumpPressed = !MovementLocked && _input.ConsumeJumpPressed();
+            var isInWater = IsInWater;
+            IsSprinting = !MovementLocked && !isInWater && TrySprint(input);
             // 移动只读取视角的世界 Yaw。不要直接使用 forward/right：当相机 Pivot
             // 因俯仰、滚转或 Cinemachine 层级调整而倾斜时，移动仍必须严格留在地面平面。
             var yawOnlyRotation = Quaternion.Euler(0f, _cameraTransform.eulerAngles.y, 0f);
             var forward = yawOnlyRotation * Vector3.forward;
             var right = yawOnlyRotation * Vector3.right;
             var speed = _moveSpeed * (IsSprinting ? _sprintSpeedMultiplier : 1f);
-            var horizontalVelocity = (forward * input.y + right * input.x) * speed;
-
-            if (_controller.isGrounded && _verticalVelocity < 0f)
+            if (isInWater)
             {
-                _verticalVelocity = -2f;
+                speed *= _waterMotionPhase == WaterMotionPhase.EntrySubmerge
+                    ? _waterEntryMoveSpeedMultiplier
+                    : _waterMoveSpeedMultiplier;
             }
 
-            _verticalVelocity -= _gravity * Time.deltaTime;
+            var horizontalVelocity = (forward * input.y + right * input.x) * speed;
+
+            if (isInWater)
+            {
+                IsGrounded = false;
+                UpdateWaterVerticalVelocity(jumpPressed);
+            }
+            else
+            {
+                IsGrounded = _controller.isGrounded;
+                if (IsGrounded && _verticalVelocity < 0f)
+                {
+                    _verticalVelocity = -_groundedStickSpeed;
+                }
+
+                if (jumpPressed && IsGrounded && _groundJumpHeight > 0f && _gravity > 0f)
+                {
+                    _verticalVelocity = Mathf.Sqrt(2f * _gravity * _groundJumpHeight);
+                    IsGrounded = false;
+                }
+
+                _verticalVelocity -= _gravity * Time.deltaTime;
+            }
+
             var velocity = horizontalVelocity + Vector3.up * _verticalVelocity;
             _controller.Move(velocity * Time.deltaTime);
+            if (!isInWater)
+            {
+                IsGrounded = _controller.isGrounded;
+            }
+        }
+
+        /// <summary>
+        /// Scene water volumes explicitly register here. This keeps water detection in
+        /// the environment while the existing, visible PlayerMovement owns locomotion.
+        /// </summary>
+        public void SetWaterContact(MonoBehaviour source, float surfaceY, bool touching)
+        {
+            if (source == null)
+            {
+                return;
+            }
+
+            if (touching)
+            {
+                var wasInWater = IsInWater;
+                if (_waterSource == null || _waterSource == source || surfaceY >= _waterSurfaceY)
+                {
+                    _waterSource = source;
+                    _waterSurfaceY = surfaceY;
+                }
+
+                if (!wasInWater && IsInWater)
+                {
+                    BeginWaterEntry();
+                }
+
+                return;
+            }
+
+            if (_waterSource == source)
+            {
+                _waterSource = null;
+                _waterMotionPhase = WaterMotionPhase.None;
+            }
         }
 
         public void SetMovementLocked(bool locked)
@@ -117,11 +212,80 @@ namespace DemonViglu.FirePlay.Player
             return _sprintPolicy == null || _sprintPolicy.TryConsumeSprint(Time.deltaTime);
         }
 
+        private void BeginWaterEntry()
+        {
+            _waterMotionPhase = WaterMotionPhase.EntrySubmerge;
+            _waterEntryElapsed = 0f;
+            _waterEntryStartVelocity = Mathf.Clamp(
+                _verticalVelocity,
+                -_waterEntryMaxSinkSpeed,
+                -_waterEntryMinSinkSpeed);
+        }
+
+        private void UpdateWaterVerticalVelocity(bool jumpPressed)
+        {
+            var targetRootY = _waterSurfaceY - _waterSurfaceOffset;
+
+            if (_waterMotionPhase == WaterMotionPhase.EntrySubmerge)
+            {
+                _waterEntryElapsed += Time.deltaTime;
+                var progress = _waterEntrySinkDuration <= 0f
+                    ? 1f
+                    : Mathf.Clamp01(_waterEntryElapsed / _waterEntrySinkDuration);
+                var easedProgress = progress * progress * (3f - 2f * progress);
+                _verticalVelocity = Mathf.Lerp(_waterEntryStartVelocity, 0f, easedProgress);
+                if (progress >= 1f)
+                {
+                    _waterMotionPhase = WaterMotionPhase.Buoyant;
+                }
+
+                return;
+            }
+
+            if (_waterMotionPhase == WaterMotionPhase.Exiting)
+            {
+                _verticalVelocity -= _gravity * Time.deltaTime;
+                if (_verticalVelocity <= 0f && transform.position.y <= targetRootY + 0.1f)
+                {
+                    _waterMotionPhase = WaterMotionPhase.Buoyant;
+                }
+
+                return;
+            }
+
+            if (jumpPressed && transform.position.y >= targetRootY - _waterJumpDepth)
+            {
+                _waterMotionPhase = WaterMotionPhase.Exiting;
+                _verticalVelocity = _waterExitSpeed;
+                return;
+            }
+
+            _waterMotionPhase = WaterMotionPhase.Buoyant;
+            var heightDelta = targetRootY - transform.position.y;
+            var desiredVerticalVelocity = Mathf.Clamp(heightDelta * 3f, -_waterRiseSpeed, _waterRiseSpeed);
+            _verticalVelocity = Mathf.MoveTowards(
+                _verticalVelocity,
+                desiredVerticalVelocity,
+                _waterBuoyancyAcceleration * Time.deltaTime);
+        }
+
         private void OnValidate()
         {
             _moveSpeed = Mathf.Max(0f, _moveSpeed);
             _sprintSpeedMultiplier = Mathf.Max(1f, _sprintSpeedMultiplier);
             _gravity = Mathf.Max(0f, _gravity);
+            _groundJumpHeight = Mathf.Max(0f, _groundJumpHeight);
+            _groundedStickSpeed = Mathf.Max(0f, _groundedStickSpeed);
+            _waterMoveSpeedMultiplier = Mathf.Clamp(_waterMoveSpeedMultiplier, 0.1f, 1f);
+            _waterEntryMoveSpeedMultiplier = Mathf.Clamp(_waterEntryMoveSpeedMultiplier, 0.1f, 1f);
+            _waterEntrySinkDuration = Mathf.Max(0f, _waterEntrySinkDuration);
+            _waterEntryMinSinkSpeed = Mathf.Max(0f, _waterEntryMinSinkSpeed);
+            _waterEntryMaxSinkSpeed = Mathf.Max(_waterEntryMinSinkSpeed, _waterEntryMaxSinkSpeed);
+            _waterRiseSpeed = Mathf.Max(0f, _waterRiseSpeed);
+            _waterBuoyancyAcceleration = Mathf.Max(0f, _waterBuoyancyAcceleration);
+            _waterSurfaceOffset = Mathf.Max(0f, _waterSurfaceOffset);
+            _waterJumpDepth = Mathf.Max(0f, _waterJumpDepth);
+            _waterExitSpeed = Mathf.Max(0f, _waterExitSpeed);
         }
     }
 }

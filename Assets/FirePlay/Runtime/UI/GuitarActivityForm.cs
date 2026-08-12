@@ -83,7 +83,7 @@ namespace DemonViglu.FirePlay.UI
                 _keyButtons[keyIndex - 1] = button;
                 var label = button.GetComponentInChildren<Text>(true);
                 if (label != null)
-                    label.text = $"{KeyboardKeys[keyIndex - 1]}\n{keyIndex:00}";
+                    label.text = $"{KeyboardKeys[keyIndex - 1]}\n{GuitarActivityLogic.GetNoteLabel(keyIndex)}";
             }
 
             var closeLabel = _closeButton != null
@@ -146,7 +146,7 @@ namespace DemonViglu.FirePlay.UI
             SetStatus(!active
                 ? "吉他活动未开始"
                 : stateReady
-                    ? $"已演奏 {playedKeyCount} 次 · 21 个音位"
+                    ? $"已演奏 {playedKeyCount} 次 · 三组 Do–Re–Mi 自然音阶"
                     : "等待主机同步");
 
             if (_keyButtons == null) return;

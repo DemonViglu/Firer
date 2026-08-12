@@ -13,6 +13,11 @@ namespace DemonViglu.FirePlay.Activity
         public const string ActivityId = "guitar";
         public const int KeyCount = 21;
         private const string PlayingStateId = "guitar.playing";
+        private static readonly string[] NaturalNoteNames =
+        {
+            "Do", "Re", "Mi", "Fa", "Sol", "La", "Si"
+        };
+        private static readonly int[] NaturalNoteSemitones = { 0, 2, 4, 5, 7, 9, 11 };
 
         public int LastKeyIndex { get; private set; }
         public int PlayedKeyCount { get; private set; }
@@ -44,7 +49,7 @@ namespace DemonViglu.FirePlay.Activity
             if (request.ActionId == "activity.exit")
                 return ActivityActionResult.End(ActivityEndReason.Requested, "Guitar activity exited");
 
-            if (!TryParseKey(request.ActionId, out var keyIndex))
+            if (!TryGetKeyIndex(request.ActionId, out var keyIndex))
                 return ActivityActionResult.Reject("Unknown guitar key action");
 
             LastKeyIndex = keyIndex;
@@ -132,12 +137,36 @@ namespace DemonViglu.FirePlay.Activity
             return $"guitar.key.{keyIndex:00}";
         }
 
-        private static bool TryParseKey(string actionId, out int keyIndex)
+        public static string GetNoteLabel(int keyIndex)
+        {
+            ValidateKeyIndex(keyIndex);
+            var zeroBased = keyIndex - 1;
+            var octave = 4 + zeroBased / NaturalNoteNames.Length;
+            return $"{NaturalNoteNames[zeroBased % NaturalNoteNames.Length]}{octave}";
+        }
+
+        public static float GetNaturalNoteFrequency(int keyIndex, float rootFrequency = 261.6256f)
+        {
+            ValidateKeyIndex(keyIndex);
+            var zeroBased = keyIndex - 1;
+            var octave = zeroBased / NaturalNoteSemitones.Length;
+            var semitones = octave * 12
+                            + NaturalNoteSemitones[zeroBased % NaturalNoteSemitones.Length];
+            return Math.Max(55f, rootFrequency) * (float)Math.Pow(2d, semitones / 12d);
+        }
+
+        private static void ValidateKeyIndex(int keyIndex)
+        {
+            if (keyIndex < 1 || keyIndex > KeyCount)
+                throw new ArgumentOutOfRangeException(nameof(keyIndex));
+        }
+
+        public static bool TryGetKeyIndex(string actionOrCueId, out int keyIndex)
         {
             keyIndex = 0;
-            if (string.IsNullOrWhiteSpace(actionId)
-                || !actionId.StartsWith("guitar.key.", StringComparison.Ordinal)
-                || !int.TryParse(actionId.Substring("guitar.key.".Length), out keyIndex))
+            if (string.IsNullOrWhiteSpace(actionOrCueId)
+                || !actionOrCueId.StartsWith("guitar.key.", StringComparison.Ordinal)
+                || !int.TryParse(actionOrCueId.Substring("guitar.key.".Length), out keyIndex))
             {
                 return false;
             }

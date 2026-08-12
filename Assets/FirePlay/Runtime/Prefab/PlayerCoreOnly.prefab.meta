@@ -1,7 +1,7 @@
 fileFormatVersion: 2
-guid: 1c0d2a6e4f7b49c9a8e1d3f5b6c7a902
+guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135
 PrefabImporter:
   externalObjects: {}
-  userData: 
+  userData: Pure movement, look and camera-target baseline; no Flame, Activity, Rest, Interaction or Network module.
   assetBundleName: 
   assetBundleVariant: 

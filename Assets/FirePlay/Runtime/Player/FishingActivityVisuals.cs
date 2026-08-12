@@ -72,10 +72,14 @@ namespace DemonViglu.FirePlay.Player
                     logic.IsLineCast,
                     logic.IsFishBiting,
                     logic.IsFighting,
+                    logic.IsCatchReady,
                     logic.Catches,
                     logic.CatchesPerRod,
-                    logic.Tension01,
+                    logic.FishPosition01,
+                    logic.CatchBarPosition01,
+                    logic.CatchZoneSize01,
                     logic.CatchProgress01,
+                    logic.IsLiftHeld,
                     logic.Status);
                 return true;
             }

@@ -1,141 +1,88 @@
-# FirePlay Player 组件收口审计
+# FirePlay Player 组合收口结论
 
-## 1. 审计结论
+> 本文记录 2026-08-12 收口后的最终资产职责。历史迁移以 Git 为准，不再把临时结构当作当前设计。
 
-当前 `Assets/FirePlay/Runtime/Prefab/Player.prefab` 的根节点有 18 个 Unity 组件：
+## 1. 结论
 
-- `Transform`、`CharacterController`、`AudioSource`；
-- 15 个 FirePlay 自定义 `MonoBehaviour`。
-- `Modules/FlameModule` 子节点挂载火焰逻辑、放置/升级、纯火焰表现和音景桥接；`Modules/ActivityModule` 子节点挂载活动服务；`Modules/InteractionModule` 子节点挂载 `PlayerInteraction` 与 `InteractionRouter`，不再占用 Player 根节点。
+Player 的运行职责已经按“基础能力 + Gameplay 模块 + 网络适配”分开。后续美术、活动和场景开发不再继续重构 Player 总体架构；只有在具体需求证明现有边界无法承载时，才允许修改公共契约。
 
-数量本身不是唯一问题。真正的问题是 Player 根节点同时承担了移动、交互、火焰资源、世界操作、活动权威、活动表现、视觉桥接和旧 Rest 逻辑。接入实时网络前必须完成职责收口，否则网络所有权和表现同步会继承这组混合依赖。
+组件数量不是继续合并代码的理由。当前保留的独立边界具有不同生命周期或权威归属，例如：
 
-当前阶段只做审计和边界整理，不直接删除已经验收的功能。
+- `PlayerActivityHost` 管理活动 Session 与权威动作；
+- `PlayerActivityPresentationHost` 执行本地 UI、Camera 和 Player 表现请求；
+- `FlameResourceController` 管理余火；
+- `PlayerFlameController` 管理玩家持有的火苗对象；
+- `FirePlayNetworkPlayer` 只负责 NGO 所有权、请求、快照与远端表现桥接。
 
-## 2. 当前根组件清单
+这些职责不能为了减少 Inspector 中的组件数量而重新合并。
 
-| 分组 | 当前组件 | 判断 |
+## 2. 正式 Player 资产
+
+| Prefab | 用途 | 是否直接放入场景 |
 |---|---|---|
-| 运动与输入 | `FirePlayPlayerInput`、`PlayerMovement`、`PlayerLook`、`PlayerModeController` | 保留独立执行边界；后续只统一入口，不先合并移动代码 |
-| 火焰资源 | `PlayerFlameController`、`FlameResourceController` | 保留分离；前者管理火苗/道具，后者管理余火资源权威 |
-| 火焰表现 | `FlameResourceVisualBridge`、`FlameContractionController` | 保留为表现/输入桥接，必要时迁移到 Player 表现子节点 |
-| 世界操作 | `PlayerInteraction`、`CampfirePlacement`、`CampfireUpgradeController`、`TreeLightColorSelector` | 需要收口；当前是 Player 上最混杂的一组玩法入口 |
-| 旧 Rest | `RestInteraction` | 暂时保留；观星仍依赖，不能与 Activity 强行合并 |
-| 活动权威 | `PlayerActivityHost` | 保留；是活动 Session 和未来网络权威入口 |
-| 活动表现 | `PlayerActivityPresentationHost` | 保留并与 Activity Host 分离；负责 UI、Camera、移动锁、朝向和表现请求执行 |
-| 活动专属表现 | `FishingActivityVisuals` | 不应长期放在 Player 根节点，迁移到钓鱼活动表现对象/子节点 |
-| 通用表现 | `PlayerAnimationController`、`PlayerAtmosphereBridge` | 保留执行边界；后续可归入 Player 表现子节点 |
-| 核心服务 | `LocalPlayerContext`、`PlayerSharedStateAdapter`、`PlayerExpressionController`、`PlayerProximityEffects`、`WorldCommandExecutor`、`InteractionRouter` | 合并候选；当前 6 个组件共同组成 Player 通用服务，但各自拥有 Unity 生命周期 |
+| `PlayerCoreOnly.prefab` | 纯基础移动实验：输入、移动、Look、`LocalPlayerContext`、语义 Camera Targets 和占位 Body | 可以；只用于移动、镜头或模块实验 |
+| `Player.prefab` | 完整单机 Gameplay 组合：基础 Player + Flame + Activity + Interaction + Rest + 表现 | 可以；`DemoScene`、`ArtScene` 与单机内容场景使用它 |
+| `PlayerNetworkBase.prefab` | NGO 技术基座：基础移动、`NetworkObject`、`FirePlayNetworkPlayer` 与网络权威需要的 Flame 基础 | **不可以**；只作为网络 Variant 的父资产 |
+| `PlayerNetworkGameplay.prefab` | 正式网络 Player：在 NetworkBase 上组合 Activity、Interaction、Rest、世界操作与活动 Visuals | 由 `NetworkManager` 生成，不手工放入玩法场景 |
 
-## 3. 已确认的结构问题
+`PlayerNetworkBase` 保留原网络基座 GUID，确保 `PlayerNetworkGameplay`、NGO Hash 和既有引用不因改名断裂。新的 `PlayerCoreOnly` 使用独立 GUID，避免网络与火焰能力再次污染纯基础资产。
 
-### 3.1 核心服务数量多，但不是都应继续独立为 MonoBehaviour
+`DefaultNetworkPrefabs.asset` 只登记实际可生成的正式网络 Prefab 和网络世界对象，不登记 `PlayerNetworkBase`。
 
-动态 `AddComponent` 已经删除，这是正确的第一步；但现在只是把隐式创建改成了显式挂载。`LocalPlayerContext` 仍要协调 5 个通用服务，导致初始化、禁用、远端对象过滤和 Inspector 引用分散在多个组件中。
-
-下一步应将这些服务变为一个明确的 `PlayerCoreHost`（名称可调整）加若干纯 C# 服务对象。目标是减少 Unity 生命周期入口，而不是把所有代码塞进一个巨型类。
-
-### 3.2 `PlayerInteraction` 与 `InteractionRouter` 必须做重复职责审计
-
-当前 `PlayerInteraction` 仍被多个 UI、世界操作和邻近效果直接引用；`InteractionRouter` 负责新的输入意图路由。两者不能长期并列成为两个“大入口”。
-
-迁移顺序应是：先列出所有调用方，统一到一个语义接口，再删除旧入口；不能直接删 `PlayerInteraction`。
-
-### 3.3 活动专属脚本不应挂在 Player 根节点
-
-`FishingActivityVisuals` 仍在 Player 根节点，说明活动表现和 Player 核心仍有残留耦合。`MarshmallowVisuals`、`GuitarActivityVisuals` 已经位于道具/子对象附近，钓鱼应按同一方向迁移。
-
-### 3.4 表现执行器与活动权威不能合并
-
-`PlayerActivityHost` 负责活动权威、Session 和 Action；`PlayerActivityPresentationHost` 负责 UI、Camera、移动锁、朝向、动画和 VFX 请求执行。两者看似都服务 Activity，但生命周期和未来联机归属不同，必须保持分离。
-
-### 3.5 火焰资源控制器与火苗道具控制器不能按名字合并
-
-`FlameResourceController` 是余火资源权威，`PlayerFlameController` 是玩家火苗/道具集合。它们都属于火焰体系，但不是同一个状态，合并会重新制造资源边界混乱。
-
-## 4. 目标 Player 结构：基础 Player + 可插拔模块
-
-本轮收口的终点不是“把所有系统合并进 PlayerCoreHost”，而是让 Player 可以只运行基础移动：
+## 3. 模块边界
 
 ```text
 基础 Player
-  ├─ CharacterController
-  ├─ 基础输入 / 移动 / Look
-  └─ 可选的基础动画与模式状态
+  ├─ FirePlayPlayerInput
+  ├─ PlayerMovement
+  ├─ PlayerLook
+  ├─ LocalPlayerContext / PlayerCoreHost
+  └─ PlayerCameraTargetSet
 
-可插拔模块
-  ├─ FlameModule：余火、火苗、冲刺消耗、放置/添火、世界操作和火焰表现
-  ├─ ActivityModule：Activity Host、Presentation Host、表情、活动表现和活动输入
-  └─ RestModule：当前坐下/观星旧入口，未来可替换为 Activity
+完整 Gameplay
+  ├─ FlameModule
+  ├─ ActivityModule
+  ├─ InteractionModule
+  ├─ Rest
+  └─ Animation / Expression / Proximity / World Command 表现与服务
+
+网络适配
+  ├─ NetworkObject
+  └─ FirePlayNetworkPlayer
+       └─ 请求 Host 裁决并同步稳定事实，不拥有具体活动玩法
 ```
 
-`PlayerCoreHost` 只负责基础 Player 上下文、身份、输入和模块注册，不再把火焰或活动服务视为核心必需依赖。缺少 FlameModule 或 ActivityModule 时，基础移动仍应可运行；模块接入后通过接口获取 Player 能力和状态。
+活动 Logic 不挂在 Player 上。活动内容继续由 `ActivityDefinition + Logic + Factory + Form + Visuals` 组合，Player 只持有通用 Host 和表现执行器。
 
-建议目标：基础 Player 根节点约 6～9 个组件；模块组件挂在独立子节点或模块 Prefab 上。活动道具 Visuals 和纯表现桥接尽量下沉到活动/模块对象，而不是回到 Player 根节点。
+Camera 的 Cinemachine 配置属于场景级 `ActivityCameraRigExecutor`。Player 只暴露 Follow、Frame、LookAt、InputPivot 等语义目标。
 
-## 5. 收口实施顺序
+## 4. 冻结规则
 
-### 阶段 A：建立调用方基线
+美术技术阶段遵守以下规则：
 
-- 冻结 Network SDK/Transport 接入；
-- 记录每个根组件的所有序列化引用、公共方法调用方和事件订阅；
-- 为移动、交互、火焰、活动、Rest 建立最小回归清单；
-- 不删除代码，不改变行为。
+1. 不把具体活动字段加入 `PlayerActivityHost`、`LocalPlayerContext` 或网络层；
+2. 不让 Shader、灯光、粒子、植被或环境音直接修改余火、篝火或活动状态；
+3. 表现层读取状态、事件或只读快照，再驱动 Renderer、VFX、Audio、Volume 和 Animator；
+4. 不在运行时用 `AddComponent` 补核心 Player 能力；Prefab 缺配置时直接报告；
+5. 不因为 Hierarchy 中组件较多而合并不同权威或生命周期的组件；
+6. `PlayerNetworkBase` 不作为测试角色或场景 Player 使用；
+7. `PlayerCoreOnly` 必须持续保持不含 Flame、Activity、Rest、Interaction 与 Network。
 
-### 阶段 B：先建组合宿主，不搬逻辑
+## 5. 有意保留的技术债
 
-- 已新增非 `MonoBehaviour` 的 `PlayerCoreHost`，由 `LocalPlayerContext` 持有；
-- 现有服务仍然显式挂在 Prefab 上并由原组件执行，宿主只集中基础上下文、可选服务初始化和模块注册；
-- 远端 Player 不会通过宿主注册本地输入、EventBus 命令执行器或本地全局服务；
-- `IPlayerModule` / `PlayerModuleContext` 已建立，缺少 Flame 或 Activity 模块时不再因为可选服务缺失而阻止基础 Player 就绪；
-- `FirePlayPlayerInput` 现在只把 `Move`、`Look` 作为基础动作，Sprint、火焰、Rest、Activity 和 UI 动作均为可选动作；
-- `PlayerMovement` 通过 `IPlayerSprintPolicy` 接入冲刺消耗，基础 Player 没有 FlameModule 时仍可移动和冲刺；
-- 已新增 `Assets/FirePlay/Runtime/Prefab/PlayerCoreOnly.prefab`，作为基础 Player 的实验资产；它只保留 CharacterController、基础输入、移动、视角、LocalPlayerContext 和最小视觉子节点，不绑定任何可选功能组件。
-- 已新增 `PlayerCameraTargetSet` / `IPlayerCameraTargetProvider`，Player 只提供框架无关的 Follow、Frame、LookAt、InputPivot 目标；Cinemachine 和活动专属目标不进入 Player Core。
-- 静态 Prefab 检查和命令行编译已通过；需要 Play Mode 验收后，才能把它作为后续模块挂载基线。
-- 已新增场景级 `ActivityCameraRig` / `ActivityCameraRigExecutor`，DemoScene 的活动 Presentation 已改为请求它；`RitualCameraDirector` 暂时只保留旧 Rest/观星/旧钓鱼入口和兼容字段。
-- 已移除 `RitualCameraDirector` 中重复的新 Activity profile 字段和接口实现；Activity profile 只在 `ActivityCameraRig` 配置，旧 Director 只负责 Rest/观星/旧钓鱼。
-- 已新增 `Modules/FlameModule` 子节点和 `FlameModule`，并由 `PlayerCoreHost` 自动发现和初始化；模块同时承接冲刺余火策略以及放置/升级篝火的世界操作组件。
-- `PlayerMovement` 现在只依赖 `IPlayerSprintPolicy`，完整 Player 由 FlameModule 提供策略，Core-only Player 没有该模块时不再依赖火焰。
-- `LocalPlayerContext`、`PlayerInteraction`、`WorldCommandExecutor` 与放置 UI 已改为从 Player 子树解析这两个世界操作组件；放置输入按 Player 根归属判断，避免子节点迁移后事件失效。
-- `FlameResourceController`、`PlayerFlameController`、`FlameResourceVisualBridge`、`FlameContractionController`、`PlayerAtmosphereBridge` 已迁入 FlameModule；表现桥接、Rest、交互和邻近效果已改为从 Player 子树解析。
-- 已建立 `ActivityModule`，并将 `FishingActivityVisuals` 移入其子节点；`PlayerActivityHost` 和 `PlayerActivityPresentationHost` 暂留根节点作为统一适配入口。
-- `PlayerInteraction` 现在只负责扫描/目标描述，`InteractionRouter` 负责唯一的原始输入转语义意图入口；二者不再重复持有火焰世界执行字段。
-- `InteractionModule` 已完成下沉；`LocalPlayerContext`、`PlayerProximityEffects`、TreeLight 选择器和子节点初始化均已适配父级查找。
-- 下一步确认本地/远端 Player 生命周期，再处理 Player 根上剩余的 Rest、Activity Host 和通用表现服务；资源权威不再继续复制或拆分。
+- `Player.prefab` 是已验收的完整单机组合，并非 `PlayerCoreOnly` 的 Variant；当前不为追求继承形式而重做它。
+- `RestInteraction` 继续承载坐下与观星的轻量休息链路；观星不是独立小游戏，不强制重写为完整活动玩法。
+- `PlayerActivityHost` 文件偏大，但公共职责仍集中在 Session、网络镜像和 Presentation 协调；没有真实修改压力前不做纯行数拆分。
+- `PlayerSharedStateAdapter` 仍是 Unity 表现适配器；它不是新增玩法状态的入口。
 
-### 阶段 C：先建立模块边界，再迁移服务
+以上项目不阻塞美术技术与内容生产。真正实现伙伴赠送、动作级目标选择或联机异常恢复时，再分别建立最小契约。
 
-`PlayerSharedStateService` 已迁入 `PlayerCoreHost`，但它不能继续成为把表情、活动或火焰强行绑定到基础 Player 的理由。后续先完成：
+## 6. 收口验收
 
-1. 将 `PlayerSharedStateAdapter`、表达/邻近效果归入 Activity/Presentation 或独立 StateModule；
-2. 将 Flame 相关服务归入 FlameModule；
-3. 将 Activity Host、Presentation Host 和活动 Visuals 归入 ActivityModule；
-4. 基础 Player 在没有这些模块时仍能移动、转向和运行基础输入。
+Unity 重导入后验证：
 
-每迁移一个模块就进行一次编译和 PlayMode 回归，不做批量删除。
-
-### 阶段 D：收口重复入口和活动残留
-
-- 完成 `PlayerInteraction` 与 `InteractionRouter` 调用方迁移后，删除旧入口或降为纯扫描器；
-- 将 `FishingActivityVisuals` 从 Player 根节点迁移到活动表现对象；
-- 观星迁移为 Activity 前，保留 `RestInteraction`；
-- 确认活动 Host、Presentation Host、火焰资源控制器的独立边界。
-
-### 阶段 E：联机前门禁
-
-只有以下条件全部满足，才恢复 Network SDK/Transport 工作：
-
-- Player 根节点职责表已稳定；
-- 本地与远端 Player 的核心服务初始化行为明确；
-- 活动权威和表现请求仍能通过现有验收；
-- 火焰资源、世界操作和活动动作没有绕过统一入口；
-- 至少完成一次完整 Demo 回归。
-
-## 6. 当前明确不做的事情
-
-- 不为了减少组件数量，把 `PlayerActivityHost` 和 `PlayerActivityPresentationHost` 合成一个类；
-- 不把 `FlameResourceController` 与 `PlayerFlameController` 合并；
-- 不在观星迁移前删除 `RestInteraction`；
-- 不在没有调用方清单的情况下直接删除 `PlayerInteraction`；
-- 不在 Player 收口完成前继续增加网络同步代码。
+1. `PlayerCoreOnly` Inspector 中没有 Network、Flame、Activity、Rest 或 Interaction 组件；
+2. `PlayerNetworkGameplay` Prefab Variant 的父资产显示为 `PlayerNetworkBase`，没有 Missing 引用；
+3. `DefaultNetworkPrefabs` 包含 `PlayerNetworkGameplay`，不包含 `PlayerNetworkBase`；
+4. `DemoScene` 继续使用 `Player.prefab`，完整单机移动、余火、活动、Rest 与世界交互正常；
+5. 命令行编译为 0 错误、0 警告。

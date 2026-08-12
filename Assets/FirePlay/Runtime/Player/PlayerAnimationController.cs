@@ -81,6 +81,7 @@ namespace DemonViglu.FirePlay.Player
         private Quaternion _placeholderBaseRotation;
         private float _placeholderCuePulse;
 
+        public event Action<string> CuePlayed;
         public string LastCueId { get; private set; } = string.Empty;
         public bool IsStateActive(string stateId) =>
             !string.IsNullOrWhiteSpace(stateId) && _activeStates.Contains(stateId);
@@ -168,17 +169,17 @@ namespace DemonViglu.FirePlay.Player
             if (string.IsNullOrWhiteSpace(cueId)) return;
             LastCueId = cueId;
             _placeholderCuePulse = 1f;
-            if (TryPlayGuitarKeyCue(cueId))
-                return;
-
-            foreach (var binding in _triggerBindings)
+            if (!TryPlayGuitarKeyCue(cueId))
             {
-                if (binding.cueId == cueId)
+                foreach (var binding in _triggerBindings)
                 {
+                    if (binding.cueId != cueId) continue;
                     SetTrigger(binding.parameterName);
-                    return;
+                    break;
                 }
             }
+
+            CuePlayed?.Invoke(cueId);
         }
 
         private bool TryPlayGuitarKeyCue(string cueId)

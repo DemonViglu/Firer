@@ -218,8 +218,8 @@ namespace DemonViglu.FirePlay.Network
                 && !anotherLocalPlayer
                 && canBindSceneServices;
             // Network Players have one world mutation path: this component's
-            // Host-authoritative RPC boundary. The standalone executor remains
-            // available on PlayerCoreOnly outside a network session.
+            // Host-authoritative RPC boundary. The standalone complete Player
+            // may keep its local executor outside a network session.
             _playerContext?.CommandExecutor?.ConfigureLocalExecution(false);
             _playerContext?.ConfigureNetworkRole(HasLocalGameplayControl, PlayerId);
             _flameModule?.CampfirePlacement?.ConfigureRequestTransport(
@@ -523,4 +523,3 @@ namespace DemonViglu.FirePlay.Network
         }
     }
 }
-

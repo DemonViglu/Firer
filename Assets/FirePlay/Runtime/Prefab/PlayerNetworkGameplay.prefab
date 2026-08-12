@@ -526,6 +526,7 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.GuitarActivityVisuals
   _activityHost: {fileID: 2000000000000004}
+  _animationController: {fileID: 2000000000000007}
   _guitarProp: {fileID: 2000000000000071}
   _renderers:
   - {fileID: 2000000000000083}
@@ -533,9 +534,10 @@ MonoBehaviour:
   _audioSource: {fileID: 2000000000000015}
   _keyClips: []
   _useProceduralFallback: 1
-  _proceduralVolume: 0.22
-  _proceduralDuration: 0.65
-  _lowestFrequency: 196
+  _proceduralVolume: 0.34
+  _proceduralDuration: 1.35
+  _rootFrequency: 261.6256
+  _pianoBrightness: 0.62
 --- !u!82 &2000000000000015
 AudioSource:
   m_ObjectHideFlags: 0

@@ -20,7 +20,8 @@ namespace DemonViglu.FirePlay.Activity
             ReadyToCast,
             WaitingForBite,
             BiteReady,
-            Fighting
+            Fighting,
+            CatchReady
         }
 
         private readonly float _rodFuelCost;
@@ -29,31 +30,46 @@ namespace DemonViglu.FirePlay.Activity
         private readonly float _minimumBiteDelay;
         private readonly float _maximumBiteDelay;
         private readonly float _hookWindowSeconds;
-        private readonly float _reelTensionGain;
-        private readonly float _reelProgressGain;
-        private readonly float _easeTensionDrop;
-        private readonly float _easeProgressLoss;
-        private readonly float _fishPullPerSecond;
-        private readonly float _fishPullVariance;
+        private readonly float _catchZoneSize;
+        private readonly float _liftAcceleration;
+        private readonly float _gravityAcceleration;
+        private readonly float _catchBarDrag;
+        private readonly float _maximumCatchBarSpeed;
+        private readonly float _fishMoveSpeed;
+        private readonly float _minimumFishTargetDuration;
+        private readonly float _maximumFishTargetDuration;
+        private readonly float _catchGainPerSecond;
+        private readonly float _catchLossPerSecond;
         private readonly Random _random;
 
         private FishingState _state;
         private int _catches;
         private float _stateEndsAt;
-        private float _fightElapsed;
-        private float _tension;
+        private float _fishPosition;
+        private float _fishTarget;
+        private float _fishTargetTime;
+        private float _catchBarPosition;
+        private float _catchBarVelocity;
         private float _catchProgress;
-        private int _publishedTensionPercent = -1;
+        private bool _liftHeld;
+        private int _publishedFishPositionPercent = -1;
+        private int _publishedCatchBarPositionPercent = -1;
         private int _publishedProgressPercent = -1;
 
         public bool HasRod => _state != FishingState.None;
         public bool IsLineCast => _state == FishingState.WaitingForBite
                                   || _state == FishingState.BiteReady
-                                  || _state == FishingState.Fighting;
+                                  || _state == FishingState.Fighting
+                                  || _state == FishingState.CatchReady;
         public bool IsFishBiting => _state == FishingState.BiteReady;
         public bool IsFighting => _state == FishingState.Fighting;
-        public float Tension01 => _tension;
+        public bool IsCatchReady => _state == FishingState.CatchReady;
+        public bool IsLiftHeld => _liftHeld;
+        public float FishPosition01 => _fishPosition;
+        public float CatchBarPosition01 => _catchBarPosition;
+        public float CatchZoneSize01 => _catchZoneSize;
         public float CatchProgress01 => _catchProgress;
+        public bool IsFishInsideCatchBar => IsInsideCatchBar();
         public int Catches => _catches;
         public int CatchesPerRod => _catchesPerRod;
         public string Status { get; private set; } = "准备钓鱼";
@@ -66,12 +82,16 @@ namespace DemonViglu.FirePlay.Activity
             float minimumBiteDelay = 1.5f,
             float maximumBiteDelay = 4f,
             float hookWindowSeconds = 2f,
-            float reelTensionGain = 0.2f,
-            float reelProgressGain = 0.2f,
-            float easeTensionDrop = 0.34f,
-            float easeProgressLoss = 0.06f,
-            float fishPullPerSecond = 0.035f,
-            float fishPullVariance = 0.08f,
+            float catchZoneSize = 0.28f,
+            float liftAcceleration = 2.25f,
+            float gravityAcceleration = 1.65f,
+            float catchBarDrag = 2.8f,
+            float maximumCatchBarSpeed = 0.9f,
+            float fishMoveSpeed = 0.52f,
+            float minimumFishTargetDuration = 0.45f,
+            float maximumFishTargetDuration = 1.15f,
+            float catchGainPerSecond = 0.34f,
+            float catchLossPerSecond = 0.2f,
             Random random = null)
         {
             _rodFuelCost = Math.Max(0f, rodFuelCost);
@@ -80,12 +100,16 @@ namespace DemonViglu.FirePlay.Activity
             _minimumBiteDelay = Math.Max(0.1f, minimumBiteDelay);
             _maximumBiteDelay = Math.Max(_minimumBiteDelay, maximumBiteDelay);
             _hookWindowSeconds = Math.Max(0.1f, hookWindowSeconds);
-            _reelTensionGain = Math.Clamp(reelTensionGain, 0.01f, 1f);
-            _reelProgressGain = Math.Clamp(reelProgressGain, 0.01f, 1f);
-            _easeTensionDrop = Math.Clamp(easeTensionDrop, 0.01f, 1f);
-            _easeProgressLoss = Math.Clamp(easeProgressLoss, 0f, 1f);
-            _fishPullPerSecond = Math.Max(0f, fishPullPerSecond);
-            _fishPullVariance = Math.Max(0f, fishPullVariance);
+            _catchZoneSize = Math.Clamp(catchZoneSize, 0.1f, 0.75f);
+            _liftAcceleration = Math.Max(0.1f, liftAcceleration);
+            _gravityAcceleration = Math.Max(0.1f, gravityAcceleration);
+            _catchBarDrag = Math.Max(0f, catchBarDrag);
+            _maximumCatchBarSpeed = Math.Max(0.1f, maximumCatchBarSpeed);
+            _fishMoveSpeed = Math.Max(0.05f, fishMoveSpeed);
+            _minimumFishTargetDuration = Math.Max(0.1f, minimumFishTargetDuration);
+            _maximumFishTargetDuration = Math.Max(_minimumFishTargetDuration, maximumFishTargetDuration);
+            _catchGainPerSecond = Math.Max(0.01f, catchGainPerSecond);
+            _catchLossPerSecond = Math.Max(0.01f, catchLossPerSecond);
             _random = random ?? new Random();
         }
 
@@ -121,8 +145,8 @@ namespace DemonViglu.FirePlay.Activity
                 "fishing.primary" => HandlePrimary(context, request.SessionRevision),
                 "fishing.materialize" => Materialize(context),
                 "fishing.cast" => Cast(),
-                "fishing.reel" => Reel(context, request.SessionRevision),
-                "fishing.ease" => EaseLine(),
+                "fishing.lift.start" => SetLiftHeld(context, request.SessionRevision, true),
+                "fishing.lift.stop" => SetLiftHeld(context, request.SessionRevision, false),
                 "activity.exit" => ActivityActionResult.End(ActivityEndReason.Requested, "Fishing activity exited"),
                 _ => ActivityActionResult.Reject("Unknown fishing action")
             };
@@ -137,7 +161,7 @@ namespace DemonViglu.FirePlay.Activity
                 {
                     _state = FishingState.BiteReady;
                     _stateEndsAt = _hookWindowSeconds;
-                    Status = "有鱼咬钩了，快收线";
+                    Status = "有鱼咬钩了，快提竿";
                     MarkNetworkStateChanged();
                 }
             }
@@ -153,20 +177,34 @@ namespace DemonViglu.FirePlay.Activity
             }
             else if (_state == FishingState.Fighting && deltaTime > 0f)
             {
-                _fightElapsed += deltaTime;
-                var pullPulse = 0.5f + 0.5f * (float)Math.Sin(_fightElapsed * 3.7f);
-                _tension = Math.Clamp(
-                    _tension + deltaTime * (_fishPullPerSecond + _fishPullVariance * pullPulse),
+                AdvanceFish(deltaTime);
+                AdvanceCatchBar(deltaTime);
+
+                var fishInside = IsInsideCatchBar();
+                _catchProgress = Math.Clamp(
+                    _catchProgress + deltaTime * (fishInside ? _catchGainPerSecond : -_catchLossPerSecond),
                     0f,
                     1f);
-                _catchProgress = Math.Max(0f, _catchProgress - deltaTime * 0.012f);
 
-                if (_tension >= 1f)
+                if (_catchProgress >= 1f)
                 {
-                    BreakLine("鱼线绷断了，重新抛竿吧");
+                    _state = FishingState.CatchReady;
+                    _liftHeld = false;
+                    _catchBarVelocity = 0f;
+                    Status = "抓住了！点击收获完成这次钓鱼";
+                    MarkNetworkStateChanged();
                     return;
                 }
 
+                if (_catchProgress <= 0f)
+                {
+                    EscapeFish();
+                    return;
+                }
+
+                Status = fishInside
+                    ? $"保持覆盖：捕获 {ToPercent(_catchProgress)}%"
+                    : $"鱼游出了绿色区域：捕获 {ToPercent(_catchProgress)}%";
                 MarkNetworkStateChangedWhenGaugeMoves();
             }
         }
@@ -181,10 +219,14 @@ namespace DemonViglu.FirePlay.Activity
             IsLineCast,
             IsFishBiting,
             IsFighting,
+            IsCatchReady,
             _catches,
             _catchesPerRod,
-            _tension,
+            _fishPosition,
+            _catchBarPosition,
+            _catchZoneSize,
             _catchProgress,
+            _liftHeld,
             Status).Serialize();
 
         public void OnPresentationStarted(IActivityContext context, uint sessionRevision)
@@ -235,6 +277,7 @@ namespace DemonViglu.FirePlay.Activity
         {
             if (!HasRod) return Materialize(context);
             if (_state == FishingState.BiteReady) return HookFish(context, sessionRevision);
+            if (_state == FishingState.CatchReady) return CollectCatch(context);
             return Cast();
         }
 
@@ -268,43 +311,21 @@ namespace DemonViglu.FirePlay.Activity
             return ActivityActionResult.Consume("Fishing line cast");
         }
 
-        private ActivityActionResult Reel(IActivityContext context, uint sessionRevision)
+        private ActivityActionResult SetLiftHeld(
+            IActivityContext context,
+            uint sessionRevision,
+            bool held)
         {
-            if (_state == FishingState.BiteReady)
-                return HookFish(context, sessionRevision);
             if (_state != FishingState.Fighting)
-                return ActivityActionResult.Reject("There is no hooked fish to reel");
+                return ActivityActionResult.Reject("There is no hooked fish to control");
+            if (_liftHeld == held)
+                return ActivityActionResult.Consume(held ? "Catch bar already rising" : "Catch bar already falling");
 
-            RequestReelCue(context, sessionRevision);
-            _tension = Math.Clamp(_tension + _reelTensionGain, 0f, 1f);
-            _catchProgress = Math.Clamp(_catchProgress + _reelProgressGain, 0f, 1f);
-
-            if (_tension >= 1f)
-            {
-                BreakLine("收线太猛，鱼线绷断了");
-                return ActivityActionResult.Consume("Fishing line snapped");
-            }
-            if (_catchProgress < 1f)
-            {
-                Status = $"稳住鱼线：进度 {ToPercent(_catchProgress)}%，张力 {ToPercent(_tension)}%";
-                MarkNetworkStateChanged();
-                return ActivityActionResult.Consume("Fishing line reeled");
-            }
-
-            _catches++;
-            if (_fuelPerCatch > 0f)
-                context.Flame.Restore(_fuelPerCatch);
-
-            if (_catches >= _catchesPerRod)
-            {
-                return ActivityActionResult.End(ActivityEndReason.Completed, "Fishing session completed");
-            }
-
-            _state = FishingState.ReadyToCast;
-            ResetFightGauges();
-            Status = $"钓到第 {_catches}/{_catchesPerRod} 条鱼，余火返还 {_fuelPerCatch:0}";
+            _liftHeld = held;
+            if (held)
+                RequestReelCue(context, sessionRevision);
             MarkNetworkStateChanged();
-            return ActivityActionResult.Consume("Fish reeled");
+            return ActivityActionResult.Consume(held ? "Catch bar rising" : "Catch bar falling");
         }
 
         private ActivityActionResult HookFish(IActivityContext context, uint sessionRevision)
@@ -313,33 +334,36 @@ namespace DemonViglu.FirePlay.Activity
                 return ActivityActionResult.Reject("There is no fish to hook");
 
             _state = FishingState.Fighting;
-            _fightElapsed = 0f;
-            _tension = 0.28f;
-            _catchProgress = 0.08f;
+            _fishPosition = 0.62f;
+            _fishTarget = 0.76f;
+            _fishTargetTime = NextFishTargetDuration();
+            _catchBarPosition = 0.32f;
+            _catchBarVelocity = 0f;
+            _catchProgress = 0.35f;
+            _liftHeld = false;
             RequestReelCue(context, sessionRevision);
-            Status = "鱼已上钩！交替收线与放线，别让张力爆表";
+            Status = "鱼已上钩！按住让绿色区域上升，松开让它下落";
             MarkNetworkStateChanged();
             return ActivityActionResult.Consume("Fish hooked");
         }
 
-        private ActivityActionResult EaseLine()
+        private ActivityActionResult CollectCatch(IActivityContext context)
         {
-            if (_state != FishingState.Fighting)
-                return ActivityActionResult.Reject("There is no hooked fish to ease");
+            if (_state != FishingState.CatchReady)
+                return ActivityActionResult.Reject("No fish is ready to collect");
 
-            _tension = Math.Max(0f, _tension - _easeTensionDrop);
-            _catchProgress = Math.Max(0f, _catchProgress - _easeProgressLoss);
-            Status = $"放线缓冲：进度 {ToPercent(_catchProgress)}%，张力 {ToPercent(_tension)}%";
-            MarkNetworkStateChanged();
-            return ActivityActionResult.Consume("Fishing line eased");
-        }
+            _catches++;
+            if (_fuelPerCatch > 0f)
+                context.Flame.Restore(_fuelPerCatch);
 
-        private void BreakLine(string status)
-        {
+            if (_catches >= _catchesPerRod)
+                return ActivityActionResult.End(ActivityEndReason.Completed, "Fishing session completed");
+
             _state = FishingState.ReadyToCast;
             ResetFightGauges();
-            Status = status;
+            Status = $"钓到第 {_catches}/{_catchesPerRod} 条鱼，余火返还 {_fuelPerCatch:0}";
             MarkNetworkStateChanged();
+            return ActivityActionResult.Consume("Fish collected");
         }
 
         private void RequestReelCue(IActivityContext context, uint sessionRevision)
@@ -354,6 +378,72 @@ namespace DemonViglu.FirePlay.Activity
                 sessionRevision: sessionRevision));
         }
 
+        private void AdvanceFish(float deltaTime)
+        {
+            _fishTargetTime -= deltaTime;
+            if (_fishTargetTime <= 0f || Math.Abs(_fishPosition - _fishTarget) <= 0.015f)
+            {
+                _fishTarget = 0.06f + (float)_random.NextDouble() * 0.88f;
+                _fishTargetTime = NextFishTargetDuration();
+            }
+
+            _fishPosition = MoveTowards(
+                _fishPosition,
+                _fishTarget,
+                _fishMoveSpeed * deltaTime);
+        }
+
+        private void AdvanceCatchBar(float deltaTime)
+        {
+            var acceleration = _liftHeld ? _liftAcceleration : -_gravityAcceleration;
+            _catchBarVelocity += acceleration * deltaTime;
+            _catchBarVelocity *= (float)Math.Exp(-_catchBarDrag * deltaTime);
+            _catchBarVelocity = Math.Clamp(
+                _catchBarVelocity,
+                -_maximumCatchBarSpeed,
+                _maximumCatchBarSpeed);
+
+            _catchBarPosition += _catchBarVelocity * deltaTime;
+            var halfZone = _catchZoneSize * 0.5f;
+            var minimum = halfZone;
+            var maximum = 1f - halfZone;
+            if (_catchBarPosition < minimum)
+            {
+                _catchBarPosition = minimum;
+                _catchBarVelocity = Math.Max(0f, -_catchBarVelocity * 0.18f);
+            }
+            else if (_catchBarPosition > maximum)
+            {
+                _catchBarPosition = maximum;
+                _catchBarVelocity = Math.Min(0f, -_catchBarVelocity * 0.18f);
+            }
+        }
+
+        private bool IsInsideCatchBar()
+        {
+            if (_state != FishingState.Fighting && _state != FishingState.CatchReady)
+                return false;
+
+            const float fishHalfSize = 0.025f;
+            return Math.Abs(_fishPosition - _catchBarPosition)
+                   <= _catchZoneSize * 0.5f + fishHalfSize;
+        }
+
+        private void EscapeFish()
+        {
+            _state = FishingState.ReadyToCast;
+            ResetFightGauges();
+            Status = "鱼儿挣脱了，重新抛竿再试一次吧";
+            MarkNetworkStateChanged();
+        }
+
+        private float NextFishTargetDuration()
+        {
+            return _minimumFishTargetDuration
+                   + (float)_random.NextDouble()
+                   * (_maximumFishTargetDuration - _minimumFishTargetDuration);
+        }
+
         private void ResetState()
         {
             _state = FishingState.None;
@@ -366,7 +456,8 @@ namespace DemonViglu.FirePlay.Activity
 
         private void MarkNetworkStateChanged()
         {
-            _publishedTensionPercent = ToPercent(_tension);
+            _publishedFishPositionPercent = ToPercent(_fishPosition);
+            _publishedCatchBarPositionPercent = ToPercent(_catchBarPosition);
             _publishedProgressPercent = ToPercent(_catchProgress);
             NetworkStateRevision = NetworkStateRevision == uint.MaxValue
                 ? 1u
@@ -375,9 +466,11 @@ namespace DemonViglu.FirePlay.Activity
 
         private void MarkNetworkStateChangedWhenGaugeMoves()
         {
-            var tensionPercent = ToPercent(_tension);
+            var fishPositionPercent = ToPercent(_fishPosition);
+            var catchBarPositionPercent = ToPercent(_catchBarPosition);
             var progressPercent = ToPercent(_catchProgress);
-            if (Math.Abs(tensionPercent - _publishedTensionPercent) < 3
+            if (Math.Abs(fishPositionPercent - _publishedFishPositionPercent) < 2
+                && Math.Abs(catchBarPositionPercent - _publishedCatchBarPositionPercent) < 2
                 && Math.Abs(progressPercent - _publishedProgressPercent) < 3)
             {
                 return;
@@ -388,11 +481,23 @@ namespace DemonViglu.FirePlay.Activity
 
         private void ResetFightGauges()
         {
-            _fightElapsed = 0f;
-            _tension = 0f;
+            _fishPosition = 0.5f;
+            _fishTarget = 0.5f;
+            _fishTargetTime = 0f;
+            _catchBarPosition = _catchZoneSize * 0.5f;
+            _catchBarVelocity = 0f;
             _catchProgress = 0f;
-            _publishedTensionPercent = 0;
+            _liftHeld = false;
+            _publishedFishPositionPercent = ToPercent(_fishPosition);
+            _publishedCatchBarPositionPercent = ToPercent(_catchBarPosition);
             _publishedProgressPercent = 0;
+        }
+
+        private static float MoveTowards(float current, float target, float maximumDelta)
+        {
+            if (Math.Abs(target - current) <= maximumDelta)
+                return target;
+            return current + Math.Sign(target - current) * maximumDelta;
         }
 
         private static int ToPercent(float value) =>
@@ -409,10 +514,17 @@ namespace DemonViglu.FirePlay.Activity
         public bool IsLineCast { get; }
         public bool IsFishBiting { get; }
         public bool IsFighting { get; }
+        public bool IsCatchReady { get; }
         public int Catches { get; }
         public int CatchesPerRod { get; }
-        public int TensionPercent { get; }
+        public int FishPositionPercent { get; }
+        public int CatchBarPositionPercent { get; }
+        public int CatchZoneSizePercent { get; }
         public int CatchProgressPercent { get; }
+        public bool IsLiftHeld { get; }
+        public bool IsFishInsideCatchBar =>
+            Math.Abs(FishPositionPercent - CatchBarPositionPercent)
+            <= CatchZoneSizePercent * 0.5f + 2.5f;
         public string Status { get; }
 
         public FishingActivityStateSnapshot(
@@ -420,27 +532,35 @@ namespace DemonViglu.FirePlay.Activity
             bool isLineCast,
             bool isFishBiting,
             bool isFighting,
+            bool isCatchReady,
             int catches,
             int catchesPerRod,
-            float tension01,
+            float fishPosition01,
+            float catchBarPosition01,
+            float catchZoneSize01,
             float catchProgress01,
+            bool isLiftHeld,
             string status)
         {
             HasRod = hasRod;
             IsLineCast = isLineCast;
             IsFishBiting = isFishBiting;
             IsFighting = isFighting;
+            IsCatchReady = isCatchReady;
             Catches = Math.Max(0, catches);
             CatchesPerRod = Math.Max(1, catchesPerRod);
-            TensionPercent = ToPercent(tension01);
+            FishPositionPercent = ToPercent(fishPosition01);
+            CatchBarPositionPercent = ToPercent(catchBarPosition01);
+            CatchZoneSizePercent = Math.Clamp(ToPercent(catchZoneSize01), 10, 75);
             CatchProgressPercent = ToPercent(catchProgress01);
+            IsLiftHeld = isLiftHeld;
             Status = status ?? string.Empty;
         }
 
         public string Serialize()
         {
             var encodedStatus = Convert.ToBase64String(Encoding.UTF8.GetBytes(Status));
-            return $"{(HasRod ? 1 : 0)}|{(IsLineCast ? 1 : 0)}|{(IsFishBiting ? 1 : 0)}|{(IsFighting ? 1 : 0)}|{Catches}|{CatchesPerRod}|{TensionPercent}|{CatchProgressPercent}|{encodedStatus}";
+            return $"{(HasRod ? 1 : 0)}|{(IsLineCast ? 1 : 0)}|{(IsFishBiting ? 1 : 0)}|{(IsFighting ? 1 : 0)}|{(IsCatchReady ? 1 : 0)}|{Catches}|{CatchesPerRod}|{FishPositionPercent}|{CatchBarPositionPercent}|{CatchZoneSizePercent}|{CatchProgressPercent}|{(IsLiftHeld ? 1 : 0)}|{encodedStatus}";
         }
 
         public static bool TryParse(string payload, out FishingActivityStateSnapshot snapshot)
@@ -449,31 +569,39 @@ namespace DemonViglu.FirePlay.Activity
             if (string.IsNullOrWhiteSpace(payload)) return false;
 
             var parts = payload.Split('|');
-            if (parts.Length != 9
+            if (parts.Length != 13
                 || !TryParseFlag(parts[0], out var hasRod)
                 || !TryParseFlag(parts[1], out var isLineCast)
                 || !TryParseFlag(parts[2], out var isFishBiting)
                 || !TryParseFlag(parts[3], out var isFighting)
-                || !int.TryParse(parts[4], out var catches)
-                || !int.TryParse(parts[5], out var catchesPerRod)
-                || !int.TryParse(parts[6], out var tensionPercent)
-                || !int.TryParse(parts[7], out var catchProgressPercent))
+                || !TryParseFlag(parts[4], out var isCatchReady)
+                || !int.TryParse(parts[5], out var catches)
+                || !int.TryParse(parts[6], out var catchesPerRod)
+                || !int.TryParse(parts[7], out var fishPositionPercent)
+                || !int.TryParse(parts[8], out var catchBarPositionPercent)
+                || !int.TryParse(parts[9], out var catchZoneSizePercent)
+                || !int.TryParse(parts[10], out var catchProgressPercent)
+                || !TryParseFlag(parts[11], out var isLiftHeld))
             {
                 return false;
             }
 
             try
             {
-                var status = Encoding.UTF8.GetString(Convert.FromBase64String(parts[8]));
+                var status = Encoding.UTF8.GetString(Convert.FromBase64String(parts[12]));
                 snapshot = new FishingActivityStateSnapshot(
                     hasRod,
                     isLineCast,
                     isFishBiting,
                     isFighting,
+                    isCatchReady,
                     catches,
                     catchesPerRod,
-                    Math.Clamp(tensionPercent, 0, 100) / 100f,
+                    Math.Clamp(fishPositionPercent, 0, 100) / 100f,
+                    Math.Clamp(catchBarPositionPercent, 0, 100) / 100f,
+                    Math.Clamp(catchZoneSizePercent, 10, 75) / 100f,
                     Math.Clamp(catchProgressPercent, 0, 100) / 100f,
+                    isLiftHeld,
                     status);
                 return true;
             }

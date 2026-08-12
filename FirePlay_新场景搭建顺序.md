@@ -23,6 +23,9 @@ Player 基础移动
 |---|---|
 | `Assets/FirePlay/Runtime/Prefab/Player.prefab` | 完整互动场景。包含余火、活动、交互、Rest、表现和相关模块。 |
 | `Assets/FirePlay/Runtime/Prefab/PlayerCoreOnly.prefab` | 只验证基础移动、重力和镜头，不包含活动、篝火交互和余火模块。 |
+| `Assets/FirePlay/Runtime/Prefab/PlayerNetworkGameplay.prefab` | 正式网络 Player，由 `NetworkManager` 生成，不作为单机场景预放 Player。 |
+
+`PlayerNetworkBase.prefab` 是 `PlayerNetworkGameplay` 的技术父资产，禁止直接放入场景，也不登记为独立可生成网络对象。
 
 如果目标是新建“包含活动、篝火等互动内容”的场景，应直接使用完整的 `Player.prefab`。不要从空 GameObject 手动逐个添加 Player 组件，否则很容易漏掉模块之间的引用。
 

@@ -1983,14 +1983,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.GuitarActivityVisuals
   _activityHost: {fileID: 0}
+  _animationController: {fileID: 2884395103448089037}
   _guitarProp: {fileID: 5200876784428586955}
   _renderers: []
   _audioSource: {fileID: 8918313119764425079}
   _keyClips: []
   _useProceduralFallback: 1
-  _proceduralVolume: 0.22
-  _proceduralDuration: 0.65
-  _lowestFrequency: 196
+  _proceduralVolume: 0.34
+  _proceduralDuration: 1.35
+  _rootFrequency: 261.6256
+  _pianoBrightness: 0.62
 --- !u!1 &7288205605736068481
 GameObject:
   m_ObjectHideFlags: 0

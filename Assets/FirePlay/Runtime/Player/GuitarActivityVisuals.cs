@@ -13,22 +13,25 @@ namespace DemonViglu.FirePlay.Player
     public sealed class GuitarActivityVisuals : MonoBehaviour
     {
         [SerializeField] private PlayerActivityHost _activityHost;
+        [SerializeField] private PlayerAnimationController _animationController;
         [SerializeField] private Transform _guitarProp;
         [SerializeField] private Renderer[] _renderers;
         [SerializeField] private AudioSource _audioSource;
-        [Tooltip("按 1-21 键对应的音效；可留空，缺失项不会报错。")]
+        [Tooltip("按 Do4-Si6 顺序对应 21 键的正式音效；可留空，缺失项使用程序钢琴音。")]
         [SerializeField] private AudioClip[] _keyClips;
 
-        [Header("Procedural Fallback")]
-        [Tooltip("没有配置对应 AudioClip 时，使用轻量程序化拨弦音；正式音频资源会自动优先。")]
+        [Header("Procedural Piano Fallback")]
+        [Tooltip("没有配置对应 AudioClip 时，使用程序化柔和钢琴音；正式音频资源会自动优先。")]
         [SerializeField] private bool _useProceduralFallback = true;
-        [SerializeField, Range(0.01f, 1f)] private float _proceduralVolume = 0.22f;
-        [SerializeField, Min(0.1f)] private float _proceduralDuration = 0.65f;
-        [SerializeField, Min(55f)] private float _lowestFrequency = 196f;
+        [SerializeField, Range(0.01f, 1f)] private float _proceduralVolume = 0.34f;
+        [SerializeField, Min(0.2f)] private float _proceduralDuration = 1.35f;
+        [Tooltip("第一个音位 Do4 的频率。其余 20 键按三组 C 大调自然音阶计算。")]
+        [SerializeField, Min(55f)] private float _rootFrequency = 261.6256f;
+        [SerializeField, Range(0.2f, 1f)] private float _pianoBrightness = 0.62f;
 
         private bool _hasActivityState;
-        private int _playedKeyCount;
         private bool _loggedMissingHost;
+        private PlayerAnimationController _subscribedAnimationController;
         private readonly AudioClip[] _proceduralClips = new AudioClip[GuitarActivityLogic.KeyCount];
 
         private void Awake()
@@ -41,12 +44,15 @@ namespace DemonViglu.FirePlay.Player
 
         private void OnEnable()
         {
+            ResolveReferences();
+            SubscribeAnimationCues();
             ResetPresentation();
         }
 
         private void Update()
         {
             ResolveReferences();
+            SubscribeAnimationCues();
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (_activityHost == null && !_loggedMissingHost)
             {
@@ -64,14 +70,8 @@ namespace DemonViglu.FirePlay.Player
                 return;
             }
 
-            var firstState = !_hasActivityState;
             _hasActivityState = true;
             SetVisible(true);
-
-            if (!firstState && state.PlayedKeyCount > _playedKeyCount)
-                PlayKeySound(state.LastKeyIndex);
-
-            _playedKeyCount = state.PlayedKeyCount;
         }
 
         private bool TryReadState(out GuitarActivityStateSnapshot state)
@@ -98,14 +98,51 @@ namespace DemonViglu.FirePlay.Player
         {
             _activityHost ??= GetComponentInParent<PlayerActivityHost>();
             _activityHost ??= PlayerActivityHost.Local;
+            _animationController ??= GetComponentInParent<PlayerAnimationController>();
             _audioSource ??= GetComponent<AudioSource>();
+        }
+
+        private void SubscribeAnimationCues()
+        {
+            if (_subscribedAnimationController == _animationController)
+                return;
+
+            UnsubscribeAnimationCues();
+            if (_animationController == null)
+                return;
+
+            _animationController.CuePlayed += OnPlayerCuePlayed;
+            _subscribedAnimationController = _animationController;
+        }
+
+        private void UnsubscribeAnimationCues()
+        {
+            if (_subscribedAnimationController != null)
+                _subscribedAnimationController.CuePlayed -= OnPlayerCuePlayed;
+            _subscribedAnimationController = null;
+        }
+
+        private void OnPlayerCuePlayed(string cueId)
+        {
+            if (_activityHost?.ActiveActivityId != GuitarActivityLogic.ActivityId
+                || !GuitarActivityLogic.TryGetKeyIndex(cueId, out var keyIndex))
+            {
+                return;
+            }
+
+            PlayKeySound(keyIndex);
         }
 
         private void ResetPresentation()
         {
             _hasActivityState = false;
-            _playedKeyCount = 0;
             SetVisible(false);
+        }
+
+        private void OnDisable()
+        {
+            UnsubscribeAnimationCues();
+            ResetPresentation();
         }
 
         private void PlayKeySound(int keyIndex)
@@ -136,28 +173,55 @@ namespace DemonViglu.FirePlay.Player
             const int sampleRate = 44100;
             var duration = Mathf.Max(0.1f, _proceduralDuration);
             var sampleCount = Mathf.CeilToInt(sampleRate * duration);
-            var frequency = Mathf.Max(55f, _lowestFrequency)
-                            * Mathf.Pow(2f, (keyIndex - 1) / 12f);
-            var delayLength = Mathf.Max(2, Mathf.RoundToInt(sampleRate / frequency));
-            var delay = new float[delayLength];
+            var frequency = GuitarActivityLogic.GetNaturalNoteFrequency(
+                keyIndex,
+                Mathf.Max(55f, _rootFrequency));
             var samples = new float[sampleCount];
-            var random = new System.Random(0x47A1 + keyIndex * 7919);
-
-            for (var i = 0; i < delay.Length; i++)
-                delay[i] = (float)(random.NextDouble() * 2.0 - 1.0);
+            var random = new System.Random(0x51A7 + keyIndex * 7919);
+            var brightness = Mathf.Clamp(_pianoBrightness, 0.2f, 1f);
+            var twoPi = Mathf.PI * 2f;
 
             for (var i = 0; i < sampleCount; i++)
             {
-                var cursor = i % delayLength;
-                var next = (cursor + 1) % delayLength;
-                var envelope = 1f - i / (float)sampleCount;
-                var value = delay[cursor];
-                samples[i] = value * envelope;
-                delay[cursor] = (value + delay[next]) * 0.4965f;
+                var time = i / (float)sampleRate;
+                var attack = 1f - Mathf.Exp(-time * 360f);
+                var remaining = duration - time;
+                var release = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(remaining / 0.14f));
+                var tone = 0f;
+
+                // Piano strings are slightly stiff: higher partials are not
+                // perfectly harmonic and decay faster than the fundamental.
+                for (var harmonic = 1; harmonic <= 7; harmonic++)
+                {
+                    var harmonicWeight = Mathf.Pow(brightness, harmonic - 1)
+                                         / Mathf.Pow(harmonic, 0.72f);
+                    var inharmonicity = Mathf.Sqrt(1f + 0.00012f * harmonic * harmonic);
+                    var partialFrequency = frequency * harmonic * inharmonicity;
+                    var partialDecay = Mathf.Exp(-time * (1.45f + harmonic * 0.72f));
+                    tone += Mathf.Sin(twoPi * partialFrequency * time + harmonic * 0.19f)
+                            * harmonicWeight
+                            * partialDecay;
+                }
+
+                // A quiet three-string spread makes the placeholder warmer
+                // and less synthetic without changing the note frequency.
+                var stringDecay = Mathf.Exp(-time * 1.75f);
+                var stringSpread = (
+                    Mathf.Sin(twoPi * frequency * 0.9986f * time)
+                    + Mathf.Sin(twoPi * frequency * 1.0014f * time))
+                    * 0.07f
+                    * stringDecay;
+                var hammerNoise = (float)(random.NextDouble() * 2d - 1d)
+                                  * Mathf.Exp(-time * 75f)
+                                  * 0.055f;
+                samples[i] = Mathf.Clamp(
+                    (tone * 0.38f + stringSpread + hammerNoise) * attack * release,
+                    -1f,
+                    1f);
             }
 
             cached = AudioClip.Create(
-                $"GuitarTone_{keyIndex:00}",
+                $"Piano_{GuitarActivityLogic.GetNoteLabel(keyIndex)}",
                 sampleCount,
                 1,
                 sampleRate,
@@ -187,6 +251,7 @@ namespace DemonViglu.FirePlay.Player
 
         private void OnDestroy()
         {
+            UnsubscribeAnimationCues();
             foreach (var clip in _proceduralClips)
             {
                 if (clip != null)

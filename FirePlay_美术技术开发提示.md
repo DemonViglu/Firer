@@ -10,8 +10,7 @@
 开始前必须依次完整阅读：
 1. FirePlay_开发状态.md
 2. FirePlay_美术技术开发提示.md
-3. FirePlay_活动系统重构契约.md（只用于理解不可破坏的玩法/表现边界）
-4. FirePlay_新场景搭建顺序.md（需要新建或复制场景时阅读）
+3. FirePlay_核心架构.md（只用于理解不可破坏的玩法/表现边界和场景组装）
 
 当前玩法、火焰、活动、Player 与网络适配的核心架构已经冻结。不要继续为了整洁重构 Activity、Player、EventBus、GameInstanceSubsystem 或网络层；美术表现只读取状态、事件和只读快照。不要改变已经验收的玩法规则。
 

@@ -10,7 +10,7 @@ DemoScene 只保留一个 `NetworkBootstrap`：
 - `UnityTransport`：传输实现；
 - `FirePlayNetworkBootstrap`：唯一 Host / Server / Client 启停入口；
 - `ConnectionApproval`：必须显式开启；Bootstrap 独占准入回调；
-- 场景默认：`Host + 127.0.0.1:7777`；
+- 当前 `DemoScene` 开发配置：`Client + 127.0.0.1:7777` 自动尝试连接，连接窗体默认隐藏；
 - Gameplay、Activity 和 World 脚本不得直接读取 `NetworkManager` 来启动会话。
 
 PC 构建无需修改场景即可通过启动参数覆盖：
@@ -31,7 +31,7 @@ FirePlayNetworkBootstrap.ConfigureEndpoint(address, port)
 FirePlayNetworkBootstrap.StartClient()
 ```
 
-连接界面不持有 `NetworkManager` 或 `UnityTransport`。制作 Android Client 测试包时，将唯一 Bootstrap 的 `Auto Start` 设为 `Manual`，并在场景 `FirePlayUiBootstrap` 开启 `Show Network Connection On Start`；玩家在窗体内填写地址与端口后连接。PC Host 保持默认 Host 或使用命令行。
+连接界面不持有 `NetworkManager` 或 `UnityTransport`。它目前只是开发期 Client 直连入口，支持填写地址/端口、连接和断开，不负责启动 Host，也不是正式房间 UI。制作 Android Client 测试包时，将唯一 Bootstrap 的 `Auto Start` 设为 `Manual`，并在场景 `FirePlayUiBootstrap` 开启 `Show Network Connection On Start`；玩家在窗体内填写地址与端口后连接。PC Host 使用命令行或在专用测试场景中明确设为 Host。
 
 ## 2. 连接准入边界
 

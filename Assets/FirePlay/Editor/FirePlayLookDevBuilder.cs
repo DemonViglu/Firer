@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -25,6 +26,7 @@ namespace DemonViglu.FirePlay.Editor
         private const string SnowScenePath = "Assets/Scenes/LookDev_SnowGrandValley.unity";
         private const string RootPath = "Assets/FirePlay/LookDev";
         private const string MaterialPath = RootPath + "/Materials";
+        private const string AnimationPath = RootPath + "/Animations";
         private const string PreviewPath = "LookDev_Campfire_Preview.png";
         private const string WidePreviewPath = "LookDev_WideValley_Preview.png";
         private const string GrandPreviewPath = "LookDev_GrandValley_Preview.png";
@@ -231,6 +233,7 @@ namespace DemonViglu.FirePlay.Editor
         {
             EnsureFolder("Assets/FirePlay", "LookDev");
             EnsureFolder(RootPath, "Materials");
+            EnsureFolder(RootPath, "Animations");
         }
 
         private static void EnsureFolder(string parent, string child)
@@ -529,12 +532,12 @@ namespace DemonViglu.FirePlay.Editor
 
             RenderSettings.skybox = sky;
             RenderSettings.ambientMode = AmbientMode.Skybox;
-            RenderSettings.ambientIntensity = 0.82f;
+            RenderSettings.ambientIntensity = 0.72f;
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
-            RenderSettings.fogColor = new Color(0.70f, 0.79f, 0.87f);
-            RenderSettings.fogDensity = 0.0026f;
-            RenderSettings.reflectionIntensity = 0.72f;
+            RenderSettings.fogColor = new Color(0.64f, 0.75f, 0.84f);
+            RenderSettings.fogDensity = 0.0022f;
+            RenderSettings.reflectionIntensity = 0.68f;
         }
 
         private static void CreateLightingAndVolumes()
@@ -596,20 +599,21 @@ namespace DemonViglu.FirePlay.Editor
             var sun = new GameObject("Snow_Sun");
             var sunLight = sun.AddComponent<Light>();
             sunLight.type = LightType.Directional;
-            sunLight.color = new Color(1.0f, 0.88f, 0.72f);
-            sunLight.intensity = 1.35f;
+            sunLight.color = new Color(1.0f, 0.91f, 0.79f);
+            sunLight.intensity = 1.22f;
             sunLight.shadows = LightShadows.Soft;
-            sunLight.shadowStrength = 0.72f;
-            sun.transform.rotation = Quaternion.Euler(34f, -42f, 0f);
+            sunLight.shadowStrength = 0.82f;
+            sunLight.shadowNearPlane = 0.2f;
+            sun.transform.rotation = Quaternion.Euler(38f, -48f, 0f);
             RenderSettings.sun = sunLight;
 
             var fill = new GameObject("Snow_Sky_Fill");
             var fillLight = fill.AddComponent<Light>();
             fillLight.type = LightType.Directional;
-            fillLight.color = new Color(0.39f, 0.57f, 0.82f);
-            fillLight.intensity = 0.26f;
+            fillLight.color = new Color(0.34f, 0.53f, 0.80f);
+            fillLight.intensity = 0.22f;
             fillLight.shadows = LightShadows.None;
-            fill.transform.rotation = Quaternion.Euler(48f, 138f, 0f);
+            fill.transform.rotation = Quaternion.Euler(52f, 132f, 0f);
 
             var volumeObject = new GameObject("Snow LookDev Volume");
             var volume = volumeObject.AddComponent<Volume>();
@@ -630,21 +634,21 @@ namespace DemonViglu.FirePlay.Editor
 
             var color = profile.Add<ColorAdjustments>();
             color.postExposure.overrideState = true;
-            color.postExposure.value = 0.26f;
+            color.postExposure.value = 0.12f;
             color.contrast.overrideState = true;
-            color.contrast.value = 10f;
+            color.contrast.value = 18f;
             color.saturation.overrideState = true;
-            color.saturation.value = -12f;
+            color.saturation.value = -6f;
             color.colorFilter.overrideState = true;
-            color.colorFilter.value = new Color(0.92f, 0.97f, 1.0f);
+            color.colorFilter.value = new Color(0.90f, 0.96f, 1.0f);
 
             var bloom = profile.Add<Bloom>();
             bloom.threshold.overrideState = true;
             bloom.threshold.value = 1.25f;
             bloom.intensity.overrideState = true;
-            bloom.intensity.value = 0.16f;
+            bloom.intensity.value = 0.11f;
             bloom.scatter.overrideState = true;
-            bloom.scatter.value = 0.42f;
+            bloom.scatter.value = 0.36f;
 
             var vignette = profile.Add<Vignette>();
             vignette.intensity.overrideState = true;
@@ -1499,24 +1503,29 @@ namespace DemonViglu.FirePlay.Editor
                 (new Vector3(36.0f, 0.38f, 2.5f), "Flower_3_Group.fbx", 0.56f, 61f)
             };
 
-            foreach (var placement in growthPlacements)
+            for (var growthIndex = 0; growthIndex < growthPlacements.Length; growthIndex++)
             {
+                var placement = growthPlacements[growthIndex];
+                var receiverName = placement.Item2.Contains("Flower") ? "ThawFlower_Receiver" : "ThawGrass_Receiver";
                 var growth = InstantiateModel(
                     NatureRoot + placement.Item2,
                     growthRoot.transform,
                     placement.Item1,
                     Vector3.one * placement.Item3,
                     Quaternion.Euler(0f, placement.Item4, 0f),
-                    placement.Item2.Contains("Flower") ? "ThawFlower_Receiver" : "ThawGrass_Receiver");
+                    receiverName + "_Visual");
                 if (growth == null)
                 {
                     continue;
                 }
 
-                var growthReceiver = growth.AddComponent(growthReceiverType);
+                var growthHost = CreateWarmthGrowthAnimator(growth, receiverName, growthIndex, out var growthAnimator);
+                var growthReceiver = growthHost.AddComponent(growthReceiverType);
                 var serializedGrowth = new SerializedObject(growthReceiver);
                 serializedGrowth.FindProperty("_activationThreshold").floatValue = placement.Item2.Contains("Flower") ? 0.22f : 0.13f;
                 serializedGrowth.FindProperty("_growthSpeed").floatValue = placement.Item2.Contains("Flower") ? 0.48f : 0.72f;
+                serializedGrowth.FindProperty("_animator").objectReferenceValue = growthAnimator;
+                serializedGrowth.FindProperty("_useAnimator").boolValue = growthAnimator != null;
                 serializedGrowth.ApplyModifiedPropertiesWithoutUndo();
             }
 
@@ -1593,6 +1602,116 @@ namespace DemonViglu.FirePlay.Editor
             {
                 property.GetArrayElementAtIndex(index).objectReferenceValue = values[index];
             }
+        }
+
+        private static GameObject CreateWarmthGrowthAnimator(GameObject growth, string receiverName, int index, out Animator animator)
+        {
+            animator = null;
+            if (growth == null)
+            {
+                return null;
+            }
+
+            // Model-import roots are treated as visual assets. Keep the Animator and
+            // Receiver on an ordinary scene object so adding components never depends
+            // on the imported FBX root's component restrictions.
+            var parent = growth.transform.parent;
+            var host = new GameObject(receiverName);
+            host.transform.SetParent(parent, false);
+            host.transform.localPosition = growth.transform.localPosition;
+            host.transform.localRotation = growth.transform.localRotation;
+            host.transform.localScale = growth.transform.localScale;
+            growth.transform.SetParent(host.transform, false);
+            growth.transform.localPosition = Vector3.zero;
+            growth.transform.localRotation = Quaternion.identity;
+            growth.transform.localScale = Vector3.one;
+
+            var clipPath = $"{AnimationPath}/WarmthGrowth_{index + 1:00}.anim";
+            var controllerPath = $"{AnimationPath}/WarmthGrowth_{index + 1:00}.controller";
+            var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath);
+            if (clip == null)
+            {
+                clip = new AnimationClip { name = $"WarmthGrowth_{index + 1:00}" };
+                AssetDatabase.CreateAsset(clip, clipPath);
+            }
+
+            clip.ClearCurves();
+            clip.frameRate = 60f;
+            clip.wrapMode = WrapMode.ClampForever;
+            var authoredScale = host.transform.localScale;
+            var authoredPosition = host.transform.localPosition;
+            var scaleBindings = new[]
+            {
+                EditorCurveBinding.FloatCurve(string.Empty, typeof(Transform), "m_LocalScale.x"),
+                EditorCurveBinding.FloatCurve(string.Empty, typeof(Transform), "m_LocalScale.y"),
+                EditorCurveBinding.FloatCurve(string.Empty, typeof(Transform), "m_LocalScale.z")
+            };
+            var scaleValues = new[] { authoredScale.x, authoredScale.y, authoredScale.z };
+            for (var axis = 0; axis < scaleBindings.Length; axis++)
+            {
+                AnimationUtility.SetEditorCurve(
+                    clip,
+                    scaleBindings[axis],
+                    AnimationCurve.Linear(0f, scaleValues[axis] * 0.04f, 1f, scaleValues[axis]));
+            }
+
+            var positionBindings = new[]
+            {
+                EditorCurveBinding.FloatCurve(string.Empty, typeof(Transform), "m_LocalPosition.x"),
+                EditorCurveBinding.FloatCurve(string.Empty, typeof(Transform), "m_LocalPosition.y"),
+                EditorCurveBinding.FloatCurve(string.Empty, typeof(Transform), "m_LocalPosition.z")
+            };
+            var positionValues = new[] { authoredPosition.x, authoredPosition.y, authoredPosition.z };
+            for (var axis = 0; axis < positionBindings.Length; axis++)
+            {
+                var start = positionValues[axis];
+                if (axis == 1)
+                {
+                    start -= 0.12f;
+                }
+
+                AnimationUtility.SetEditorCurve(
+                    clip,
+                    positionBindings[axis],
+                    AnimationCurve.Linear(0f, start, 1f, positionValues[axis]));
+            }
+
+            EditorUtility.SetDirty(clip);
+            var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath);
+            if (controller == null)
+            {
+                controller = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
+            }
+
+            var stateMachine = controller.layers[0].stateMachine;
+            foreach (var childState in stateMachine.states)
+            {
+                stateMachine.RemoveState(childState.state);
+            }
+
+            var state = stateMachine.AddState("WarmthGrowth");
+            state.motion = clip;
+            stateMachine.defaultState = state;
+            EditorUtility.SetDirty(controller);
+
+            // UnityEngine.Object has overloaded null semantics; do not use C# `??` here.
+            // An imported FBX root can return a managed Animator wrapper that is already
+            // destroyed/invalid, which would otherwise fail on the next property access.
+            animator = host.GetComponent<Animator>();
+            if (animator == null)
+            {
+                animator = host.AddComponent<Animator>();
+            }
+
+            if (animator == null)
+            {
+                Debug.LogWarning($"[FirePlayLookDevBuilder] Could not attach Animator to {host.name}; using procedural warmth growth.");
+                return host;
+            }
+
+            animator.runtimeAnimatorController = controller;
+            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            return host;
         }
 
         private static void CreatePath()

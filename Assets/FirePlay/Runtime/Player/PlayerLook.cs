@@ -15,6 +15,7 @@ namespace DemonViglu.FirePlay.Player
 
         private FirePlayPlayerInput _input;
         private float _pitch;
+        private float _yaw;
         private int _framesToIgnoreLookInput;
         private bool _cursorCaptured;
         private bool _localControl = true;
@@ -37,7 +38,8 @@ namespace DemonViglu.FirePlay.Player
                 return;
             }
 
-            _pitch = NormalizeAngle(_cameraPivot.localEulerAngles.x);
+            _pitch = NormalizeAngle(_cameraPivot.eulerAngles.x);
+            _yaw = NormalizeAngle(_cameraPivot.eulerAngles.y);
         }
 
         private void OnEnable()
@@ -90,10 +92,9 @@ namespace DemonViglu.FirePlay.Player
             }
 
             var look = _input.Look * _sensitivity;
-            transform.Rotate(Vector3.up, look.x, Space.World);
-
+            _yaw += look.x;
             _pitch = Mathf.Clamp(_pitch - look.y, _pitchLimits.x, _pitchLimits.y);
-            _cameraPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+            _cameraPivot.rotation = Quaternion.Euler(_pitch, _yaw, 0f);
         }
 
         public void SetLookLocked(bool locked) => LookLocked = locked;
@@ -113,6 +114,13 @@ namespace DemonViglu.FirePlay.Player
             direction.y = 0f;
             if (direction.sqrMagnitude < 0.0001f) return false;
 
+            var movement = GetComponent<PlayerMovement>();
+            if (movement != null)
+            {
+                return movement.TryFaceDirection(direction, instant: true);
+            }
+
+            // Kept for stripped-down test prefabs that do not contain PlayerMovement.
             transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
             return true;
         }

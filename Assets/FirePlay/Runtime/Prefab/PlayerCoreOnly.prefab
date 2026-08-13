@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 1000000000000006}
   - component: {fileID: 1000000000000007}
   - component: {fileID: 1000000000000008}
+  - component: {fileID: 5190618320442900478}
   m_Layer: 0
   m_Name: PlayerCoreOnly
   m_TagString: Untagged
@@ -94,8 +95,20 @@ MonoBehaviour:
   _moveSpeed: 4.5
   _sprintSpeedMultiplier: 1.55
   _gravity: 20
+  _groundJumpHeight: 1.25
+  _groundedStickSpeed: 2
   _cameraTransform: {fileID: 0}
   _sprintPolicyBehaviour: {fileID: 0}
+  _waterMoveSpeedMultiplier: 0.62
+  _waterEntryMoveSpeedMultiplier: 0.42
+  _waterEntrySinkDuration: 0.72
+  _waterEntryMinSinkSpeed: 3.6
+  _waterEntryMaxSinkSpeed: 6.2
+  _waterRiseSpeed: 2.8
+  _waterBuoyancyAcceleration: 7.5
+  _waterSurfaceOffset: 1.25
+  _waterJumpDepth: 0.32
+  _waterExitSpeed: 8.2
 --- !u!114 &1000000000000006
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -149,6 +162,22 @@ MonoBehaviour:
   _frameTarget: {fileID: 1000000000000025}
   _lookAtTarget: {fileID: 1000000000000023}
   _inputPivot: {fileID: 1000000000000014}
+--- !u!114 &5190618320442900478
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d9814c78e4b4a4a9d2a3d1f5fb5873a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerLocomotionAnimationBridge
+  _movement: {fileID: 1000000000000005}
+  _input: {fileID: 1000000000000004}
+  _animator: {fileID: 0}
+  _parameterBlendSpeed: 12
 --- !u!1 &1000000000000011
 GameObject:
   m_ObjectHideFlags: 0
@@ -166,7 +195,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1000000000000012
 Transform:
   m_ObjectHideFlags: 0

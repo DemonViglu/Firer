@@ -21,6 +21,9 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField, Min(0f)] private float _groundJumpHeight = 1.25f;
         [SerializeField, Min(0f)] private float _groundedStickSpeed = 2f;
         [SerializeField] private Transform _cameraTransform;
+        [Tooltip("Only the visual model turns while moving. Keep the Player root stable so it can own collision and the camera pivot.")]
+        [SerializeField] private Transform _visualTransform;
+        [SerializeField, Min(0f)] private float _turnSpeed = 900f;
         [SerializeField] private MonoBehaviour _sprintPolicyBehaviour;
 
         [Header("Water Movement")]
@@ -79,6 +82,14 @@ namespace DemonViglu.FirePlay.Player
             {
                 _cameraTransform = Camera.main.transform;
             }
+
+            // The built character prefab is deliberately a direct child of Player.
+            // Rotating that child instead of Player prevents camera yaw from being
+            // compounded by movement-facing yaw.
+            if (_visualTransform == null)
+            {
+                _visualTransform = transform.Find("SnowTravelerVisual");
+            }
         }
 
         private void Update()
@@ -112,6 +123,7 @@ namespace DemonViglu.FirePlay.Player
             }
 
             var horizontalVelocity = (forward * input.y + right * input.x) * speed;
+            RotateTowardsMovement(horizontalVelocity);
 
             if (isInWater)
             {
@@ -212,6 +224,34 @@ namespace DemonViglu.FirePlay.Player
             return _sprintPolicy == null || _sprintPolicy.TryConsumeSprint(Time.deltaTime);
         }
 
+        /// <summary>
+        /// Faces the visible character without rotating the Player root. The root is
+        /// shared by CharacterController, camera pivot and gameplay attachment points.
+        /// </summary>
+        public bool TryFaceDirection(Vector3 direction, bool instant = false)
+        {
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f)
+            {
+                return false;
+            }
+
+            var targetRotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+            var turnTarget = _visualTransform != null ? _visualTransform : transform;
+            turnTarget.rotation = instant
+                ? targetRotation
+                : Quaternion.RotateTowards(
+                turnTarget.rotation,
+                targetRotation,
+                _turnSpeed * Time.deltaTime);
+            return true;
+        }
+
+        private void RotateTowardsMovement(Vector3 horizontalVelocity)
+        {
+            TryFaceDirection(horizontalVelocity);
+        }
+
         private void BeginWaterEntry()
         {
             _waterMotionPhase = WaterMotionPhase.EntrySubmerge;
@@ -276,6 +316,7 @@ namespace DemonViglu.FirePlay.Player
             _gravity = Mathf.Max(0f, _gravity);
             _groundJumpHeight = Mathf.Max(0f, _groundJumpHeight);
             _groundedStickSpeed = Mathf.Max(0f, _groundedStickSpeed);
+            _turnSpeed = Mathf.Max(0f, _turnSpeed);
             _waterMoveSpeedMultiplier = Mathf.Clamp(_waterMoveSpeedMultiplier, 0.1f, 1f);
             _waterEntryMoveSpeedMultiplier = Mathf.Clamp(_waterEntryMoveSpeedMultiplier, 0.1f, 1f);
             _waterEntrySinkDuration = Mathf.Max(0f, _waterEntrySinkDuration);

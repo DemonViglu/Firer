@@ -166,6 +166,21 @@ Client intent
 
 网络层只运输稳定 DTO 和不透明活动状态，不传输 Unity 对象或 `ActivityLogic` 实例。`PlayerActivityHost` 是本地 EventBus 与网络权威共用的活动入口。异步功能未来只保存实时玩法产生的必要事实，不维护另一套兼容逻辑。
 
+### 实时/异步共用互动事实
+
+所有可被伙伴观察、重放或异步保存的社交互动，都应抽象为同一种事实记录。最小字段为：
+
+- `ActorId`：稳定的行为发起者身份；
+- `TargetKind + TargetId`：目标联合类型，至少支持 `player`、`place` 和 `instance`；
+- `EventId`：幂等键，重复投递只能产生一次效果；
+- `OccurredAt`：Host 产生事实的时间戳；
+- `Revision`：同一权威状态流中的单调版本；
+- `Payload`：活动自己的不透明数据，必须经过 Host 校验。
+
+实时通道把事实即时投递给在线 Player；异步通道只负责保存、查询和重放同一事实。两条通道不能各自实现一套“赠送”“投火”或活动状态机。
+
+当前协议迁移期间，已有 Activity DTO 可以继续运行；新增社交动作必须优先使用上述元数据和稳定目标，不得把 Unity 对象引用、层级路径或临时 Instance ID 写进 payload。
+
 `NetworkConnectionForms` 当前是开发期直连 Client 工具：可以配置地址/端口、连接和断开，但不是正式房间 UI，也不负责启动 Host。具体配置与验收顺序见 `FirePlay_联机测试清单.md`。
 
 ## 10. 不变量

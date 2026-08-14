@@ -55,8 +55,10 @@ FirePlayNetworkBootstrap.StartClient()
 8. **活动 Owner**：Marshmallow、Fishing、Guitar、Stargazing 的 Owner 只打开自己的 UI/Camera，移动锁和退出恢复对称。
 9. **活动 Observer**：对方能看到道具、持续动画状态与动作/VFX 事实，但不得打开对方 UI、切换本机 Camera 或锁住本机移动。
 10. **共享与目标契约**：SharedGroup 只合并同 Anchor + 同 Activity；Targeted 只接受明确且在线的 TargetId；目标离线会结束对应 Session。
-11. **晚加入与断线**：活动、Rest、篝火、树和余火源均直接落到当前快照；不重放历史一次性音效/动作；断线后输入、相机、活动锁和目标目录无残留。
-12. **PC / Android 互通**：相同协议版本和 Network Prefab 列表下，PC Host 与 Android Client 完成上述核心路径；公网测试只更换 endpoint，不修改 Gameplay。
+11. **互发表情**：一方发送 `expression.*` 后，Host 验证稳定 PlayerId 并广播语义 Cue；双方只播放自己的本地表现，不打开对方 UI、不切换本机 Camera、不锁本机移动。
+12. **互喂棉花糖**：Host 验证 `marshmallow.give(targetId)` 的发起者、目标在线状态、产物归属和余火结算；重复 EventId、旧 revision、无效目标和资源不足不得产生部分写入；双方收到同一事实和对应表现 Cue。
+13. **晚加入与断线**：活动、Rest、篝火、树和余火源均直接落到当前快照；不重放历史一次性音效/动作；断线后输入、相机、活动锁和目标目录无残留。
+14. **PC / Android 互通**：相同协议版本和 Network Prefab 列表下，PC Host 与 Android Client 完成上述核心路径；公网测试只更换 endpoint，不修改 Gameplay。
 
 ## 4. 当前尚未宣称完成
 
@@ -64,5 +66,6 @@ FirePlayNetworkBootstrap.StartClient()
 - Lobby、Relay、匹配和断线重连产品流程；
 - 正式 Animator、活动美术、VFX、吉他音频及最终活动轮盘；
 - 旧 `ColorSource / RestorableNode` 实验视觉的共享状态。
+- 实时/异步共用互动事实协议、互喂棉花糖和完整远端表情动画仍在开发中；完成前不得宣称社交闭环已验收。
 
 这些项目不应混入 Host 权威 Gameplay 代码；连接界面走 Bootstrap，表现资源走现有 Activity Presentation / Visuals 边界。

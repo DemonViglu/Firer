@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace DemonViglu.FirePlay.UI
 {
@@ -18,6 +19,14 @@ namespace DemonViglu.FirePlay.UI
         private void Awake()
         {
             _joystickArea ??= transform as RectTransform;
+            // The handle is visual-only. If it receives a raycast, a touch that
+            // begins on its centre never reaches this parent's pointer handlers,
+            // so dragging appears to do nothing on the most natural touch target.
+            var handleImage = _handle != null ? _handle.GetComponent<Image>() : null;
+            if (handleImage != null)
+            {
+                handleImage.raycastTarget = false;
+            }
             CenterHandle();
         }
 

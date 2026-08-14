@@ -36,6 +36,9 @@ namespace DemonViglu.FirePlay.UI
         [Header("Exploration controls")]
         [SerializeField] private GameObject _explorationControlsRoot;
         [SerializeField] private GameObject _jumpButtonRoot;
+        [SerializeField] private GameObject _placeFireButtonRoot;
+        [SerializeField] private GameObject _restButtonRoot;
+        [SerializeField] private GameObject _expressionButtonRoot;
 
         private float _nextReferenceSearchTime;
 
@@ -81,13 +84,16 @@ namespace DemonViglu.FirePlay.UI
             _interactionPromptText ??= FindText(_interactionPromptRoot);
             _explorationControlsRoot ??= FindInCanvas("MobileControls")?.gameObject;
             _jumpButtonRoot ??= FindInCanvas("JumpButton")?.gameObject;
+            _placeFireButtonRoot ??= FindInCanvas("PlaceFireButton")?.gameObject;
+            _restButtonRoot ??= FindInCanvas("RestButton")?.gameObject;
+            _expressionButtonRoot ??= FindInCanvas("ExpressionButton")?.gameObject;
 
-            // The original SUIFW sample used a Simple Image. A fuel amount only
-            // changes visually when the Image is a horizontal filled image.
+            // Fuel is a small radial ember rather than a long status strip. It
+            // remains a normal filled Image, so this is presentation-only.
             if (_fuelFill != null)
             {
                 _fuelFill.type = Image.Type.Filled;
-                _fuelFill.fillMethod = Image.FillMethod.Horizontal;
+                _fuelFill.fillMethod = Image.FillMethod.Radial360;
                 _fuelFill.fillOrigin = 0;
             }
         }
@@ -141,6 +147,26 @@ namespace DemonViglu.FirePlay.UI
             var activityOwnsMovement = activityActive && movement != null && movement.MovementLocked;
             SetActive(_explorationControlsRoot, movement != null && !activityOwnsMovement);
             SetActive(_jumpButtonRoot, movement != null && !activityOwnsMovement);
+
+            // Optional feature buttons follow explicit Player composition. A
+            // partially assembled scene must not display controls whose intent
+            // router or consumer has not been attached yet.
+            var hasIntentRouter = _localPlayer != null
+                && _localPlayer.InteractionRouter != null;
+            SetActive(
+                _placeFireButtonRoot,
+                !activityOwnsMovement
+                && hasIntentRouter
+                && _localPlayer.FlameModule?.CampfirePlacement != null);
+            SetActive(
+                _restButtonRoot,
+                !activityOwnsMovement
+                && hasIntentRouter
+                && _localPlayer.RestInteraction != null);
+            SetActive(
+                _expressionButtonRoot,
+                !activityOwnsMovement
+                && _localPlayer?.Expressions != null);
         }
 
         private bool HasActiveActivity() => _activityHost != null && _activityHost.HasActiveActivity;

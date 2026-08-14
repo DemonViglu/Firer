@@ -22,6 +22,8 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField] private CampfireUpgradeController _campfireUpgrade;
 
         private PlayerModuleContext _context;
+        private IPlayerSceneServiceBindings _sceneBindings;
+        private string _allocatedPlayerId;
 
         public string ModuleId => "flame";
         public bool IsReady { get; private set; }
@@ -40,6 +42,7 @@ namespace DemonViglu.FirePlay.Player
             // It no longer needs a direct FlameResourceController reference.
             _context?.Movement?.BindSprintPolicy(this);
             IsReady = _context != null;
+            TryEnsureOwnedFlame();
         }
 
         public void Shutdown()
@@ -47,8 +50,25 @@ namespace DemonViglu.FirePlay.Player
             if (_context?.Movement != null)
                 _context.Movement.BindSprintPolicy(null);
 
+            if (_sceneBindings != null && !string.IsNullOrWhiteSpace(_allocatedPlayerId))
+                _sceneBindings.ReleasePlayerFlame(_allocatedPlayerId);
+
+            _sceneBindings = null;
+            _allocatedPlayerId = null;
             _context = null;
             IsReady = false;
+        }
+
+        private void Start()
+        {
+            // Covers unusual scene initialization order while keeping all
+            // ownership creation inside the explicit scene-service boundary.
+            TryEnsureOwnedFlame();
+        }
+
+        private void OnDestroy()
+        {
+            Shutdown();
         }
 
         public bool TryConsumeSprint(float deltaTime)
@@ -67,6 +87,24 @@ namespace DemonViglu.FirePlay.Player
             _playerFlameController ??= _context.GetComponent<PlayerFlameController>();
             _campfirePlacement ??= _context.GetComponent<CampfirePlacement>();
             _campfireUpgrade ??= _context.GetComponent<CampfireUpgradeController>();
+        }
+
+        private void TryEnsureOwnedFlame()
+        {
+            if (_context == null
+                || !_context.IsLocalPlayer
+                || _playerFlameController == null
+                || _playerFlameController.ActiveFlame != null)
+            {
+                return;
+            }
+
+            _sceneBindings ??= GameInstanceSubsystem.TryGet<IPlayerSceneServiceBindings>();
+            if (_sceneBindings != null
+                && _sceneBindings.TryEnsurePlayerFlame(_context.PlayerId, this, out _))
+            {
+                _allocatedPlayerId = _context.PlayerId;
+            }
         }
 
         private void OnValidate()

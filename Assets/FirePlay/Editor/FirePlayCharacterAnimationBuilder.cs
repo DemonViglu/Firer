@@ -24,6 +24,8 @@ namespace DemonViglu.FirePlay.Editor
             "Assets/FirePlay/Art/Character/Generated/Controllers/SnowTraveler_Female_Locomotion.controller";
         private const string PlayerPrefabPath =
             "Assets/FirePlay/Runtime/Prefab/Player.prefab";
+        private const string PlayerCorePrefabPath =
+            "Assets/FirePlay/Runtime/Prefab/PlayerCoreOnly.prefab";
 
         private static readonly string[] MotionNames =
         {
@@ -77,7 +79,7 @@ namespace DemonViglu.FirePlay.Editor
             AssetDatabase.Refresh();
             EditorUtility.DisplayDialog(
                 "FirePlay Character",
-                "Female Animator Controller 已生成，并已挂到 Player.prefab。\n\n" +
+                "Female Animator Controller 已生成，并已挂到 Player 与 PlayerCoreOnly。\n\n" +
                 "当前接入：Idle / Walk / Run / Jump / Fall / Land / Fishing。\n" +
                 "现已接入：坐下 / 烤棉花 / 观星。",
                 "好的");
@@ -309,7 +311,17 @@ namespace DemonViglu.FirePlay.Editor
                 throw new InvalidOperationException(
                     "Female FBX 没有生成有效 Avatar。请在 FBX 的 Rig 面板点击 Apply，并确认 Animation Type 为 Humanoid。 ");
 
-            var playerRoot = PrefabUtility.LoadPrefabContents(PlayerPrefabPath);
+            InstallVisualOnPlayerPrefab(PlayerPrefabPath, visualPrefab, avatar, controller);
+            InstallVisualOnPlayerPrefab(PlayerCorePrefabPath, visualPrefab, avatar, controller);
+        }
+
+        private static void InstallVisualOnPlayerPrefab(
+            string prefabPath,
+            GameObject visualPrefab,
+            Avatar avatar,
+            RuntimeAnimatorController controller)
+        {
+            var playerRoot = PrefabUtility.LoadPrefabContents(prefabPath);
             try
             {
                 var oldVisual = playerRoot.transform.Find("SnowTravelerVisual");
@@ -318,7 +330,7 @@ namespace DemonViglu.FirePlay.Editor
 
                 var visual = PrefabUtility.InstantiatePrefab(visualPrefab, playerRoot.transform) as GameObject;
                 if (visual == null)
-                    throw new InvalidOperationException("无法把 Female Visual Prefab 实例化到 Player.prefab。 ");
+                    throw new InvalidOperationException($"无法把 Female Visual Prefab 实例化到 {prefabPath}。 ");
 
                 visual.name = "SnowTravelerVisual";
                 visual.transform.localPosition = Vector3.zero;
@@ -332,8 +344,9 @@ namespace DemonViglu.FirePlay.Editor
 
                 AssignAnimator(playerRoot.GetComponent<PlayerAnimationController>(), animator);
                 AssignAnimator(playerRoot.GetComponent<PlayerLocomotionAnimationBridge>(), animator);
+                AssignObjectReference(playerRoot.GetComponent<PlayerMovement>(), "_visualTransform", visual.transform);
 
-                PrefabUtility.SaveAsPrefabAsset(playerRoot, PlayerPrefabPath);
+                PrefabUtility.SaveAsPrefabAsset(playerRoot, prefabPath);
             }
             finally
             {
@@ -343,15 +356,23 @@ namespace DemonViglu.FirePlay.Editor
 
         private static void AssignAnimator(UnityEngine.Object component, Animator animator)
         {
+            AssignObjectReference(component, "_animator", animator);
+        }
+
+        private static void AssignObjectReference(
+            UnityEngine.Object component,
+            string propertyName,
+            UnityEngine.Object value)
+        {
             if (component == null)
                 return;
 
             var serializedObject = new SerializedObject(component);
-            var property = serializedObject.FindProperty("_animator");
+            var property = serializedObject.FindProperty(propertyName);
             if (property == null)
                 return;
 
-            property.objectReferenceValue = animator;
+            property.objectReferenceValue = value;
             serializedObject.ApplyModifiedPropertiesWithoutUndo();
         }
 

@@ -1785,7 +1785,7 @@ MonoBehaviour:
   _groundJumpHeight: 1.25
   _groundedStickSpeed: 2
   _cameraTransform: {fileID: 0}
-  _visualTransform: {fileID: 0}
+  _visualTransform: {fileID: 696404897318695080}
   _turnSpeed: 900
   _sprintPolicyBehaviour: {fileID: 9000000000000005}
   _waterMoveSpeedMultiplier: 0.62

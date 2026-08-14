@@ -46,11 +46,16 @@ namespace DemonViglu.FirePlay.Player
         private readonly Dictionary<string, FlameAllocation> _flamesByPlayerId = new();
         private PlayerCameraTargetSet _localCameraTargets;
 
-        public bool IsReady => _activityLogicFactory != null
+        public bool HasActivityServices => _activityLogicFactory != null
             && _activityCameraExecutor != null
-            && _activityCameraExecutor.HasValidSetup
-            && _playerFlamePrefab != null
-            && _networkPlayerSpawnPoint != null;
+            && _activityCameraExecutor.HasValidSetup;
+        public bool HasCameraService => _activityCameraExecutor != null
+            && _activityCameraExecutor.HasValidSetup;
+        public bool HasPlayerFlameFactory => _playerFlamePrefab != null;
+        public bool HasNetworkSpawnPoint => _networkPlayerSpawnPoint != null;
+        public bool IsReady => HasActivityServices
+            || HasPlayerFlameFactory
+            || HasNetworkSpawnPoint;
 
         private void OnEnable()
         {
@@ -72,13 +77,15 @@ namespace DemonViglu.FirePlay.Player
             if (!IsReady)
             {
                 Debug.LogError(
-                    "[PlayerSceneServiceBindings] Activity services, Player Flame prefab, or Network Player spawn point are not ready.",
+                    "[PlayerSceneServiceBindings] No scene service is configured.",
                     this);
                 return;
             }
 
             var currentTargets = LocalPlayerContext.Current?.CameraTargets;
-            if (currentTargets != null && !TryBindLocalPlayerCamera(currentTargets))
+            if (HasCameraService
+                && currentTargets != null
+                && !TryBindLocalPlayerCamera(currentTargets))
             {
                 Debug.LogError(
                     "[PlayerSceneServiceBindings] Could not bind the current scene Player camera targets.",
@@ -88,7 +95,9 @@ namespace DemonViglu.FirePlay.Player
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             Debug.Log(
-                "[PlayerSceneServiceBindings] Ready: runtime-spawned Players can bind Activity services and receive an owned Flame.",
+                $"[PlayerSceneServiceBindings] Ready: activity={HasActivityServices}, " +
+                $"camera={HasCameraService}, flame={HasPlayerFlameFactory}, " +
+                $"networkSpawn={HasNetworkSpawnPoint}.",
                 this);
 #endif
         }
@@ -103,7 +112,7 @@ namespace DemonViglu.FirePlay.Player
             PlayerActivityHost activityHost,
             PlayerActivityPresentationHost presentationHost)
         {
-            if (!IsReady || activityHost == null || presentationHost == null)
+            if (!HasActivityServices || activityHost == null || presentationHost == null)
                 return false;
 
             if (!presentationHost.ConfigureSceneExecutors(
@@ -120,7 +129,7 @@ namespace DemonViglu.FirePlay.Player
 
         public bool TryBindLocalPlayerCamera(PlayerCameraTargetSet targets)
         {
-            if (_activityCameraExecutor == null || targets == null)
+            if (!HasCameraService || targets == null)
                 return false;
 
             if (_localCameraTargets != null && _localCameraTargets != targets)
@@ -154,7 +163,7 @@ namespace DemonViglu.FirePlay.Player
         {
             position = default;
             rotation = Quaternion.identity;
-            if (_networkPlayerSpawnPoint == null)
+            if (!HasNetworkSpawnPoint)
                 return false;
 
             position = _networkPlayerSpawnPoint.position;
@@ -186,7 +195,7 @@ namespace DemonViglu.FirePlay.Player
                 || flameModule == null
                 || flameModule.PlayerFlameController == null
                 || flameModule.FlameAnchor == null
-                || _playerFlamePrefab == null)
+                || !HasPlayerFlameFactory)
             {
                 return false;
             }

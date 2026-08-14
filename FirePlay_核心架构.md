@@ -18,6 +18,7 @@ FirePlay 由四条边界清楚的链路组成：
 | 资产 | 用途 | 使用规则 |
 |---|---|---|
 | `PlayerCoreOnly.prefab` | 纯角色基础：输入、移动、Look、`LocalPlayerContext`、语义 Camera Targets 和碰撞体 | 新实验角色的起点；不含 Flame、Activity、Rest、Interaction 或 Network |
+| `PlayerFlameModule.prefab` / Flame scene override | 可选火焰能力：余火、玩家火苗归属、小火种/公共火命令与火焰表现桥 | 推荐作为可见子模块挂到 Player Core 下；场景副本也可通过 Prefab Override 显式添加同一组组件。不能脱离 `LocalPlayerContext` 单独运行 |
 | `Player.prefab` | 完整单机 Gameplay 组合 | `DemoScene`、`ArtScene` 和单机内容场景直接使用 |
 | `PlayerNetworkBase.prefab` | NGO、网络身份及权威 Flame 的技术父资产 | 不直接放入场景，也不单独注册为可生成对象 |
 | `PlayerNetworkGameplay.prefab` | 正式网络 Player | 只由 `NetworkManager` 生成；在 `DefaultNetworkPrefabs` 注册 |
@@ -31,7 +32,7 @@ Player 的可选能力放在可见子层级：
 
 具体的棉花糖、钓鱼、吉他等玩法 Logic 不挂在 Player 上。核心服务缺失时应明确报配置错误，不允许运行时用 `AddComponent` 隐式补齐。
 
-`PlayerCameraTargetSet` 只暴露跟随、观察等语义目标，不引用 Cinemachine。场景中的 `ActivityCameraRigExecutor` 拥有具体 Cinemachine Profile、TargetGroup 和活动机位；`PlayerActivityPresentationHost` 负责把活动请求转给它。
+`PlayerCameraTargetSet` 只暴露跟随、观察等语义目标，不引用 Cinemachine。基础探索相机可使用 `PlayerCameraObstruction` 处理地形/墙体遮挡，它只调整相机臂距离，不控制 Look、Player 朝向或活动镜头。场景中的 `ActivityCameraRigExecutor` 拥有具体 Cinemachine Profile、TargetGroup 和活动机位；`PlayerActivityPresentationHost` 负责把活动请求转给它。
 
 ## 3. 活动模型
 
@@ -149,6 +150,8 @@ Player / Campfire / Activity command
 4. 世界持久化或同步对象配置 `StableSceneId`；活动地点配置 `ActivityAnchorNode` 与活动定义引用；
 5. 篝火、余火源、小火种和世界树继续使用各自独立的状态组件，不复制状态到活动；
 6. 先验收移动、余火、活动打开/退出与相机恢复，再添加美术、动画和网络表现。
+
+`PlayerSceneServiceBindings` 的活动执行器、相机执行器、玩家火苗工厂和网络出生点是彼此独立的可选场景服务。实验场景可以只配置当前模块需要的字段；例如只接 Flame 时，只需显式配置玩家火苗 Prefab，不得为了满足统一 `IsReady` 把 Activity 或 Network 占位对象一起带入。
 
 不要把 `PlayerNetworkBase` 放入场景，不要让完全体单机 Player 与网络生成 Player 同时成为本地输入拥有者，也不要通过复制 Canvas/Camera 解决缺失配置。
 

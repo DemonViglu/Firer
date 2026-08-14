@@ -192,3 +192,57 @@
 - 2026-08-14 为 `LookDev_SnowGrandValley_LivedIn` 增加纯表现动态氛围层，原雪谷生成路径不变：雪花从单一宽域发射器拆为远景（850 粒子）、谷底中景（420）与营地近景（155）三层，使用不同尺度、速度和横风/Noise 形成景深，不做暴风雪；篝火仅在 Lived-In 版增加薄烟（最多 36 粒子、约 4.5/s）和上升余烬（最多 42 粒子、约 9/s）。所有新粒子关闭阴影、没有 Collider、没有活动/状态读写；其设计目的是让画面有风与温度，而不是接入火焰玩法。`Assembly-CSharp-Editor` 编译为 0 错误、0 警告。验收时重点检查近景雪花是否有层次但不遮挡视线、烟雾是否轻薄、余烬是否只在篝火近处可读。
 - 2026-08-14 新增 `FirePlay/LookDev/Build Snow Character Showcase`（及带预览版本），输出 `Assets/Scenes/LookDev_SnowGrandValley_CharacterShowcase.unity`。该场景从 Lived-In 雪谷构图派生，但只实例化 `SnowTraveler_Female.prefab` 的静态美术外观，不创建 Player、Animator Controller、Activity、Collider 或状态组件；角色位于篝火前侧，画面同时保留营地暖点、主湖与北峡谷远景。单独使用一盏低强度冷色 Spot Rim Light、一盏极弱暖色 Face Fill 和半透明雪地接地压痕，解决白斗篷/雪地/背光叠加时的轮廓与脚底漂浮问题；它们仅用于固定 Demo 截图基线，不改变角色正式运行时材质。`Assembly-CSharp-Editor` 编译为 0 错误、0 警告。验收重点：斗篷边缘、面罩/眼睛与脚底是否可读，角色是否是前景主体而篝火/峡谷仍能引导视线。
 - 2026-08-14 为三张雪谷 LookDev 场景补充独立的场景级音景根节点 `07_Snow_Soundscape`：低音量的整体空气底噪、主冰湖岸边声、篝火近场声及一条可替换的 Demo BGM 都是显式 `AudioSource`，不挂在 Player 上，也不读取或反向改写 Campfire/余火/热场状态。湖与篝火使用距离衰减，靠近时才清晰；空气与 BGM 保持轻量 2D 底层。两个雪谷相机现在显式带有 `AudioListener`，因此场景可直接 Play Mode 听到。生成新的雪谷 BGM 后，只需在 `Demo_Music_Bed_Replaceable` 的 Inspector 替换 `AudioClip`，无需改代码或重新布置。`Assembly-CSharp-Editor` 编译为 0 错误、0 警告。
+- 2026-08-14 新增 `Assets/FirePlay/Editor/FirePlayUiLookDevBuilder.cs`，提供 `FirePlay/UI/Apply Snow Valley UI LookDev`。该可重复执行工具只修改 SUIFW 的 Canvas 与现有 Activity Form 的视觉序列化资产：生成一张可九宫格拉伸的圆角雪玻璃 Sprite，统一 HUD、活动轮盘、棉花糖、钓鱼、吉他和表情面板的圆角、深蓝雪玻璃底、暖余火主按钮、冰蓝进度/判定条、霜白文字、轻描边、Hover/Pressed/Disabled 状态与 1920×1080/移动端缩放基线。不更改任一 Form 脚本、Button 回调、活动状态、输入或 UI 路由；执行菜单后需要在真实场景的亮雪、篝火和移动端安全区下验收对比度与点击区。`Assembly-CSharp-Editor` 编译为 0 错误、0 警告。
+- 2026-08-14 根据视觉反馈调整 UI LookDev：取消深蓝/暖橙配色，改为透明白、灰白/冰白的低干扰界面；标题、状态和按钮文字增大，活动轮盘条目为 148px 圆形，常用活动按钮收紧为更大的短圆角触控块，关闭键为独立圆形；HUD 的余火由水平长条改为圆形 Radial360 读数。工具另生成圆形 Sprite，用于余火与移动摇杆。需要再次执行 `FirePlay/UI/Apply Snow Valley UI LookDev` 写入资源后验收。
+- 2026-08-14 静态核查移动摇杆链路：`FirePlayMobileJoystick.OnPointerDown/OnDrag` 调用 `FirePlayMobileInputRouter.SetMove`，后者调用本地 `FirePlayPlayerInput.SetVirtualMove`，`PlayerMovement.Update` 从同一输入门面读取 `Move` 并按相机水平朝向驱动当前角色；链路没有绕过 Player 或另建移动逻辑。发现并修复手柄 `Image` 可能拦截中心触点、使父级摇杆收不到 Pointer 事件的问题：`FirePlayMobileJoystick.Awake` 现在强制手柄 `raycastTarget=false`，UI LookDev 也会把对应资源写为不可拦截。`Assembly-CSharp-Editor` 编译为 0 错误、0 警告；仍需在真机或 Unity Game View 手动拖动摇杆确认触点、安全区与角色移动方向。
+
+## 15. SnowValley_Playable 模块接入记录
+
+### 接入前基线
+
+- `SnowValley_Playable` 是从 LookDev 派生出的独立正式候选场景。接入审计确认场景原本只有环境根节点、场景热场、真实 `Campfire`、冰面/水域交互以及一台固定 LookDev 相机；没有 Player、HUD、Activity、Rest 或 Network 对象。
+- `FirePlayUiLookDevBuilder.cs` 只负责 Canvas 与活动 Form 的视觉资产，不负责生成或组装 `SnowValley_Playable`。后续不能把它当作场景接入入口。
+- 本记录按可验收的小步骤维护；每一步都会写明 Hierarchy、组件依赖和运行链路，不复制 `DemoScene` 的整套对象。
+
+### Step 1：Player Core + 角色表现 + 探索相机（待 Unity 验收）
+
+- 场景新增根对象 `Player_Core`，来源为 `PlayerCoreOnly.prefab`。它只包含 `CharacterController`、`FirePlayPlayerInput`、`PlayerMovement`、`PlayerLook`、`LocalPlayerContext`、`PlayerCameraTargetSet`、`PlayerLocomotionAnimationBridge` 和玩家自带探索相机；没有 Flame、Interaction、Activity、Rest、HUD 或 Network 组件。
+- 原 `Snow Grand Valley Camera` 改名为 `Snow Grand Valley Camera [LookDev Reference]` 并停用、取消 `MainCamera` Tag。它保留为构图参考，不参与运行；唯一运行相机来自 `Player_Core/CameraPivot/Camera`。
+- `PlayerCoreOnly.prefab` 显式嵌套现有 `SnowTraveler_Female.prefab`，命名为 `SnowTravelerVisual`；`PlayerLocomotionAnimationBridge` 把 `PlayerMovement` 的只读移动事实写入 Animator 参数，Animator 不反向驱动碰撞或移动。
+- `PlayerMovement._visualTransform` 显式指向 `SnowTravelerVisual`：移动转向只旋转人物外观，Player 根节点、CharacterController 和 CameraPivot 保持稳定。完整单机 `Player.prefab` 同步修正为相同绑定。
+- `FirePlayCharacterAnimationBuilder` 现会同时维护 `Player.prefab` 与 `PlayerCoreOnly.prefab`，并在重建角色时重新绑定 Animator 与 `_visualTransform`，避免下一次执行角色生成菜单后引用退回为空。
+
+运行链路：
+
+`FirePlay.inputactions -> FirePlayPlayerInput -> PlayerMovement -> CharacterController`
+
+`PlayerMovement + FirePlayPlayerInput -> PlayerLocomotionAnimationBridge -> SnowTravelerVisual/Animator`
+
+`FirePlayPlayerInput.Look -> PlayerLook -> CameraPivot -> Camera`
+
+验收要求：打开 `SnowValley_Playable` 进入 Play Mode，只验证键鼠移动、视角、陆地跳跃、动画、冰面破裂、落水/浮起/出水和唯一 AudioListener；本步骤不应出现余火 HUD、交互提示、活动轮盘或网络对象。通过后下一步再显式接入 FlameModule，并把场景 `Hero_Campfire` 与玩家余火/HUD 链路写入本节。
+
+- 静态验证：Runtime 与 Editor 工程均为 0 错误、0 警告；场景仅序列化 1 个 `PlayerCoreOnly` 实例，Prefab/场景 YAML 无重复对象 fileID，角色 Animator、移动视觉根节点和 SceneRoots 引用均已核对。最终资源导入与 Play Mode 结果仍以本步骤人工验收为准。
+
+### Step 2：FlameModule + HUD + 探索相机防穿模（已直接写入 SnowValley，待 Unity 重载验收）
+
+- 新增独立 `PlayerFlameModule.prefab`，只包含 `FlameModule`、`FlameResourceController`、`PlayerFlameController`、`CampfirePlacement`、`CampfireUpgradeController`、火焰视觉桥、收束控制器和显式 `FlameAnchor`。它不携带 Interaction、Activity、Rest 或 Network。
+- `PlayerSceneServiceBindings` 改为按服务独立就绪：活动、活动相机、玩家火苗工厂、网络出生点不再要求一次性全部配置。SnowValley 本步骤只配置玩家火苗工厂。
+- 单机 `FlameModule` 初始化时通过 `GameInstanceSubsystem` 查找 `IPlayerSceneServiceBindings`，请求场景工厂为当前稳定 `PlayerId` 分配 `Flame.prefab`，再由 `PlayerFlameController` 建立归属；模块卸载时只释放该工厂创建的火苗。
+- `SnowValley_Playable` 已直接序列化接入 Flame 模块：通过 `PlayerCoreOnly` 的场景级 Prefab Override 添加 `FlameModule`、玩家火焰控制/资源/放置/升级/视觉组件和 `FlameAnchor`，并新增 `Gameplay_SceneServices`、`Gameplay_UI` 两个场景根节点；不会重建环境，也不会复制 `DemoScene`。原 `SnowValleyGameplayIntegrationBuilder` 菜单仍保留给后续新副本场景使用，但不再是本场景的必需步骤。
+- HUD 在部分组装场景中只显示已有能力：Fuel 与移动/跳跃可以显示；PlaceFire、Rest、Expression 在对应 Intent Router/消费者尚未接入时保持隐藏，避免出现能看见但无效的按钮。
+- `PlayerCoreOnly` 的直接探索 Camera 新增显式 `PlayerCameraObstruction`。它从相机 Pivot 到作者设定机位做球形检测，遇到雪地、山体、墙壁或天花板时立即拉近，离开遮挡后平滑复位；只处理相机臂，不修改 Look、移动或人物根节点。重点修复 SnowValley 抬头看天空时第三人称相机穿入地面/山体的问题。完整 `Player` 的活动/Cinemachine 链路暂不挂该组件，避免覆盖活动镜头执行器。
+
+接线链路：
+
+`LocalPlayerContext -> PlayerCoreHost -> PlayerFlameModule -> FlameResourceController`
+
+`PlayerFlameModule -> IPlayerSceneServiceBindings -> Flame.prefab -> PlayerFlameController`
+
+`FlameResourceState -> FirePlayHudForm/FuelRoot`
+
+`PlayerLook -> CameraPivot -> PlayerCameraObstruction -> Camera final position`
+
+验收前让 Unity 重载并保存 `SnowValley_Playable` 后直接进入 Play Mode。检查：Hierarchy 中 `Player_Core` 的场景 Override 下可见 Flame 组件和 `FlameAnchor`，两个场景根节点可见；角色旁生成唯一 `Flame[local.player]`；HUD 显示余火且随时间缓慢下降；靠近真实 `Hero_Campfire` 时只应用既有附近篝火倍率；PlaceFire/Rest/Expression 暂不显示；抬头、贴近坡面和背靠山体时相机拉近且离开后恢复，不再穿模。SmallFire 放置和篝火交互明确留到 InteractionModule 接入步骤验收。
+
+- 静态验证：新 Camera 组件、FlameModule/场景服务改动与接入菜单已纳入 Runtime/Editor 编译检查，最终为 0 错误、0 警告；新 Module Prefab 的 7 个脚本 GUID、配置资产、SmallFire/Campfire Prefab 引用和对象 fileID 均已核对。接入菜单现在会在加载 Prefab 前执行同步 AssetDatabase 刷新，避免新资源尚未导入时首轮执行误报“找不到 Prefab”。Unity 菜单执行后的场景序列化结果与 Play Mode 表现仍需人工验收。

@@ -24,6 +24,8 @@ namespace DemonViglu.FirePlay.Editor
         private const string WideScenePath = "Assets/Scenes/LookDev_WideValley.unity";
         private const string GrandScenePath = "Assets/Scenes/LookDev_GrandValley.unity";
         private const string SnowScenePath = "Assets/Scenes/LookDev_SnowGrandValley.unity";
+        private const string SnowLivedInScenePath = "Assets/Scenes/LookDev_SnowGrandValley_LivedIn.unity";
+        private const string SnowCharacterShowcaseScenePath = "Assets/Scenes/LookDev_SnowGrandValley_CharacterShowcase.unity";
         private const string RootPath = "Assets/FirePlay/LookDev";
         private const string MaterialPath = RootPath + "/Materials";
         private const string AnimationPath = RootPath + "/Animations";
@@ -31,10 +33,17 @@ namespace DemonViglu.FirePlay.Editor
         private const string WidePreviewPath = "LookDev_WideValley_Preview.png";
         private const string GrandPreviewPath = "LookDev_GrandValley_Preview.png";
         private const string SnowPreviewPath = "LookDev_SnowGrandValley_Preview.png";
+        private const string SnowLivedInPreviewPath = "LookDev_SnowGrandValley_LivedIn_Preview.png";
+        private const string SnowCharacterShowcasePreviewPath = "LookDev_SnowGrandValley_CharacterShowcase_Preview.png";
         private const string NatureRoot = "Assets/Resources/Art/Stylized Nature MegaKit[Standard]/FBX (Unity)/";
         private const string SurvivalRoot = "Assets/Resources/Art/kenney_survival-kit/Models/FBX format/";
         private const string UltimateNatureRoot = "Assets/Resources/Art/Ultimate Nature Pack - Jun 2019-20260728T054020Z-1-001/Ultimate Nature Pack - Jun 2019/";
         private const string SnowNatureRoot = UltimateNatureRoot + "FBX/";
+        private const string FemaleCharacterPrefabPath = "Assets/FirePlay/Art/Character/Generated/Prefabs/SnowTraveler_Female.prefab";
+        private const string AmbientBedAudioPath = "Assets/Resources/Sound/36301272-night-forest-soundscape-158701.mp3";
+        private const string LakeAudioPath = "Assets/Resources/Sound/freesound_community-lake-wavelet-27909.mp3";
+        private const string CampfireAudioPath = "Assets/Resources/Sound/soundsforyou-campfire-crackling-fireplace-sound-119594.mp3";
+        private const string DemoMusicAudioPath = "Assets/Resources/Sound/bg.mp3";
 
         // Ultimate Nature source models arrive with a +90 degree X-axis orientation.
         // Apply the inverse in local model space, then preserve the authored world yaw.
@@ -178,6 +187,7 @@ namespace DemonViglu.FirePlay.Editor
             CreateSnowfall();
 
             CreateCampfire(true);
+            CreateSnowSoundscape();
             CreateSnowEnvironmentWarmthSession();
             CreateLanterns();
             CreateSnowCamera();
@@ -193,6 +203,87 @@ namespace DemonViglu.FirePlay.Editor
         {
             BuildSnowGrandValleyScene();
             RenderPreviewTo(SnowPreviewPath);
+        }
+
+        [MenuItem("FirePlay/LookDev/Build Snow Grand Valley Lived-In")]
+        public static void BuildSnowGrandValleyLivedInScene()
+        {
+            EnsureFolders();
+            LoadOrCreateMaterials();
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            ConfigureSnowRenderSettings(livedIn: true);
+            CreateSnowPresentationRoot();
+            CreateSnowLightingAndVolume(livedIn: true);
+            CreateSnowGrandValleyFloor();
+            CreateSnowTerrainLayers();
+            CreateFrozenLakes();
+            CreateWideBridge();
+            CreateGrandCanyonBridge();
+            CreateSnowNorthCanyon();
+            CreateSnowLandmarks();
+            CreateSnowTreeGroves();
+            CreateSnowDecorations();
+            CreateSnowLivedInDetails();
+            CreateSnowAtmosphereVfx();
+
+            CreateCampfire(true, includeAtmosphere: true);
+            CreateSnowSoundscape();
+            CreateSnowEnvironmentWarmthSession();
+            CreateLanterns();
+            CreateSnowCamera();
+
+            EditorSceneManager.SaveScene(scene, SnowLivedInScenePath);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log($"[FirePlayLookDevBuilder] Saved {SnowLivedInScenePath}");
+        }
+
+        [MenuItem("FirePlay/LookDev/Build Snow Grand Valley Lived-In + Render Preview")]
+        public static void BuildSnowGrandValleyLivedInAndRender()
+        {
+            BuildSnowGrandValleyLivedInScene();
+            RenderPreviewTo(SnowLivedInPreviewPath);
+        }
+
+        [MenuItem("FirePlay/LookDev/Build Snow Character Showcase")]
+        public static void BuildSnowCharacterShowcaseScene()
+        {
+            EnsureFolders();
+            LoadOrCreateMaterials();
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            ConfigureSnowRenderSettings(livedIn: true);
+            CreateSnowPresentationRoot();
+            CreateSnowLightingAndVolume(livedIn: true);
+            CreateSnowGrandValleyFloor();
+            CreateSnowTerrainLayers();
+            CreateFrozenLakes();
+            CreateWideBridge();
+            CreateGrandCanyonBridge();
+            CreateSnowNorthCanyon();
+            CreateSnowLandmarks();
+            CreateSnowTreeGroves();
+            CreateSnowDecorations();
+            CreateSnowLivedInDetails();
+            CreateSnowAtmosphereVfx();
+            CreateCampfire(includeAtmosphere: true);
+            CreateSnowSoundscape();
+            CreateLanterns();
+            CreateSnowCharacterShowcase();
+            CreateSnowCharacterShowcaseCamera();
+
+            EditorSceneManager.SaveScene(scene, SnowCharacterShowcaseScenePath);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log($"[FirePlayLookDevBuilder] Saved {SnowCharacterShowcaseScenePath}");
+        }
+
+        [MenuItem("FirePlay/LookDev/Build Snow Character Showcase + Render Preview")]
+        public static void BuildSnowCharacterShowcaseAndRender()
+        {
+            BuildSnowCharacterShowcaseScene();
+            RenderPreviewTo(SnowCharacterShowcasePreviewPath);
         }
 
         public static void RenderPreview()
@@ -280,11 +371,15 @@ namespace DemonViglu.FirePlay.Editor
             Materials["snow"] = CreateMaterial("SnowField", new Color(0.84f, 0.90f, 0.95f), 0.38f);
             Materials["snowLight"] = CreateMaterial("SnowLight", new Color(0.94f, 0.965f, 1.0f), 0.48f);
             Materials["snowShadow"] = CreateMaterial("SnowShadow", new Color(0.48f, 0.61f, 0.72f), 0.30f);
+            Materials["snowContactShadow"] = CreateTransparentMaterial("SnowContactShadow", new Color(0.34f, 0.47f, 0.58f, 0.16f), 0.1f);
             Materials["snowRock"] = CreateMaterial("SnowRock", new Color(0.58f, 0.66f, 0.72f), 0.28f);
             Materials["lakeBed"] = CreateMaterial("SnowLakeBed", new Color(0.12f, 0.24f, 0.30f), 0.22f);
             Materials["ice"] = CreateIcePathMaterial();
             Materials["openWater"] = CreateDepthWaterMaterial();
             Materials["snowflake"] = CreateParticleMaterial("Snowflake", new Color(0.88f, 0.95f, 1.0f, 0.82f));
+            Materials["snowflakeNear"] = CreateParticleMaterial("SnowflakeNear", new Color(1f, 1f, 1f, 0.72f));
+            Materials["campfireSmoke"] = CreateParticleMaterial("CampfireSmoke", new Color(0.28f, 0.34f, 0.40f, 0.15f));
+            Materials["campfireSpark"] = CreateParticleMaterial("CampfireSpark", new Color(1f, 0.30f, 0.06f, 0.86f));
             Materials["thawMist"] = CreateParticleMaterial("ThawMist", new Color(0.78f, 0.90f, 0.86f, 0.32f));
             Materials["warmthSnow"] = CreateWarmthSnowMaterial();
         }
@@ -513,30 +608,32 @@ namespace DemonViglu.FirePlay.Editor
             RenderSettings.reflectionIntensity = 0.5f;
         }
 
-        private static void ConfigureSnowRenderSettings()
+        private static void ConfigureSnowRenderSettings(bool livedIn = false)
         {
-            const string skyPath = MaterialPath + "/LookDev_SnowSky.mat";
+            var skyPath = livedIn
+                ? MaterialPath + "/LookDev_SnowLivedInSky.mat"
+                : MaterialPath + "/LookDev_SnowSky.mat";
             var sky = AssetDatabase.LoadAssetAtPath<Material>(skyPath);
             if (sky == null)
             {
-                sky = new Material(Shader.Find("Skybox/Procedural")) { name = "LookDev_SnowSky" };
+                sky = new Material(Shader.Find("Skybox/Procedural")) { name = livedIn ? "LookDev_SnowLivedInSky" : "LookDev_SnowSky" };
                 AssetDatabase.CreateAsset(sky, skyPath);
             }
 
-            sky.SetColor("_SkyTint", new Color(0.48f, 0.68f, 0.86f));
-            sky.SetColor("_GroundColor", new Color(0.58f, 0.67f, 0.75f));
-            sky.SetFloat("_AtmosphereThickness", 0.78f);
-            sky.SetFloat("_Exposure", 1.18f);
+            sky.SetColor("_SkyTint", livedIn ? new Color(0.56f, 0.71f, 0.86f) : new Color(0.48f, 0.68f, 0.86f));
+            sky.SetColor("_GroundColor", livedIn ? new Color(0.68f, 0.72f, 0.76f) : new Color(0.58f, 0.67f, 0.75f));
+            sky.SetFloat("_AtmosphereThickness", livedIn ? 0.70f : 0.78f);
+            sky.SetFloat("_Exposure", livedIn ? 1.22f : 1.18f);
             sky.SetFloat("_SunSize", 0.035f);
             EditorUtility.SetDirty(sky);
 
             RenderSettings.skybox = sky;
             RenderSettings.ambientMode = AmbientMode.Skybox;
-            RenderSettings.ambientIntensity = 0.72f;
+            RenderSettings.ambientIntensity = livedIn ? 0.76f : 0.72f;
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
-            RenderSettings.fogColor = new Color(0.64f, 0.75f, 0.84f);
-            RenderSettings.fogDensity = 0.0022f;
+            RenderSettings.fogColor = livedIn ? new Color(0.69f, 0.77f, 0.84f) : new Color(0.64f, 0.75f, 0.84f);
+            RenderSettings.fogDensity = livedIn ? 0.00185f : 0.0022f;
             RenderSettings.reflectionIntensity = 0.68f;
         }
 
@@ -594,13 +691,13 @@ namespace DemonViglu.FirePlay.Editor
             volume.profile = profile;
         }
 
-        private static void CreateSnowLightingAndVolume()
+        private static void CreateSnowLightingAndVolume(bool livedIn = false)
         {
             var sun = new GameObject("Snow_Sun");
             var sunLight = sun.AddComponent<Light>();
             sunLight.type = LightType.Directional;
-            sunLight.color = new Color(1.0f, 0.91f, 0.79f);
-            sunLight.intensity = 1.22f;
+            sunLight.color = livedIn ? new Color(1.0f, 0.88f, 0.70f) : new Color(1.0f, 0.91f, 0.79f);
+            sunLight.intensity = livedIn ? 1.16f : 1.22f;
             sunLight.shadows = LightShadows.Soft;
             sunLight.shadowStrength = 0.82f;
             sunLight.shadowNearPlane = 0.2f;
@@ -611,7 +708,7 @@ namespace DemonViglu.FirePlay.Editor
             var fillLight = fill.AddComponent<Light>();
             fillLight.type = LightType.Directional;
             fillLight.color = new Color(0.34f, 0.53f, 0.80f);
-            fillLight.intensity = 0.22f;
+            fillLight.intensity = livedIn ? 0.26f : 0.22f;
             fillLight.shadows = LightShadows.None;
             fill.transform.rotation = Quaternion.Euler(52f, 132f, 0f);
 
@@ -619,12 +716,14 @@ namespace DemonViglu.FirePlay.Editor
             var volume = volumeObject.AddComponent<Volume>();
             volume.isGlobal = true;
             volume.priority = 20f;
-            const string profilePath = MaterialPath + "/LookDev_SnowProfile.asset";
+            var profilePath = livedIn
+                ? MaterialPath + "/LookDev_SnowLivedInProfile.asset"
+                : MaterialPath + "/LookDev_SnowProfile.asset";
             var profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(profilePath);
             if (profile == null)
             {
                 profile = ScriptableObject.CreateInstance<VolumeProfile>();
-                profile.name = "LookDev_SnowProfile";
+                profile.name = livedIn ? "LookDev_SnowLivedInProfile" : "LookDev_SnowProfile";
                 AssetDatabase.CreateAsset(profile, profilePath);
             }
             else
@@ -634,19 +733,19 @@ namespace DemonViglu.FirePlay.Editor
 
             var color = profile.Add<ColorAdjustments>();
             color.postExposure.overrideState = true;
-            color.postExposure.value = 0.12f;
+            color.postExposure.value = livedIn ? 0.16f : 0.12f;
             color.contrast.overrideState = true;
-            color.contrast.value = 18f;
+            color.contrast.value = livedIn ? 14f : 18f;
             color.saturation.overrideState = true;
-            color.saturation.value = -6f;
+            color.saturation.value = livedIn ? -3f : -6f;
             color.colorFilter.overrideState = true;
-            color.colorFilter.value = new Color(0.90f, 0.96f, 1.0f);
+            color.colorFilter.value = livedIn ? new Color(0.96f, 0.95f, 0.92f) : new Color(0.90f, 0.96f, 1.0f);
 
             var bloom = profile.Add<Bloom>();
             bloom.threshold.overrideState = true;
             bloom.threshold.value = 1.25f;
             bloom.intensity.overrideState = true;
-            bloom.intensity.value = 0.11f;
+            bloom.intensity.value = livedIn ? 0.16f : 0.11f;
             bloom.scatter.overrideState = true;
             bloom.scatter.value = 0.36f;
 
@@ -946,6 +1045,82 @@ namespace DemonViglu.FirePlay.Editor
             InstantiateModel(SurvivalRoot + "resource-stone-large.fbx", root.transform, new Vector3(42f, 5.8f, 181f), Vector3.one * 1.35f, Quaternion.Euler(0f, 91f, 0f), "NorthCanyon_StoneSupplies");
         }
 
+        /// <summary>
+        /// Adds three deliberately compact story clusters to the snow valley. They
+        /// are visual landmarks only: no colliders, activities, stable IDs or
+        /// gameplay state are added here.
+        /// </summary>
+        private static void CreateSnowLivedInDetails()
+        {
+            var root = new GameObject("04_Snow_Lived_In_Story_Clusters");
+
+            // Camp: an irregular semicircle keeps a clear route to the fire while
+            // suggesting that several travelers recently stopped here.
+            var camp = new GameObject("Campfire_Overnight_Cluster");
+            camp.transform.SetParent(root.transform);
+            PlaceSnowProp(camp.transform, "bedroll.fbx", new Vector3(-4.7f, 0.36f, -1.8f), 1.05f, 132f, "Camp_Bedroll_Open");
+            PlaceSnowProp(camp.transform, "bedroll-frame.fbx", new Vector3(3.4f, 0.36f, -2.6f), 0.95f, -44f, "Camp_Bedroll_Frame");
+            PlaceSnowProp(camp.transform, "box-open.fbx", new Vector3(-7.3f, 0.36f, 0.3f), 0.9f, 24f, "Camp_Open_SupplyBox");
+            PlaceSnowProp(camp.transform, "barrel-open.fbx", new Vector3(-9.2f, 0.36f, 7.2f), 0.92f, -18f, "Camp_Open_Barrel");
+            PlaceSnowProp(camp.transform, "resource-planks.fbx", new Vector3(5.0f, 0.36f, 5.8f), 0.95f, 66f, "Camp_PlankStack");
+            PlaceSnowProp(camp.transform, "resource-wood.fbx", new Vector3(3.9f, 0.36f, 7.3f), 0.88f, 8f, "Camp_FirewoodReserve");
+            CreateSnowLantern(camp.transform, new Vector3(-4.2f, 0.38f, 1.9f), 0.82f, 0.42f, 2.4f, "Camp_Lantern_West");
+            CreateSnowLantern(camp.transform, new Vector3(4.8f, 0.38f, 3.6f), 0.76f, 0.36f, 2.1f, "Camp_Lantern_East");
+
+            // Lake shore: supplies are placed off the ice edge, framing a small
+            // preparation spot without claiming the open lake as dense content.
+            var lake = new GameObject("FrozenLake_Supply_Cluster");
+            lake.transform.SetParent(root.transform);
+            PlaceSnowProp(lake.transform, "fence-doorway.fbx", new Vector3(9.8f, 0.36f, -13.4f), 0.95f, 37f, "Lake_Simple_Rack");
+            PlaceSnowProp(lake.transform, "bucket.fbx", new Vector3(11.8f, 0.36f, -11.1f), 0.86f, 16f, "Lake_WaterBucket");
+            PlaceSnowProp(lake.transform, "box-large.fbx", new Vector3(8.1f, 0.36f, -9.4f), 0.82f, -22f, "Lake_TackleCrate");
+            PlaceSnowProp(lake.transform, "resource-planks.fbx", new Vector3(25.2f, 0.36f, 7.7f), 0.9f, 112f, "Lake_WalkwayRepair");
+            CreateSnowLantern(lake.transform, new Vector3(12.4f, 0.38f, -7.6f), 0.7f, 0.30f, 1.9f, "Lake_Lantern");
+
+            // Canyon: a windbreak, supply chest and lamp establish a quiet final
+            // pause before the player commits to the northern route.
+            var canyon = new GameObject("NorthCanyon_Forward_Post");
+            canyon.transform.SetParent(root.transform);
+            PlaceSnowProp(canyon.transform, "tent-canvas-half.fbx", new Vector3(31.5f, 5.8f, 159f), 1.18f, -33f, "Canyon_Windbreak");
+            PlaceSnowProp(canyon.transform, "chest.fbx", new Vector3(35.0f, 5.8f, 162.2f), 0.92f, 27f, "Canyon_SupplyChest");
+            PlaceSnowProp(canyon.transform, "resource-wood.fbx", new Vector3(27.0f, 5.8f, 162.6f), 0.82f, 78f, "Canyon_Firewood");
+            PlaceSnowProp(canyon.transform, "signpost-single.fbx", new Vector3(-8.0f, 5.8f, 164f), 1.35f, 8f, "Canyon_TrailMarker");
+            CreateSnowLantern(canyon.transform, new Vector3(27.0f, 5.8f, 157.5f), 0.82f, 0.42f, 2.6f, "Canyon_Lantern");
+        }
+
+        private static void PlaceSnowProp(Transform parent, string assetName, Vector3 position, float scale, float yaw, string name)
+        {
+            var prop = InstantiateModel(
+                SurvivalRoot + assetName,
+                parent,
+                position,
+                Vector3.one * scale,
+                Quaternion.Euler(0f, yaw, 0f),
+                name);
+            TintImportedMaterials(prop, new Color(0.72f, 0.78f, 0.82f));
+        }
+
+        private static void CreateSnowLantern(Transform parent, Vector3 position, float scale, float intensity, float range, string name)
+        {
+            var lantern = new GameObject(name);
+            lantern.transform.SetParent(parent);
+            lantern.transform.position = position;
+            lantern.transform.localScale = Vector3.one * scale;
+            CreateCylinder("Post", lantern.transform, Vector3.up * 0.56f, new Vector3(0.055f, 0.56f, 0.055f), Materials["wood"], Quaternion.identity);
+            CreateCube("Cap", lantern.transform, Vector3.up * 1.18f, new Vector3(0.30f, 0.07f, 0.30f), Materials["wood"]);
+            CreateSphere("Glow", lantern.transform, Vector3.up * 1.01f, Vector3.one * 0.15f, Materials["lantern"]);
+
+            var lightRoot = new GameObject("WarmLight");
+            lightRoot.transform.SetParent(lantern.transform);
+            lightRoot.transform.localPosition = Vector3.up * 1.01f;
+            var light = lightRoot.AddComponent<Light>();
+            light.type = LightType.Point;
+            light.color = new Color(1f, 0.53f, 0.22f);
+            light.intensity = intensity;
+            light.range = range;
+            light.shadows = LightShadows.None;
+        }
+
         private static void CreateSnowfall()
         {
             var root = new GameObject("04_Snowfall_VFX");
@@ -990,6 +1165,97 @@ namespace DemonViglu.FirePlay.Editor
             particles.Play();
         }
 
+        private static void CreateSnowAtmosphereVfx()
+        {
+            var root = new GameObject("05_Snow_Atmosphere_VFX");
+            CreateSnowLayer(root.transform, "Distant_Snowfall", new Vector3(0f, 100f, 0f), new Vector3(330f, 1f, 330f), 850, 58f, new Vector2(8f, 12f), new Vector2(0.055f, 0.14f), new Vector2(1.2f, 2.0f), new Vector2(0.24f, 0.58f), 0.22f, Materials["snowflake"]);
+            CreateSnowLayer(root.transform, "Valley_Midground_Snow", new Vector3(16f, 42f, 28f), new Vector3(135f, 1f, 145f), 420, 32f, new Vector2(6f, 9f), new Vector2(0.09f, 0.20f), new Vector2(1.0f, 1.6f), new Vector2(0.42f, 0.88f), 0.38f, Materials["snowflake"]);
+            CreateSnowLayer(root.transform, "Camp_Nearfield_Snow", new Vector3(-2f, 16f, 1f), new Vector3(38f, 1f, 40f), 155, 17f, new Vector2(4f, 6.5f), new Vector2(0.16f, 0.36f), new Vector2(0.7f, 1.35f), new Vector2(0.62f, 1.18f), 0.58f, Materials["snowflakeNear"]);
+        }
+
+        private static void CreateSnowLayer(Transform parent, string name, Vector3 position, Vector3 boxSize, int maxParticles, float rate, Vector2 lifetime, Vector2 size, Vector2 fallSpeed, Vector2 sideWind, float noiseStrength, Material material)
+        {
+            var root = new GameObject(name);
+            root.transform.SetParent(parent);
+            root.transform.position = position;
+            var particles = root.AddComponent<ParticleSystem>();
+            var main = particles.main;
+            main.loop = true;
+            main.duration = 12f;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(lifetime.x, lifetime.y);
+            main.startSize = new ParticleSystem.MinMaxCurve(size.x, size.y);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(fallSpeed.x, fallSpeed.y);
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.82f, 0.92f, 1f, 0.36f), new Color(1f, 1f, 1f, 0.88f));
+            main.maxParticles = maxParticles;
+            main.gravityModifier = 0.02f;
+            var emission = particles.emission;
+            emission.rateOverTime = rate;
+            var shape = particles.shape;
+            shape.shapeType = ParticleSystemShapeType.Box;
+            shape.scale = boxSize;
+            var velocity = particles.velocityOverLifetime;
+            velocity.enabled = true;
+            velocity.space = ParticleSystemSimulationSpace.World;
+            velocity.x = new ParticleSystem.MinMaxCurve(sideWind.x, sideWind.y);
+            velocity.y = new ParticleSystem.MinMaxCurve(-fallSpeed.y, -fallSpeed.x);
+            velocity.z = new ParticleSystem.MinMaxCurve(sideWind.x * 0.28f, sideWind.y * 0.42f);
+            var noise = particles.noise;
+            noise.enabled = true;
+            noise.strength = noiseStrength;
+            noise.frequency = 0.18f;
+            noise.scrollSpeed = 0.16f;
+            noise.damping = true;
+            var renderer = root.GetComponent<ParticleSystemRenderer>();
+            renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            renderer.sharedMaterial = material;
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            particles.Play();
+        }
+
+        /// <summary>
+        /// Presentation-only acoustic layout. This has no dependency on Player,
+        /// Campfire, WarmthNode, or any other gameplay state.
+        /// </summary>
+        private static void CreateSnowSoundscape()
+        {
+            var root = new GameObject("07_Snow_Soundscape");
+            var ambientBed = AssetDatabase.LoadAssetAtPath<AudioClip>(AmbientBedAudioPath);
+            var lake = AssetDatabase.LoadAssetAtPath<AudioClip>(LakeAudioPath);
+            var campfire = AssetDatabase.LoadAssetAtPath<AudioClip>(CampfireAudioPath);
+            var music = AssetDatabase.LoadAssetAtPath<AudioClip>(DemoMusicAudioPath);
+
+            CreateSoundscapeSource(root.transform, "Valley_Air_Bed", ambientBed, new Vector3(0f, 15f, 0f), 0.09f, false, 1f, 1f);
+            CreateSoundscapeSource(root.transform, "MainLake_Quiet_Water", lake, new Vector3(56f, 1.2f, 27f), 0.18f, true, 22f, 150f);
+
+            // This source is separate from the warmth receiver, which remains free
+            // to respond to gameplay later. The LookDev fire texture is always-on.
+            CreateSoundscapeSource(root.transform, "Campfire_Nearfield", campfire, new Vector3(-0.5f, 1.25f, 0.8f), 0.26f, true, 4.5f, 42f);
+
+            // Replace this clip in the Inspector after the snow-valley BGM is ready;
+            // its source and mix level can remain unchanged.
+            CreateSoundscapeSource(root.transform, "Demo_Music_Bed_Replaceable", music, Vector3.zero, 0.055f, false, 1f, 1f);
+        }
+
+        private static AudioSource CreateSoundscapeSource(Transform parent, string name, AudioClip clip, Vector3 position, float volume, bool spatial, float minDistance, float maxDistance)
+        {
+            var sourceRoot = new GameObject(name);
+            sourceRoot.transform.SetParent(parent);
+            sourceRoot.transform.position = position;
+
+            var source = sourceRoot.AddComponent<AudioSource>();
+            source.clip = clip;
+            source.loop = true;
+            source.playOnAwake = true;
+            source.volume = volume;
+            source.spatialBlend = spatial ? 1f : 0f;
+            source.rolloffMode = AudioRolloffMode.Logarithmic;
+            source.minDistance = minDistance;
+            source.maxDistance = maxDistance;
+            source.dopplerLevel = 0f;
+            return source;
+        }
+
         private static void CreateSnowCamera()
         {
             var cameraObject = new GameObject("Snow Grand Valley Camera");
@@ -1002,8 +1268,85 @@ namespace DemonViglu.FirePlay.Editor
             camera.allowMSAA = true;
             camera.depthTextureMode |= DepthTextureMode.Depth;
             camera.GetUniversalAdditionalCameraData().requiresDepthTexture = true;
+            cameraObject.AddComponent<AudioListener>();
             camera.transform.position = new Vector3(-268f, 154f, -312f);
             LookAt(camera.transform, new Vector3(14f, 17f, 27f));
+            camera.backgroundColor = new Color(0.66f, 0.76f, 0.86f);
+        }
+
+        private static void CreateSnowCharacterShowcase()
+        {
+            var root = new GameObject("06_Character_Showcase");
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(FemaleCharacterPrefabPath);
+            if (prefab == null)
+            {
+                throw new InvalidOperationException($"Character showcase is missing: {FemaleCharacterPrefabPath}");
+            }
+
+            var character = PrefabUtility.InstantiatePrefab(prefab, root.transform) as GameObject;
+            if (character == null)
+            {
+                throw new InvalidOperationException("Unable to instantiate the female character showcase prefab.");
+            }
+
+            character.name = "SnowTraveler_Showcase_Female";
+            character.transform.position = new Vector3(-4.15f, 0.40f, -3.25f);
+            character.transform.rotation = Quaternion.Euler(0f, 34f, 0f);
+            character.transform.localScale = Vector3.one;
+
+            // A very soft flattened receiver grounds the character in an otherwise
+            // bright snow field. It is visual-only and deliberately has no collider.
+            var contactShadow = CreateDisc(
+                "Character_SnowContactShadow",
+                root.transform,
+                new Vector3(-4.15f, 0.405f, -3.25f),
+                0.72f,
+                0.004f,
+                Materials["snowContactShadow"],
+                36,
+                0.08f,
+                new Vector3(1.18f, 1f, 0.56f));
+            contactShadow.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
+            contactShadow.GetComponent<Renderer>().receiveShadows = false;
+
+            var rimRoot = new GameObject("Character_Cool_RimLight");
+            rimRoot.transform.SetParent(root.transform);
+            rimRoot.transform.position = new Vector3(-6.4f, 4.6f, 1.1f);
+            var rim = rimRoot.AddComponent<Light>();
+            rim.type = LightType.Spot;
+            rim.color = new Color(0.48f, 0.66f, 1f);
+            rim.intensity = 1.05f;
+            rim.range = 9f;
+            rim.spotAngle = 66f;
+            rim.shadows = LightShadows.None;
+            LookAt(rimRoot.transform, character.transform.position + Vector3.up * 1.25f);
+
+            var faceFillRoot = new GameObject("Character_Warm_FaceFill");
+            faceFillRoot.transform.SetParent(root.transform);
+            faceFillRoot.transform.position = new Vector3(-1.7f, 2.2f, -4.5f);
+            var faceFill = faceFillRoot.AddComponent<Light>();
+            faceFill.type = LightType.Point;
+            faceFill.color = new Color(1f, 0.56f, 0.26f);
+            faceFill.intensity = 0.42f;
+            faceFill.range = 4.2f;
+            faceFill.shadows = LightShadows.None;
+        }
+
+        private static void CreateSnowCharacterShowcaseCamera()
+        {
+            var cameraObject = new GameObject("Snow Character Showcase Camera");
+            var camera = cameraObject.AddComponent<Camera>();
+            cameraObject.tag = "MainCamera";
+            camera.fieldOfView = 45f;
+            camera.nearClipPlane = 0.15f;
+            camera.farClipPlane = 1400f;
+            camera.allowHDR = true;
+            camera.allowMSAA = true;
+            camera.depthTextureMode |= DepthTextureMode.Depth;
+            camera.GetUniversalAdditionalCameraData().requiresDepthTexture = true;
+            cameraObject.AddComponent<AudioListener>();
+            camera.transform.position = new Vector3(5.8f, 4.1f, -12.8f);
+            LookAt(camera.transform, new Vector3(-2.1f, 1.8f, 2.8f));
             camera.backgroundColor = new Color(0.66f, 0.76f, 0.86f);
         }
 
@@ -1381,7 +1724,7 @@ namespace DemonViglu.FirePlay.Editor
             }
         }
 
-        private static GameObject CreateCampfire(bool includeGameplaySource = false)
+        private static GameObject CreateCampfire(bool includeGameplaySource = false, bool includeAtmosphere = false)
         {
             var root = new GameObject("Hero_Campfire");
             root.transform.position = new Vector3(-0.5f, 0.38f, 0.8f);
@@ -1406,6 +1749,10 @@ namespace DemonViglu.FirePlay.Editor
             CreateCone("OuterFlame", root.transform, new Vector3(0f, 1.45f, 0f), 0.65f, 1.65f, Materials["flameOuter"], 9);
             CreateCone("InnerFlame", root.transform, new Vector3(0f, 1.43f, -0.03f), 0.36f, 1.15f, Materials["flameInner"], 8);
             CreateCone("SideFlame", root.transform, new Vector3(0.34f, 1.15f, 0.08f), 0.26f, 0.82f, Materials["flameInner"], 7);
+            if (includeAtmosphere)
+            {
+                CreateCampfireAtmosphere(root.transform);
+            }
 
             var fireLightObject = new GameObject("CampfireLight");
             fireLightObject.transform.SetParent(root.transform);
@@ -1442,6 +1789,75 @@ namespace DemonViglu.FirePlay.Editor
             }
 
             return root;
+        }
+
+        private static void CreateCampfireAtmosphere(Transform campfireRoot)
+        {
+            var smokeRoot = new GameObject("Campfire_ThinSmoke");
+            smokeRoot.transform.SetParent(campfireRoot);
+            smokeRoot.transform.localPosition = new Vector3(0.15f, 1.45f, 0f);
+            var smoke = smokeRoot.AddComponent<ParticleSystem>();
+            var smokeMain = smoke.main;
+            smokeMain.loop = true;
+            smokeMain.startLifetime = new ParticleSystem.MinMaxCurve(2.8f, 4.8f);
+            smokeMain.startSpeed = new ParticleSystem.MinMaxCurve(0.18f, 0.40f);
+            smokeMain.startSize = new ParticleSystem.MinMaxCurve(0.28f, 0.58f);
+            smokeMain.startColor = new ParticleSystem.MinMaxGradient(new Color(0.22f, 0.28f, 0.34f, 0.16f), new Color(0.55f, 0.64f, 0.68f, 0.035f));
+            smokeMain.maxParticles = 36;
+            var smokeEmission = smoke.emission;
+            smokeEmission.rateOverTime = 4.5f;
+            var smokeShape = smoke.shape;
+            smokeShape.shapeType = ParticleSystemShapeType.Cone;
+            smokeShape.radius = 0.28f;
+            smokeShape.angle = 11f;
+            var smokeVelocity = smoke.velocityOverLifetime;
+            smokeVelocity.enabled = true;
+            smokeVelocity.x = new ParticleSystem.MinMaxCurve(0.12f, 0.26f);
+            // Unity requires X/Y/Z Velocity over Lifetime curves to use the
+            // same MinMaxCurve mode. Keep Y randomized just like X and Z.
+            smokeVelocity.y = new ParticleSystem.MinMaxCurve(0.04f, 0.14f);
+            smokeVelocity.z = new ParticleSystem.MinMaxCurve(0.04f, 0.15f);
+            var smokeNoise = smoke.noise;
+            smokeNoise.enabled = true;
+            smokeNoise.strength = 0.30f;
+            smokeNoise.frequency = 0.26f;
+            smokeNoise.scrollSpeed = 0.12f;
+            var smokeRenderer = smokeRoot.GetComponent<ParticleSystemRenderer>();
+            smokeRenderer.renderMode = ParticleSystemRenderMode.Billboard;
+            smokeRenderer.sharedMaterial = Materials["campfireSmoke"];
+            smokeRenderer.shadowCastingMode = ShadowCastingMode.Off;
+            smoke.Play();
+
+            var emberRoot = new GameObject("Campfire_RisingEmbers");
+            emberRoot.transform.SetParent(campfireRoot);
+            emberRoot.transform.localPosition = new Vector3(0f, 1.16f, 0f);
+            var embers = emberRoot.AddComponent<ParticleSystem>();
+            var emberMain = embers.main;
+            emberMain.loop = true;
+            emberMain.startLifetime = new ParticleSystem.MinMaxCurve(0.7f, 1.65f);
+            emberMain.startSpeed = new ParticleSystem.MinMaxCurve(0.65f, 1.35f);
+            emberMain.startSize = new ParticleSystem.MinMaxCurve(0.025f, 0.075f);
+            emberMain.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.22f, 0.04f, 0.92f), new Color(1f, 0.76f, 0.22f, 0.68f));
+            emberMain.maxParticles = 42;
+            var emberEmission = embers.emission;
+            emberEmission.rateOverTime = 9f;
+            var emberShape = embers.shape;
+            emberShape.shapeType = ParticleSystemShapeType.Circle;
+            emberShape.radius = 0.42f;
+            var emberVelocity = embers.velocityOverLifetime;
+            emberVelocity.enabled = true;
+            emberVelocity.x = new ParticleSystem.MinMaxCurve(-0.22f, 0.34f);
+            emberVelocity.y = new ParticleSystem.MinMaxCurve(0.72f, 1.45f);
+            emberVelocity.z = new ParticleSystem.MinMaxCurve(-0.14f, 0.20f);
+            var emberNoise = embers.noise;
+            emberNoise.enabled = true;
+            emberNoise.strength = 0.28f;
+            emberNoise.frequency = 0.42f;
+            var emberRenderer = emberRoot.GetComponent<ParticleSystemRenderer>();
+            emberRenderer.renderMode = ParticleSystemRenderMode.Billboard;
+            emberRenderer.sharedMaterial = Materials["campfireSpark"];
+            emberRenderer.shadowCastingMode = ShadowCastingMode.Off;
+            embers.Play();
         }
 
         private static void CreateSnowEnvironmentWarmthSession()

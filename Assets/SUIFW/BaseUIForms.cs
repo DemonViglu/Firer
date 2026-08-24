@@ -44,7 +44,7 @@ namespace SUIFW
             if (_CurrentUIType.UIForms_Type == UIFormsType.PopUp) 
             {
                 //添加UI遮罩处理
-                UIMaskMgr.GetInstance().SetMaskWindow(this.gameObject,_CurrentUIType.UIForms_LucencyType);                
+                UIMaskMgr.GetInstance()?.SetMaskWindow(this.gameObject, _CurrentUIType.UIForms_LucencyType);
             }
         }
         //页面隐藏(不在“栈”集合中)
@@ -54,7 +54,7 @@ namespace SUIFW
             if (_CurrentUIType.UIForms_Type == UIFormsType.PopUp)
             {
                 //添加UI遮罩处理
-                UIMaskMgr.GetInstance().CancleMaskWindow();
+                UIMaskMgr.GetInstance()?.CancleMaskWindow();
             }
         }
         //页面重新显示
@@ -64,7 +64,7 @@ namespace SUIFW
             if (_CurrentUIType.UIForms_Type == UIFormsType.PopUp)
             {
                 //添加UI遮罩处理
-                UIMaskMgr.GetInstance().SetMaskWindow(this.gameObject, _CurrentUIType.UIForms_LucencyType);
+                UIMaskMgr.GetInstance()?.SetMaskWindow(this.gameObject, _CurrentUIType.UIForms_LucencyType);
             }
         }
         //页面冻结(还在“栈”集合中)

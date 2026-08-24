@@ -12,6 +12,8 @@ namespace DemonViglu.FirePlay.Activity
     {
         public const string ActivityId = "marshmallow";
         public const string RoastingStateId = "marshmallow.roasting";
+        public const string GiveActionId = "marshmallow.give";
+        public const string ReceiveVfxCueId = "marshmallow.receive.vfx";
 
         private readonly float _materializeFuelCost;
         private readonly int _turnsRequired;
@@ -38,6 +40,57 @@ namespace DemonViglu.FirePlay.Activity
         public MarshmallowActivityResult? CompletedResult => _completedResult;
         public int TurnsRequired => _roast?.TurnsRequired ?? _turnsRequired;
         public uint NetworkStateRevision { get; private set; }
+
+        public bool TryPeekGift(
+            string sourcePlayerId,
+            string eventId,
+            out MarshmallowGift gift,
+            out string reason)
+        {
+            if (_roast == null || !_roast.IsReadyToEat || !_completedResult.HasValue)
+            {
+                gift = default;
+                reason = "Marshmallow is not ready to give";
+                return false;
+            }
+
+            var result = _completedResult.Value;
+            gift = new MarshmallowGift(
+                sourcePlayerId,
+                eventId,
+                result.Quality,
+                result.FuelRefund);
+            reason = string.Empty;
+            return true;
+        }
+
+        public bool ConsumeGift()
+        {
+            if (_roast == null || !_roast.IsReadyToEat || !_completedResult.HasValue)
+                return false;
+            ResetState();
+            return true;
+        }
+
+        public bool TryGive(
+            string sourcePlayerId,
+            string eventId,
+            Func<MarshmallowGift, string> accept,
+            out string reason)
+        {
+            if (!TryPeekGift(sourcePlayerId, eventId, out var gift, out reason))
+                return false;
+            if (accept == null)
+            {
+                reason = "Marshmallow gift receiver is unavailable";
+                return false;
+            }
+            reason = accept(gift) ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(reason))
+                return false;
+            ResetState();
+            return true;
+        }
 
         public MarshmallowActivityLogic(
             float materializeFuelCost = 3f,

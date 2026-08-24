@@ -38,6 +38,34 @@ namespace DemonViglu.FirePlay.Activity
         bool HasTag(string tag);
     }
 
+    public readonly struct MarshmallowGift
+    {
+        public string SourcePlayerId { get; }
+        public string EventId { get; }
+        public MarshmallowRoastQuality Quality { get; }
+        public float FuelValue { get; }
+        public bool IsValid => !string.IsNullOrWhiteSpace(SourcePlayerId)
+            && !string.IsNullOrWhiteSpace(EventId)
+            && FuelValue >= 0f;
+
+        public MarshmallowGift(
+            string sourcePlayerId,
+            string eventId,
+            MarshmallowRoastQuality quality,
+            float fuelValue)
+        {
+            SourcePlayerId = sourcePlayerId ?? string.Empty;
+            EventId = eventId ?? string.Empty;
+            Quality = quality;
+            FuelValue = fuelValue;
+        }
+    }
+
+    public interface IActivityTargetGiftReceiver
+    {
+        bool TryReceiveMarshmallow(MarshmallowGift gift, out string reason);
+    }
+
     public sealed class ActivityTargetAvailabilityChanged : IGameEvent
     {
         public string TargetId { get; }
@@ -52,9 +80,10 @@ namespace DemonViglu.FirePlay.Activity
 
     public interface IActivityTargetDirectory
     {
-        bool RegisterPlayer(string playerId);
+        bool RegisterPlayer(string playerId, IActivityTargetGiftReceiver giftReceiver = null);
         bool Remove(string targetId);
         bool TryResolve(string targetId, out IActivityTargetView target);
+        bool TryDeliverMarshmallow(string targetId, MarshmallowGift gift, out string reason);
         IReadOnlyList<string> GetAvailablePlayerIds(string excludePlayerId = null);
     }
 
@@ -68,11 +97,16 @@ namespace DemonViglu.FirePlay.Activity
         {
             public string TargetId { get; }
             public bool IsAvailable => true;
+            public IActivityTargetGiftReceiver GiftReceiver { get; private set; }
 
-            public PlayerTargetView(string targetId)
+            public PlayerTargetView(string targetId, IActivityTargetGiftReceiver giftReceiver)
             {
                 TargetId = targetId;
+                GiftReceiver = giftReceiver;
             }
+
+            public void SetGiftReceiver(IActivityTargetGiftReceiver giftReceiver) =>
+                GiftReceiver = giftReceiver;
 
             public bool HasTag(string tag) =>
                 string.Equals(tag, "player", StringComparison.Ordinal);
@@ -87,13 +121,20 @@ namespace DemonViglu.FirePlay.Activity
             _events = events;
         }
 
-        public bool RegisterPlayer(string playerId)
+        public bool RegisterPlayer(
+            string playerId,
+            IActivityTargetGiftReceiver giftReceiver = null)
         {
             playerId = playerId?.Trim() ?? string.Empty;
             if (playerId.Length == 0) return false;
-            if (_targets.ContainsKey(playerId)) return true;
+            if (_targets.TryGetValue(playerId, out var existing))
+            {
+                if (existing is PlayerTargetView existingPlayer)
+                    existingPlayer.SetGiftReceiver(giftReceiver);
+                return true;
+            }
 
-            _targets[playerId] = new PlayerTargetView(playerId);
+            _targets[playerId] = new PlayerTargetView(playerId, giftReceiver);
             _events?.Publish(new ActivityTargetAvailabilityChanged(playerId, true));
             return true;
         }
@@ -122,6 +163,23 @@ namespace DemonViglu.FirePlay.Activity
             return false;
         }
 
+        public bool TryDeliverMarshmallow(
+            string targetId,
+            MarshmallowGift gift,
+            out string reason)
+        {
+            if (!gift.IsValid
+                || !TryResolve(targetId, out var target)
+                || target is not PlayerTargetView player
+                || player.GiftReceiver == null)
+            {
+                reason = "Target Player cannot receive a marshmallow";
+                return false;
+            }
+
+            return player.GiftReceiver.TryReceiveMarshmallow(gift, out reason);
+        }
+
         public IReadOnlyList<string> GetAvailablePlayerIds(string excludePlayerId = null)
         {
             var result = new List<string>();
@@ -143,6 +201,7 @@ namespace DemonViglu.FirePlay.Activity
     public interface IActivityFlameResource
     {
         float CurrentFuel { get; }
+        float MaximumFuel { get; }
         bool TryConsume(float amount);
         bool Restore(float amount);
     }

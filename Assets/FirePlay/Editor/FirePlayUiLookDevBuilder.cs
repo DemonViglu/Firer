@@ -40,8 +40,11 @@ namespace DemonViglu.FirePlay.Editor
         [MenuItem("FirePlay/UI/Apply Snow Valley UI LookDev")]
         public static void ApplySnowValleyUiLookDev()
         {
-            var roundedSprite = EnsureRoundedPanelSprite();
-            var circleSprite = EnsureSoftCircleSprite();
+            // The accepted direction is transparent grey/white UGUI without
+            // decorative panel textures. Keep the parameters for compatibility
+            // with the existing authoring routine, but do not generate assets.
+            Sprite roundedSprite = null;
+            Sprite circleSprite = null;
             StylePrefab(CanvasPath, roundedSprite, circleSprite, isHud: true);
             foreach (var formPath in ActivityFormPaths)
             {
@@ -129,7 +132,7 @@ namespace DemonViglu.FirePlay.Editor
                     || name.Contains("FuelFill")
                     || name.Contains("JoystickArea")
                     || name == "Handle";
-                image.sprite = usesCircularControl ? circleSprite : roundedSprite;
+                image.sprite = null;
                 image.type = name.Contains("FuelFill") ? Image.Type.Filled : usesCircularControl ? Image.Type.Simple : Image.Type.Sliced;
                 if (name == "Handle")
                 {
@@ -177,8 +180,8 @@ namespace DemonViglu.FirePlay.Editor
                     continue;
                 }
 
-                image.sprite = roundedSprite;
-                image.type = Image.Type.Sliced;
+                image.sprite = null;
+                image.type = Image.Type.Simple;
                 image.color = button.name.Contains("Close")
                     ? new Color(1f, 1f, 1f, 0.20f)
                     : PrimaryWhite;

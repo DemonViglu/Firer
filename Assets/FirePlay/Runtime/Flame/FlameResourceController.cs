@@ -24,6 +24,7 @@ namespace DemonViglu.FirePlay.Flame
         public FlameResourceState State { get; private set; }
         public FlameResourceConfig Config => _config;
         public float CurrentFuel => State?.CurrentFuel ?? 0f;
+        public float MaximumFuel => State?.MaxFuel ?? 0f;
         public bool NightDrainActive => _nightDrainActive;
         public bool IsRecovering => _activeRecoverySources > 0;
         public bool IsInSafeZone => _activeSafeZones > 0;

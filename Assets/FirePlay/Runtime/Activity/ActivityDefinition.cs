@@ -23,14 +23,28 @@ namespace DemonViglu.FirePlay.Activity
         public string ActivityId { get; }
         public string ActionId { get; }
         public string Payload { get; }
+        public ActivityTargetKind TargetKind { get; }
+        public string TargetId { get; }
+        public string EventId { get; }
         public uint SessionRevision { get; }
 
-        public ActivityActionRequest(string playerId, string activityId, string actionId, string payload, uint sessionRevision)
+        public ActivityActionRequest(
+            string playerId,
+            string activityId,
+            string actionId,
+            string payload,
+            uint sessionRevision,
+            ActivityTargetKind targetKind = ActivityTargetKind.None,
+            string targetId = null,
+            string eventId = null)
         {
             PlayerId = playerId ?? string.Empty;
             ActivityId = activityId ?? string.Empty;
             ActionId = actionId ?? string.Empty;
             Payload = payload ?? string.Empty;
+            TargetKind = targetKind;
+            TargetId = targetId ?? string.Empty;
+            EventId = eventId ?? string.Empty;
             SessionRevision = sessionRevision;
         }
     }
@@ -40,7 +54,10 @@ namespace DemonViglu.FirePlay.Activity
     {
         bool HasActiveActivity { get; }
         string ActiveActivityId { get; }
-        ActivityActionResult RequestAction(string actionId, string payload = null);
+        ActivityActionResult RequestAction(
+            string actionId,
+            string payload = null,
+            ActivityTargetReference target = default);
     }
 
     /// <summary>

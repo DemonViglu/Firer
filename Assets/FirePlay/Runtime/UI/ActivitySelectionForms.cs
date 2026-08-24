@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DemonViglu.FirePlay.Activity;
 using SUIFW;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace DemonViglu.FirePlay.UI
@@ -19,11 +20,12 @@ namespace DemonViglu.FirePlay.UI
         [SerializeField] private Transform _buttonRoot;
         [SerializeField] private Button _buttonTemplate;
         [SerializeField] private Button _closeButton;
+        [SerializeField] private ActivityRadialWheelGraphic _wheelGraphic;
         [SerializeField, Min(0.1f)] private float _anchorSearchDistance = 3f;
         [SerializeField, Min(0.05f)] private float _refreshInterval = 0.15f;
         [SerializeField, Min(40f)] private float _wheelRadius = 130f;
-        [SerializeField] private Color _anchorButtonColor = new(0.44f, 0.25f, 0.09f, 1f);
-        [SerializeField] private Color _anywhereButtonColor = new(0.12f, 0.3f, 0.38f, 1f);
+        [SerializeField] private Color _anchorButtonColor = new(0.94f, 0.96f, 0.98f, 0.24f);
+        [SerializeField] private Color _anywhereButtonColor = new(0.78f, 0.83f, 0.88f, 0.17f);
 
         private readonly List<GameObject> _buttonPool = new();
         private PlayerActivityHost _host;
@@ -33,14 +35,40 @@ namespace DemonViglu.FirePlay.UI
         private float _nextRefreshAt;
         private string _pendingActivityId = string.Empty;
         private bool _eventsBound;
+        private int _highlightedIndex = -1;
+        private readonly List<SelectionEntry> _visibleEntries = new();
+        private bool _pointerSelectionArmed;
 
         private void Awake()
         {
+            // The persistent HUD lives under SUIFW's Fixed node.  The activity
+            // selector must be a real popup or those fixed controls remain above
+            // it and intercept pointer input.  Lucency keeps the mask visually
+            // transparent while still preventing clicks from leaking to the HUD.
+            CurrentUIType = new UIType
+            {
+                UIForms_Type = UIFormsType.PopUp,
+                UIForms_ShowMode = UIFormsShowMode.ReverseChange,
+                UIForms_LucencyType = UIFormsLucencyType.Lucency
+            };
+
+            FirePlayMinimalUiTheme.Apply(gameObject);
+            // Prefabs from the previous look-dev pass serialized opaque brown/blue
+            // colours. Keep the runtime wheel in the shared neutral theme even when
+            // those legacy serialized values have not been re-saved yet.
+            _anchorButtonColor = FirePlayMinimalUiTheme.AnchorActivityButton;
+            _anywhereButtonColor = FirePlayMinimalUiTheme.AnywhereActivityButton;
             _titleText ??= FindText("Title");
             _statusText ??= FindText("Status");
             _buttonRoot ??= FindTransform("Buttons");
             _buttonTemplate ??= FindButton("ActivityButtonTemplate");
             _closeButton ??= FindButton("CloseButton");
+            _wheelGraphic ??= GetComponentInChildren<ActivityRadialWheelGraphic>(true);
+            if (TryGetComponent<Image>(out var rootImage))
+            {
+                rootImage.color = Color.clear;
+                rootImage.raycastTarget = false;
+            }
             _anchorDiscovery = new ActivityAnchorDiscovery(_anchorSearchDistance);
         }
 
@@ -66,6 +94,9 @@ namespace DemonViglu.FirePlay.UI
             var anchorChanged = RefreshNearbyAnchor(hostChanged);
             if (hostChanged || anchorChanged)
                 RebuildEntries();
+
+            UpdateDirectionalHighlight();
+            ProcessRadialPointerSelection();
         }
 
         public override void Hiding()
@@ -128,6 +159,9 @@ namespace DemonViglu.FirePlay.UI
             }
 
             var entries = CollectEntries();
+            _visibleEntries.Clear();
+            _visibleEntries.AddRange(entries);
+            SetHighlightedIndex(-1);
             if (entries.Count == 0)
             {
                 HideButtons();
@@ -162,6 +196,7 @@ namespace DemonViglu.FirePlay.UI
                     buttonRect.anchorMax = new Vector2(0.5f, 0.5f);
                     buttonRect.pivot = new Vector2(0.5f, 0.5f);
                     buttonRect.anchoredPosition = GetWheelPosition(index, entries.Count);
+                    buttonRect.sizeDelta = new Vector2(112f, 62f);
                 }
 
                 var button = buttonObject.GetComponent<Button>();
@@ -202,6 +237,81 @@ namespace DemonViglu.FirePlay.UI
             return new Vector2(Mathf.Cos(radians), Mathf.Sin(radians)) * radius;
         }
 
+        private void UpdateDirectionalHighlight()
+        {
+            if (_wheelGraphic == null || _visibleEntries.Count == 0)
+                return;
+
+            if (Pointer.current == null)
+            {
+                SetHighlightedIndex(-1);
+                return;
+            }
+
+            SetHighlightedIndex(_wheelGraphic.GetSegmentAtScreenPoint(
+                Pointer.current.position.ReadValue(),
+                null));
+        }
+
+        private void SetHighlightedIndex(int index)
+        {
+            index = index >= 0 && index < _visibleEntries.Count ? index : -1;
+            if (_highlightedIndex == index
+                && _wheelGraphic != null
+                && _wheelGraphic.SegmentCount == _visibleEntries.Count)
+                return;
+
+            _highlightedIndex = index;
+            _wheelGraphic?.SetSegments(_visibleEntries.Count, index);
+            for (var buttonIndex = 0; buttonIndex < _buttonPool.Count; buttonIndex++)
+            {
+                var buttonObject = _buttonPool[buttonIndex];
+                if (buttonObject == null
+                    || !buttonObject.activeSelf
+                    || !buttonObject.TryGetComponent<Button>(out var button)
+                    || button.targetGraphic == null)
+                    continue;
+
+                var entry = buttonIndex < _visibleEntries.Count ? _visibleEntries[buttonIndex] : default;
+                button.targetGraphic.color = buttonIndex == index
+                    ? new Color(0.96f, 0.99f, 1f, 0.48f)
+                    : entry.IsAnywhere ? _anywhereButtonColor : _anchorButtonColor;
+            }
+        }
+
+        private void ProcessRadialPointerSelection()
+        {
+            var pointer = Pointer.current;
+            if (pointer == null || _wheelGraphic == null || _visibleEntries.Count == 0)
+                return;
+
+            var screenPoint = pointer.position.ReadValue();
+            if (pointer.press.wasPressedThisFrame)
+            {
+                _pointerSelectionArmed = !IsCloseButtonPoint(screenPoint)
+                                         && _wheelGraphic.GetSegmentAtScreenPoint(screenPoint, null) >= 0;
+            }
+
+            if (!pointer.press.wasReleasedThisFrame)
+                return;
+
+            var wasArmed = _pointerSelectionArmed;
+            _pointerSelectionArmed = false;
+            var index = _wheelGraphic.GetSegmentAtScreenPoint(screenPoint, null);
+            if (wasArmed
+                && index >= 0
+                && index < _visibleEntries.Count
+                && !IsCloseButtonPoint(screenPoint))
+            {
+                RequestSelection(_visibleEntries[index]);
+            }
+        }
+
+        private bool IsCloseButtonPoint(Vector2 screenPoint) =>
+            _closeButton != null
+            && _closeButton.transform is RectTransform closeRect
+            && RectTransformUtility.RectangleContainsScreenPoint(closeRect, screenPoint, null);
+
         private List<SelectionEntry> CollectEntries()
         {
             var entries = new List<SelectionEntry>();
@@ -240,7 +350,7 @@ namespace DemonViglu.FirePlay.UI
 
         private void RequestSelection(SelectionEntry entry)
         {
-            if (_host == null || _events == null) return;
+            if (_host == null || _events == null || !string.IsNullOrEmpty(_pendingActivityId)) return;
 
             _pendingActivityId = entry.ActivityId;
             SetButtonsInteractable(false);
@@ -263,6 +373,7 @@ namespace DemonViglu.FirePlay.UI
             }
 
             _pendingActivityId = string.Empty;
+            _pointerSelectionArmed = false;
             if (result.Accepted)
             {
                 CloseSelection();

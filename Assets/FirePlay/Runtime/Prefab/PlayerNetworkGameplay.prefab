@@ -246,6 +246,8 @@ MonoBehaviour:
     parameterName: MarshmallowEat
   - cueId: marshmallow.cancel
     parameterName: MarshmallowCancel
+  - cueId: marshmallow.receive
+    parameterName: MarshmallowReceive
   - cueId: ritual.offer
     parameterName: RitualOffer
   - cueId: guitar.begin

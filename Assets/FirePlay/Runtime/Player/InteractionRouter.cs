@@ -25,7 +25,8 @@ namespace DemonViglu.FirePlay.Player
             _context = context;
             if (_context != null && !_context.IsLocalPlayer) return;
 
-            _mode = GetComponentInParent<PlayerModeController>();
+            _mode = GetComponentInParent<PlayerModeController>()
+                ?? _context?.GetComponentInChildren<PlayerModeController>(true);
             _events ??= GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
             _registry ??= GameInstanceSubsystem.GetOrCreate<IWorldObjectRegistry>(() => new StableIdWorldObjectRegistry());
             var registered = GameInstanceSubsystem.TryGet<IInteractionRouter>();

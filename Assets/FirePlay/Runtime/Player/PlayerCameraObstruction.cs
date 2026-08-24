@@ -7,6 +7,7 @@ namespace DemonViglu.FirePlay.Player
     /// when terrain or scene geometry blocks the view. It changes presentation
     /// only; PlayerLook remains the sole owner of yaw and pitch.
     /// </summary>
+    [DefaultExecutionOrder(-200)]
     [DisallowMultipleComponent]
     public sealed class PlayerCameraObstruction : MonoBehaviour
     {
@@ -19,6 +20,7 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField, Min(0.01f)] private float _returnSpeed = 10f;
 
         private readonly RaycastHit[] _hits = new RaycastHit[16];
+        private LocalPlayerContext _ownerContext;
         private float _currentDistance;
 
         private void Awake()
@@ -29,7 +31,8 @@ namespace DemonViglu.FirePlay.Player
 
         private void LateUpdate()
         {
-            if (_pivot == null)
+            _ownerContext ??= GetComponentInParent<LocalPlayerContext>();
+            if ((_ownerContext != null && !_ownerContext.IsLocalPlayer) || _pivot == null)
                 return;
 
             // Preserve the authored vertical/side offset as the orbit focus,
@@ -104,8 +107,9 @@ namespace DemonViglu.FirePlay.Player
 
         private void ResolveReferences()
         {
+            _ownerContext ??= GetComponentInParent<LocalPlayerContext>();
             _pivot ??= transform.parent;
-            _ignoredRoot ??= GetComponentInParent<LocalPlayerContext>()?.transform;
+            _ignoredRoot ??= _ownerContext?.transform;
             if (_desiredLocalPosition.sqrMagnitude <= 0.0001f)
                 _desiredLocalPosition = transform.localPosition;
         }

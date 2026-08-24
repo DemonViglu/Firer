@@ -18,11 +18,14 @@ namespace DemonViglu.FirePlay.Player
         public const string MarshmallowTurn = "marshmallow.turn";
         public const string MarshmallowEat = "marshmallow.eat";
         public const string MarshmallowCancel = "marshmallow.cancel";
+        public const string MarshmallowReceive = "marshmallow.receive";
         public const string RitualOffer = "ritual.offer";
         public const string GuitarBegin = "guitar.begin";
         public const string GuitarPlay = "guitar.play";
         public const string FishingCast = "fishing.cast";
         public const string FishingReel = "fishing.reel";
+        public const string EmoteWave = "expression.wave";
+        public const string EmoteThanks = "expression.thanks";
     }
 
     /// <summary>
@@ -64,13 +67,14 @@ namespace DemonViglu.FirePlay.Player
             new() { cueId = PlayerAnimationCueIds.MarshmallowTurn, parameterName = "MarshmallowTurn" },
             new() { cueId = PlayerAnimationCueIds.MarshmallowEat, parameterName = "MarshmallowEat" },
             new() { cueId = PlayerAnimationCueIds.MarshmallowCancel, parameterName = "MarshmallowCancel" },
+            new() { cueId = PlayerAnimationCueIds.MarshmallowReceive, parameterName = "MarshmallowReceive" },
             new() { cueId = PlayerAnimationCueIds.RitualOffer, parameterName = "RitualOffer" },
             new() { cueId = PlayerAnimationCueIds.GuitarBegin, parameterName = "GuitarBegin" },
             new() { cueId = PlayerAnimationCueIds.GuitarPlay, parameterName = "GuitarPlay" },
             new() { cueId = PlayerAnimationCueIds.FishingCast, parameterName = "FishingCast" },
             new() { cueId = PlayerAnimationCueIds.FishingReel, parameterName = "FishingReel" },
-            new() { cueId = "expression.wave", parameterName = "EmoteWave" },
-            new() { cueId = "expression.thanks", parameterName = "EmoteThanks" },
+            new() { cueId = PlayerAnimationCueIds.EmoteWave, parameterName = "EmoteWave" },
+            new() { cueId = PlayerAnimationCueIds.EmoteThanks, parameterName = "EmoteThanks" },
             new() { cueId = "expression.warmth", parameterName = "EmoteWarmth" },
             new() { cueId = "expression.sit", parameterName = "EmoteSit" }
         };
@@ -88,7 +92,14 @@ namespace DemonViglu.FirePlay.Player
 
         private void Awake()
         {
-            _animator ??= GetComponentInChildren<Animator>();
+            _animator ??= GetComponentInChildren<Animator>(true);
+            if (_animator == null)
+            {
+                var player = GetComponentInParent<LocalPlayerContext>();
+                _animator = player != null
+                    ? player.GetComponentInChildren<Animator>(true)
+                    : null;
+            }
             if (_placeholderVisual != null)
             {
                 _placeholderBasePosition = _placeholderVisual.localPosition;

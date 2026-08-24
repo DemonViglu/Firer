@@ -15,6 +15,10 @@ namespace DemonViglu.FirePlay.UI
         [SerializeField] private Button _materializeButton;
         [SerializeField] private Button _turnButton;
         [SerializeField] private Button _eatButton;
+        [SerializeField] private Button _giveButton;
+        [SerializeField] private Dropdown _targetDropdown;
+        [SerializeField] private Button _targetButton;
+        [SerializeField] private Text _targetLabel;
         [SerializeField] private Button _closeButton;
         [SerializeField] private GameObject _timingPanel;
         [SerializeField] private RectTransform _timingTrack;
@@ -22,9 +26,11 @@ namespace DemonViglu.FirePlay.UI
         [SerializeField] private RectTransform _needle;
 
         private IActivityActionRequester _requester;
+        private string _selectedTargetId = string.Empty;
 
         private void Awake()
         {
+            FirePlayMinimalUiTheme.Apply(gameObject);
             ResolveControls();
         }
 
@@ -34,6 +40,10 @@ namespace DemonViglu.FirePlay.UI
             _materializeButton ??= FindButton("MaterializeButton");
             _turnButton ??= FindButton("TurnButton");
             _eatButton ??= FindButton("EatButton");
+            _giveButton ??= FindButton("GiveButton");
+            _targetDropdown ??= FindDropdown("TargetDropdown");
+            _targetButton ??= FindButton("TargetButton");
+            _targetLabel ??= FindText("TargetLabel");
             _closeButton ??= FindButton("CloseButton");
             _timingPanel ??= FindRect("TimingPanel")?.gameObject;
             _timingTrack ??= FindRect("TimingTrack");
@@ -85,6 +95,7 @@ namespace DemonViglu.FirePlay.UI
                     logic.NeedlePosition,
                     logic.TargetCenter,
                     logic.PerfectZoneWidth));
+                RefreshTargetControls(host, logic.IsReadyToEat);
                 return;
             }
 
@@ -95,6 +106,7 @@ namespace DemonViglu.FirePlay.UI
                 && MarshmallowActivityStateSnapshot.TryParse(payload, out var snapshot))
             {
                 ApplyState(snapshot);
+                RefreshTargetControls(host, snapshot.IsReadyToEat);
                 return;
             }
 
@@ -102,6 +114,7 @@ namespace DemonViglu.FirePlay.UI
             SetInteractable(_materializeButton, false);
             SetInteractable(_turnButton, false);
             SetInteractable(_eatButton, false);
+            SetInteractable(_giveButton, false);
             SetTimingVisible(false);
         }
 
@@ -123,6 +136,7 @@ namespace DemonViglu.FirePlay.UI
             SetInteractable(_materializeButton, !state.HasMaterialized);
             SetInteractable(_turnButton, state.HasMaterialized && !state.IsReadyToEat);
             SetInteractable(_eatButton, state.IsReadyToEat);
+            RefreshTargetControls(_requester as PlayerActivityHost, state.IsReadyToEat);
             SetTimingVisible(state.HasMaterialized && !state.IsReadyToEat);
             UpdateTimingGauge(state);
         }
@@ -154,6 +168,8 @@ namespace DemonViglu.FirePlay.UI
             _materializeButton?.onClick.AddListener(OnMaterializeClicked);
             _turnButton?.onClick.AddListener(OnTurnClicked);
             _eatButton?.onClick.AddListener(OnEatClicked);
+            _giveButton?.onClick.AddListener(OnGiveClicked);
+            _targetButton?.onClick.AddListener(OnTargetClicked);
             _closeButton?.onClick.AddListener(OnCloseClicked);
         }
 
@@ -162,13 +178,100 @@ namespace DemonViglu.FirePlay.UI
             _materializeButton?.onClick.RemoveListener(OnMaterializeClicked);
             _turnButton?.onClick.RemoveListener(OnTurnClicked);
             _eatButton?.onClick.RemoveListener(OnEatClicked);
+            _giveButton?.onClick.RemoveListener(OnGiveClicked);
+            _targetButton?.onClick.RemoveListener(OnTargetClicked);
             _closeButton?.onClick.RemoveListener(OnCloseClicked);
         }
 
         private void OnMaterializeClicked() => Submit("marshmallow.materialize");
         private void OnTurnClicked() => Submit("marshmallow.turn");
         private void OnEatClicked() => Submit("marshmallow.eat");
+        private void OnGiveClicked()
+        {
+            var host = _requester as PlayerActivityHost;
+            var targetIds = host?.AvailableTargetPlayerIds;
+            var index = ResolveSelectedTargetIndex(targetIds);
+            if (targetIds == null || targetIds.Count == 0 || index < 0 || index >= targetIds.Count)
+            {
+                SetStatus("附近没有可接收棉花糖的伙伴");
+                return;
+            }
+
+            var targetId = targetIds[index];
+            var result = _requester.RequestAction(
+                MarshmallowActivityLogic.GiveActionId,
+                target: ActivityTargetReference.Player(targetId));
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.Log($"[MarshmallowActivityForm] 赠送棉花糖：target={targetId}，consumed={result.Consumed}，reason={result.Reason}", this);
+#endif
+            SetStatus(result.Consumed ? result.Reason : $"未执行：{result.Reason}");
+        }
+
+        private void OnTargetClicked()
+        {
+            var ids = (_requester as PlayerActivityHost)?.AvailableTargetPlayerIds;
+            if (ids == null || ids.Count == 0)
+                return;
+            var index = ResolveSelectedTargetIndex(ids);
+            _selectedTargetId = ids[(index + 1) % ids.Count];
+            Refresh();
+        }
         private void OnCloseClicked() => Submit("activity.exit");
+
+        private void RefreshTargetControls(PlayerActivityHost host, bool giftReady)
+        {
+            var ids = host?.AvailableTargetPlayerIds;
+            var hasTargets = ids != null && ids.Count > 0;
+            if (_targetDropdown != null)
+            {
+                var previousTargetId = string.Empty;
+                if (_targetDropdown.value >= 0
+                    && _targetDropdown.value < _targetDropdown.options.Count)
+                {
+                    previousTargetId = _targetDropdown.options[_targetDropdown.value].text;
+                }
+                _targetDropdown.ClearOptions();
+                if (hasTargets)
+                {
+                    _targetDropdown.AddOptions(new System.Collections.Generic.List<string>(ids));
+                    var selectedIndex = -1;
+                    for (var index = 0; index < ids.Count; index++)
+                    {
+                        if (ids[index] == previousTargetId)
+                        {
+                            selectedIndex = index;
+                            break;
+                        }
+                    }
+                    _targetDropdown.value = selectedIndex >= 0 ? selectedIndex : 0;
+                }
+                _targetDropdown.interactable = hasTargets;
+            }
+            else
+            {
+                var selectedIndex = ResolveSelectedTargetIndex(ids);
+                _selectedTargetId = hasTargets ? ids[selectedIndex] : string.Empty;
+                if (_targetLabel != null)
+                    _targetLabel.text = hasTargets
+                        ? $"伙伴 · {_selectedTargetId}"
+                        : "附近没有伙伴";
+                SetInteractable(_targetButton, hasTargets && ids.Count > 1);
+            }
+            SetInteractable(_giveButton, giftReady && hasTargets);
+        }
+
+        private int ResolveSelectedTargetIndex(
+            System.Collections.Generic.IReadOnlyList<string> targetIds)
+        {
+            if (targetIds == null || targetIds.Count == 0)
+                return 0;
+            for (var index = 0; index < targetIds.Count; index++)
+            {
+                if (targetIds[index] == _selectedTargetId)
+                    return index;
+            }
+            return 0;
+        }
 
         private void Submit(string actionId)
         {
@@ -228,6 +331,17 @@ namespace DemonViglu.FirePlay.UI
             {
                 if (button.gameObject.name == childName)
                     return button;
+            }
+
+            return null;
+        }
+
+        private Dropdown FindDropdown(string childName)
+        {
+            foreach (var dropdown in GetComponentsInChildren<Dropdown>(true))
+            {
+                if (dropdown.gameObject.name == childName)
+                    return dropdown;
             }
 
             return null;

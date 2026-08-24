@@ -165,7 +165,7 @@ namespace SUIFW
                     ExitUIFormsCache(strUIFormName);
                     break;
                 case UIFormsShowMode.ReverseChange:
-                    PopUIForms();
+                    PopUIForms(baseUIForms);
                     break;
                 case UIFormsShowMode.HideOther:
                     ExitUIFormsFromCacheAndShowOther(strUIFormName);
@@ -332,8 +332,44 @@ namespace SUIFW
         /// <summary>
         /// UI窗体出栈逻辑
         /// </summary>
-        private void PopUIForms()
+        private void PopUIForms(BaseUIForms requestedUIForms)
         {
+            if (requestedUIForms == null || _StaCurrentUIForms.Count == 0)
+            {
+                return;
+            }
+
+            // CloseOrReturnUIForms 接受了窗体名，旧实现却始终弹出栈顶。
+            // 活动选择成功时玩法 UI 已同步入栈，因此旧实现会误关玩法 UI，
+            // 留下仍显示的活动轮盘。这里按请求对象移除，并保持上层窗体。
+            if (!ReferenceEquals(_StaCurrentUIForms.Peek(), requestedUIForms))
+            {
+                var formsAboveRequested = new Stack<BaseUIForms>();
+                while (_StaCurrentUIForms.Count > 0
+                       && !ReferenceEquals(_StaCurrentUIForms.Peek(), requestedUIForms))
+                {
+                    formsAboveRequested.Push(_StaCurrentUIForms.Pop());
+                }
+
+                if (_StaCurrentUIForms.Count == 0)
+                {
+                    while (formsAboveRequested.Count > 0)
+                    {
+                        _StaCurrentUIForms.Push(formsAboveRequested.Pop());
+                    }
+                    return;
+                }
+
+                _StaCurrentUIForms.Pop().Hiding();
+                while (formsAboveRequested.Count > 0)
+                {
+                    _StaCurrentUIForms.Push(formsAboveRequested.Pop());
+                }
+
+                _StaCurrentUIForms.Peek().Redisplay();
+                return;
+            }
+
             if (_StaCurrentUIForms.Count >= 2)
             {
                 /* 出栈逻辑 */

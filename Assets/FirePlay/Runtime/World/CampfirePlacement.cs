@@ -170,11 +170,22 @@ namespace DemonViglu.FirePlay.World
 
             _screenPoint = screenPoint;
             var ray = _placementCamera.ScreenPointToRay(_screenPoint);
-            if (TryFindPlacementHit(ray, out _candidate))
+            var hasCameraHit = TryFindPlacementHit(ray, out var cameraHit);
+            var cameraHitIsUsable = hasCameraHit
+                && CampfireSiteValidator.TryValidate(
+                    cameraHit,
+                    transform.root.position,
+                    _config,
+                    out _);
+            var fallbackHit = default(RaycastHit);
+            var hasFallbackHit = !cameraHitIsUsable
+                                 && TryFindDefaultPlacementHit(out fallbackHit);
+            if (cameraHitIsUsable || hasFallbackHit)
             {
+                _candidate = cameraHitIsUsable ? cameraHit : fallbackHit;
                 IsPlacementValid = CampfireSiteValidator.TryValidate(
                     _candidate,
-                    transform.position,
+                    transform.root.position,
                     _config,
                     out var reason);
                 PlacementStatus = reason;
@@ -214,7 +225,7 @@ namespace DemonViglu.FirePlay.World
                 return true;
             }
 
-            if (!TryPreparePlacement(_candidate, transform.position, out var instance, out var reason))
+            if (!TryPreparePlacement(_candidate, transform.root.position, out var instance, out var reason))
             {
                 PlacementStatus = reason;
                 return false;
@@ -398,7 +409,7 @@ namespace DemonViglu.FirePlay.World
                 return;
             }
 
-            _preview.SetPositionAndRotation(hit.point + hit.normal * 0.02f, Quaternion.FromToRotation(Vector3.up, hit.normal));
+            _preview.SetPositionAndRotation(hit.point + hit.normal * 0.16f, Quaternion.FromToRotation(Vector3.up, hit.normal));
             UpdatePreviewColor(IsPlacementValid);
             SetPreviewVisible(true);
         }
@@ -421,6 +432,24 @@ namespace DemonViglu.FirePlay.World
             }
 
             return closestDistance < float.PositiveInfinity;
+        }
+
+        private bool TryFindDefaultPlacementHit(out RaycastHit placementHit)
+        {
+            placementHit = default;
+            if (_config == null)
+                return false;
+
+            var root = transform.root;
+            var forward = Vector3.ProjectOnPlane(root.forward, Vector3.up).normalized;
+            if (forward.sqrMagnitude < 0.01f)
+                forward = Vector3.forward;
+
+            var target = root.position
+                         + forward * Mathf.Min(2.5f, _config.MaximumPlacementDistance * 0.6f);
+            return TryFindPlacementHit(
+                new Ray(target + Vector3.up * 3f, Vector3.down),
+                out placementHit);
         }
 
         private void SetPreviewVisible(bool visible)
@@ -451,6 +480,7 @@ namespace DemonViglu.FirePlay.World
             }
 
             _preview = previewFire.transform;
+            _preview.localScale = Vector3.one * 1.75f;
             _previewRenderers = previewFire.GetComponentsInChildren<Renderer>(true);
             _previewProperties = new MaterialPropertyBlock();
             _ownsRuntimePreview = true;
@@ -466,9 +496,13 @@ namespace DemonViglu.FirePlay.World
             var color = isValid ? _validPreviewColor : _invalidPreviewColor;
             foreach (var renderer in _previewRenderers)
             {
+                renderer.enabled = true;
                 renderer.GetPropertyBlock(_previewProperties);
                 _previewProperties.SetColor("_FlameColor", color);
                 _previewProperties.SetColor("_CoreColor", Color.Lerp(Color.white, color, 0.35f));
+                _previewProperties.SetColor("_BaseColor", color);
+                _previewProperties.SetColor("_Color", color);
+                _previewProperties.SetColor("_EmissionColor", color * (isValid ? 1.8f : 0.5f));
                 _previewProperties.SetFloat("_FlameIntensity", isValid ? 1.8f : 0.55f);
                 renderer.SetPropertyBlock(_previewProperties);
             }

@@ -62,19 +62,28 @@ namespace DemonViglu.FirePlay.Activity
         public string ActivityId { get; }
         public string ActionId { get; }
         public string Payload { get; }
+        public ActivityTargetKind TargetKind { get; }
+        public string TargetId { get; }
+        public string EventId { get; }
 
         public ActivityActionRequested(
             string playerId,
             string anchorId,
             string activityId,
             string actionId,
-            string payload = null)
+            string payload = null,
+            ActivityTargetKind targetKind = ActivityTargetKind.None,
+            string targetId = null,
+            string eventId = null)
         {
             PlayerId = playerId ?? string.Empty;
             AnchorId = anchorId ?? string.Empty;
             ActivityId = activityId ?? string.Empty;
             ActionId = actionId ?? string.Empty;
             Payload = payload ?? string.Empty;
+            TargetKind = targetKind;
+            TargetId = targetId ?? string.Empty;
+            EventId = eventId ?? string.Empty;
         }
     }
 
@@ -89,8 +98,10 @@ namespace DemonViglu.FirePlay.Activity
         public string AnchorId { get; }
         public string ActivityId { get; }
         public string TargetId { get; }
+        public ActivityTargetKind TargetKind { get; }
         public ActivityParticipationMode ParticipationMode { get; }
         public uint SessionRevision { get; }
+        public ActivityFactMetadata Metadata { get; }
 
         public ActivitySessionStarted(
             string playerId,
@@ -98,14 +109,20 @@ namespace DemonViglu.FirePlay.Activity
             string activityId,
             ActivityParticipationMode participationMode,
             uint sessionRevision,
-            string targetId = null)
+            string targetId = null,
+            ActivityTargetKind targetKind = ActivityTargetKind.None,
+            ActivityFactMetadata metadata = default)
         {
             PlayerId = playerId ?? string.Empty;
             AnchorId = anchorId ?? string.Empty;
             ActivityId = activityId ?? string.Empty;
             TargetId = targetId ?? string.Empty;
+            TargetKind = targetKind == ActivityTargetKind.None && !string.IsNullOrWhiteSpace(TargetId)
+                ? ActivityTargetKind.Player
+                : targetKind;
             ParticipationMode = participationMode;
             SessionRevision = sessionRevision;
+            Metadata = metadata;
         }
     }
 
@@ -121,10 +138,14 @@ namespace DemonViglu.FirePlay.Activity
         public string ActivityId { get; }
         public string ActionId { get; }
         public string Payload { get; }
+        public ActivityTargetKind TargetKind { get; }
+        public string TargetId { get; }
         public uint SessionRevision { get; }
         public bool EndsSession { get; }
         public ActivityEndReason EndReason { get; }
         public string Reason { get; }
+        public ActivityFactMetadata Metadata { get; }
+        public bool IsSessionBound { get; }
 
         public ActivityInteractionOccurred(
             string playerId,
@@ -135,17 +156,25 @@ namespace DemonViglu.FirePlay.Activity
             uint sessionRevision,
             bool endsSession,
             ActivityEndReason endReason,
-            string reason)
+            string reason,
+            ActivityTargetKind targetKind = ActivityTargetKind.None,
+            string targetId = null,
+            ActivityFactMetadata metadata = default,
+            bool isSessionBound = true)
         {
             PlayerId = playerId ?? string.Empty;
             AnchorId = anchorId ?? string.Empty;
             ActivityId = activityId ?? string.Empty;
             ActionId = actionId ?? string.Empty;
             Payload = payload ?? string.Empty;
+            TargetKind = targetKind;
+            TargetId = targetId ?? string.Empty;
             SessionRevision = sessionRevision;
             EndsSession = endsSession;
             EndReason = endReason;
             Reason = reason ?? string.Empty;
+            Metadata = metadata;
+            IsSessionBound = isSessionBound;
         }
     }
 
@@ -160,19 +189,22 @@ namespace DemonViglu.FirePlay.Activity
         public string ActivityId { get; }
         public uint SessionRevision { get; }
         public ActivityEndReason Reason { get; }
+        public ActivityFactMetadata Metadata { get; }
 
         public ActivitySessionEnded(
             string playerId,
             string anchorId,
             string activityId,
             uint sessionRevision,
-            ActivityEndReason reason)
+            ActivityEndReason reason,
+            ActivityFactMetadata metadata = default)
         {
             PlayerId = playerId ?? string.Empty;
             AnchorId = anchorId ?? string.Empty;
             ActivityId = activityId ?? string.Empty;
             SessionRevision = sessionRevision;
             Reason = reason;
+            Metadata = metadata;
         }
     }
 
@@ -188,6 +220,7 @@ namespace DemonViglu.FirePlay.Activity
         public uint SessionRevision { get; }
         public uint StateRevision { get; }
         public string Payload { get; }
+        public ActivityFactMetadata Metadata { get; }
 
         public ActivityStateChanged(
             string playerId,
@@ -195,7 +228,8 @@ namespace DemonViglu.FirePlay.Activity
             string activityId,
             uint sessionRevision,
             uint stateRevision,
-            string payload)
+            string payload,
+            ActivityFactMetadata metadata = default)
         {
             PlayerId = playerId ?? string.Empty;
             AnchorId = anchorId ?? string.Empty;
@@ -203,6 +237,7 @@ namespace DemonViglu.FirePlay.Activity
             SessionRevision = sessionRevision;
             StateRevision = stateRevision;
             Payload = payload ?? string.Empty;
+            Metadata = metadata;
         }
     }
 
@@ -247,7 +282,7 @@ namespace DemonViglu.FirePlay.Activity
         }
     }
 
-    /// <summary>Action requests carry the Session revision returned at start.</summary>
+    /// <summary>Action requests carry target, EventId and Session revision.</summary>
     public readonly struct ActivityActionRequestDto
     {
         public string PlayerId { get; }
@@ -255,10 +290,14 @@ namespace DemonViglu.FirePlay.Activity
         public string ActivityId { get; }
         public string ActionId { get; }
         public string Payload { get; }
+        public ActivityTargetKind TargetKind { get; }
+        public string TargetId { get; }
+        public string EventId { get; }
         public uint SessionRevision { get; }
         public bool IsValid => !string.IsNullOrWhiteSpace(PlayerId)
             && !string.IsNullOrWhiteSpace(ActivityId)
             && !string.IsNullOrWhiteSpace(ActionId)
+            && !string.IsNullOrWhiteSpace(EventId)
             && SessionRevision > 0;
 
         public ActivityActionRequestDto(
@@ -267,13 +306,19 @@ namespace DemonViglu.FirePlay.Activity
             string activityId,
             string actionId,
             string payload,
-            uint sessionRevision)
+            uint sessionRevision,
+            ActivityTargetKind targetKind = ActivityTargetKind.None,
+            string targetId = null,
+            string eventId = null)
         {
             PlayerId = playerId?.Trim() ?? string.Empty;
             AnchorId = anchorId?.Trim() ?? string.Empty;
             ActivityId = activityId?.Trim() ?? string.Empty;
             ActionId = actionId?.Trim() ?? string.Empty;
             Payload = payload ?? string.Empty;
+            TargetKind = targetKind;
+            TargetId = targetId?.Trim() ?? string.Empty;
+            EventId = eventId?.Trim() ?? string.Empty;
             SessionRevision = sessionRevision;
         }
     }
@@ -304,7 +349,8 @@ namespace DemonViglu.FirePlay.Activity
         SessionStarted,
         InteractionOccurred,
         SessionEnded,
-        StateChanged
+        StateChanged,
+        SocialInteractionOccurred
     }
 
     /// <summary>
@@ -316,6 +362,7 @@ namespace DemonViglu.FirePlay.Activity
         public ActivityNetworkFactKind Kind { get; }
         public string PlayerId { get; }
         public string AnchorId { get; }
+        public ActivityTargetKind TargetKind { get; }
         public string TargetId { get; }
         public string ActivityId { get; }
         public ActivityParticipationMode ParticipationMode { get; }
@@ -326,11 +373,13 @@ namespace DemonViglu.FirePlay.Activity
         public bool EndsSession { get; }
         public ActivityEndReason EndReason { get; }
         public string Reason { get; }
+        public ActivityFactMetadata Metadata { get; }
 
         private ActivityFactDto(
             ActivityNetworkFactKind kind,
             string playerId,
             string anchorId,
+            ActivityTargetKind targetKind,
             string targetId,
             string activityId,
             ActivityParticipationMode participationMode,
@@ -340,11 +389,13 @@ namespace DemonViglu.FirePlay.Activity
             uint stateRevision,
             bool endsSession,
             ActivityEndReason endReason,
-            string reason)
+            string reason,
+            ActivityFactMetadata metadata)
         {
             Kind = kind;
             PlayerId = playerId ?? string.Empty;
             AnchorId = anchorId ?? string.Empty;
+            TargetKind = targetKind;
             TargetId = targetId ?? string.Empty;
             ActivityId = activityId ?? string.Empty;
             ParticipationMode = participationMode;
@@ -355,6 +406,7 @@ namespace DemonViglu.FirePlay.Activity
             EndsSession = endsSession;
             EndReason = endReason;
             Reason = reason ?? string.Empty;
+            Metadata = metadata;
         }
 
         public static ActivityFactDto From(ActivitySessionStarted fact) => fact == null
@@ -363,6 +415,7 @@ namespace DemonViglu.FirePlay.Activity
                 ActivityNetworkFactKind.SessionStarted,
                 fact.PlayerId,
                 fact.AnchorId,
+                fact.TargetKind,
                 fact.TargetId,
                 fact.ActivityId,
                 fact.ParticipationMode,
@@ -372,15 +425,19 @@ namespace DemonViglu.FirePlay.Activity
                 0,
                 false,
                 ActivityEndReason.Requested,
-                string.Empty);
+                string.Empty,
+                fact.Metadata);
 
         public static ActivityFactDto From(ActivityInteractionOccurred fact) => fact == null
             ? default
             : new(
-                ActivityNetworkFactKind.InteractionOccurred,
+                fact.IsSessionBound
+                    ? ActivityNetworkFactKind.InteractionOccurred
+                    : ActivityNetworkFactKind.SocialInteractionOccurred,
                 fact.PlayerId,
                 fact.AnchorId,
-                string.Empty,
+                fact.TargetKind,
+                fact.TargetId,
                 fact.ActivityId,
                 ActivityParticipationMode.Independent,
                 fact.ActionId,
@@ -389,7 +446,8 @@ namespace DemonViglu.FirePlay.Activity
                 0,
                 fact.EndsSession,
                 fact.EndReason,
-                fact.Reason);
+                fact.Reason,
+                fact.Metadata);
 
         public static ActivityFactDto From(ActivitySessionEnded fact) => fact == null
             ? default
@@ -397,6 +455,7 @@ namespace DemonViglu.FirePlay.Activity
                 ActivityNetworkFactKind.SessionEnded,
                 fact.PlayerId,
                 fact.AnchorId,
+                ActivityTargetKind.None,
                 string.Empty,
                 fact.ActivityId,
                 ActivityParticipationMode.Independent,
@@ -406,7 +465,8 @@ namespace DemonViglu.FirePlay.Activity
                 0,
                 true,
                 fact.Reason,
-                string.Empty);
+                string.Empty,
+                fact.Metadata);
 
         public static ActivityFactDto From(ActivityStateChanged fact) => fact == null
             ? default
@@ -414,6 +474,7 @@ namespace DemonViglu.FirePlay.Activity
                 ActivityNetworkFactKind.StateChanged,
                 fact.PlayerId,
                 fact.AnchorId,
+                ActivityTargetKind.None,
                 string.Empty,
                 fact.ActivityId,
                 ActivityParticipationMode.Independent,
@@ -423,7 +484,8 @@ namespace DemonViglu.FirePlay.Activity
                 fact.StateRevision,
                 false,
                 ActivityEndReason.Requested,
-                string.Empty);
+                string.Empty,
+                fact.Metadata);
 
         /// <summary>
         /// Rehydrates transport data without exposing a public mutable DTO.
@@ -434,6 +496,7 @@ namespace DemonViglu.FirePlay.Activity
             ActivityNetworkFactKind kind,
             string playerId,
             string anchorId,
+            ActivityTargetKind targetKind,
             string targetId,
             string activityId,
             ActivityParticipationMode participationMode,
@@ -443,10 +506,15 @@ namespace DemonViglu.FirePlay.Activity
             uint stateRevision,
             bool endsSession,
             ActivityEndReason endReason,
-            string reason) => new(
+            string reason,
+            string actorId,
+            string eventId,
+            long occurredAtUnixMs,
+            uint factRevision) => new(
                 kind,
                 playerId,
                 anchorId,
+                targetKind,
                 targetId,
                 activityId,
                 participationMode,
@@ -456,7 +524,8 @@ namespace DemonViglu.FirePlay.Activity
                 stateRevision,
                 endsSession,
                 endReason,
-                reason);
+                reason,
+                new ActivityFactMetadata(actorId, eventId, occurredAtUnixMs, factRevision));
     }
 
     public static class ActivityNetworkMapper
@@ -473,6 +542,9 @@ namespace DemonViglu.FirePlay.Activity
                 request.ActivityId,
                 request.ActionId,
                 request.Payload,
-                sessionRevision);
+                sessionRevision,
+                request.TargetKind,
+                request.TargetId,
+                request.EventId);
     }
 }

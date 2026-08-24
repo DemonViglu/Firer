@@ -42,13 +42,18 @@ namespace DemonViglu.FirePlay.UI
             var inputModule = eventSystem.GetComponent<InputSystemUIInputModule>();
             if (inputModule == null)
             {
-                inputModule = eventSystem.gameObject.AddComponent<InputSystemUIInputModule>();
+                Debug.LogError(
+                    "[FirePlayUiBootstrap] SUIFW Canvas 的 EventSystem 缺少显式 InputSystemUIInputModule；不会在运行时动态补组件。",
+                    eventSystem);
+                return;
             }
 
-            // Creates the standard Pointer/Touch actions owned by this module. It
-            // replaces the disabled legacy StandaloneInputModule and never reads
-            // UnityEngine.Input in an Input System-only project.
-            inputModule.AssignDefaultActions();
+            if (inputModule.actionsAsset == null)
+            {
+                Debug.LogError(
+                    "[FirePlayUiBootstrap] InputSystemUIInputModule 缺少 UI Actions Asset；请在 Canvas Prefab 中显式绑定。",
+                    inputModule);
+            }
         }
     }
 }

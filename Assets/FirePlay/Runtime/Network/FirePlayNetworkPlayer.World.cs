@@ -1,5 +1,7 @@
+using DemonViglu.FirePlay.Activity;
 using DemonViglu.FirePlay.Core;
 using DemonViglu.FirePlay.Player;
+using DemonViglu.FirePlay.Save;
 using DemonViglu.FirePlay.World;
 using Unity.Netcode;
 using UnityEngine;
@@ -8,6 +10,8 @@ namespace DemonViglu.FirePlay.Network
 {
     public sealed partial class FirePlayNetworkPlayer
     {
+        private uint _nextAsyncWorldFactRevision;
+
         public SmallFirePlacementRequestResult RequestSmallFirePlacement(Vector3 requestedPoint)
         {
             var placement = _flameModule != null ? _flameModule.CampfirePlacement : null;
@@ -88,6 +92,8 @@ namespace DemonViglu.FirePlay.Network
                 var resource = _flameModule.ResourceController;
                 if (resource != null)
                     _fuelSnapshot.Value = resource.CurrentFuel;
+                RecordAsyncSmallFirePlacement(
+                    smallFire.GetComponent<StableSceneId>()?.Value);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 Debug.Log(
                     $"[FirePlayNetworkPlayer] Host placed SmallFire: player={PlayerId}, id={smallFire.GetComponent<DemonViglu.FirePlay.Core.StableSceneId>()?.Value}, position={smallFire.transform.position}, fuel={_fuelSnapshot.Value:0.00}.",
@@ -295,7 +301,76 @@ namespace DemonViglu.FirePlay.Network
             _worldCommandRateLimiter.RecordAccepted(PlayerId, intentKind, targetId, now);
             if (resource != null)
                 _fuelSnapshot.Value = resource.CurrentFuel;
+            RecordAsyncWorldFact(intentKind, targetKind, targetId);
             return true;
+        }
+
+        private void RecordAsyncWorldFact(
+            PlayerIntentKind intentKind,
+            PlayerInteractTargetKind targetKind,
+            string targetId)
+        {
+            var factKind = targetKind switch
+            {
+                PlayerInteractTargetKind.Campfire => FirePlayAsyncFactKind.Campfire,
+                PlayerInteractTargetKind.SmallFire => FirePlayAsyncFactKind.SmallFire,
+                PlayerInteractTargetKind.WorldTree => FirePlayAsyncFactKind.WorldTree,
+                _ => (FirePlayAsyncFactKind?)null
+            };
+            if (!factKind.HasValue)
+                return;
+
+            var revision = ++_nextAsyncWorldFactRevision;
+            if (revision == 0)
+                revision = ++_nextAsyncWorldFactRevision;
+            var metadata = ActivityFactMetadata.Create(
+                PlayerId,
+                revision,
+                $"{PlayerId}:world:{revision}");
+            var target = targetKind switch
+            {
+                PlayerInteractTargetKind.Campfire => new ActivityTargetReference(
+                    ActivityTargetKind.Instance,
+                    targetId),
+                PlayerInteractTargetKind.SmallFire => new ActivityTargetReference(
+                    ActivityTargetKind.Instance,
+                    targetId),
+                PlayerInteractTargetKind.WorldTree => new ActivityTargetReference(
+                    ActivityTargetKind.Instance,
+                    targetId),
+                _ => default
+            };
+            var store = GameInstanceSubsystem.GetOrCreate<IAsyncInteractionFactStore>(
+                () => new LocalAsyncInteractionFactStore());
+            store.AppendWorld(
+                factKind.Value,
+                metadata,
+                target,
+                intentKind.ToString(),
+                string.Empty,
+                out _);
+        }
+
+        private void RecordAsyncSmallFirePlacement(string stableId)
+        {
+            if (string.IsNullOrWhiteSpace(stableId))
+                return;
+            var revision = ++_nextAsyncWorldFactRevision;
+            if (revision == 0)
+                revision = ++_nextAsyncWorldFactRevision;
+            var metadata = ActivityFactMetadata.Create(
+                PlayerId,
+                revision,
+                $"{PlayerId}:smallfire:{revision}");
+            var store = GameInstanceSubsystem.GetOrCreate<IAsyncInteractionFactStore>(
+                () => new LocalAsyncInteractionFactStore());
+            store.AppendWorld(
+                FirePlayAsyncFactKind.SmallFire,
+                metadata,
+                ActivityTargetReference.Instance(stableId),
+                PlayerIntentKind.PlaceFire.ToString(),
+                string.Empty,
+                out _);
         }
 
         private bool ExecuteAuthorityWorldCommand(

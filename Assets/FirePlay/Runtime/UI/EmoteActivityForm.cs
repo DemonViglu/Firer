@@ -32,6 +32,7 @@ namespace DemonViglu.FirePlay.UI
 
         private void Awake()
         {
+            FirePlayMinimalUiTheme.Apply(gameObject);
             ResolveControls();
         }
 

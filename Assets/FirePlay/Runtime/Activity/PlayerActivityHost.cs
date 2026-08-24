@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using DemonViglu.FirePlay.Player;
+using DemonViglu.FirePlay.Save;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.Activity
@@ -13,8 +15,13 @@ namespace DemonViglu.FirePlay.Activity
     /// 和动态活动服务已从 Player Prefab 移除。
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class PlayerActivityHost : MonoBehaviour, IActivityActionRequester, IActivityAuthority
+    public sealed class PlayerActivityHost : MonoBehaviour,
+        IActivityActionRequester,
+        IActivityAuthority,
+        IActivityTargetGiftReceiver
     {
+        private const int MaximumActionPayloadLength = 512;
+        private const string MarshmallowReceiveActionId = "marshmallow.receive";
         public static PlayerActivityHost Local { get; private set; }
         [SerializeField] private string _playerId = "local.player";
         [SerializeField] private bool _isLocalPlayer = true;
@@ -35,6 +42,7 @@ namespace DemonViglu.FirePlay.Activity
         private IActivityParticipationDirectory _participationDirectory;
         private IActivityTargetDirectory _targetDirectory;
         private IEventPublisher _events;
+        private IAsyncInteractionFactStore _asyncFactStore;
         private IActivityRequestTransport _requestTransport;
         private ActivityCatalog _catalog;
         private ActivityDefinition _mirroredDefinition;
@@ -45,6 +53,11 @@ namespace DemonViglu.FirePlay.Activity
         private string _mirroredStatePayload = string.Empty;
         private uint _publishedStateSessionRevision;
         private uint _publishedLogicStateRevision;
+        private uint _nextFactRevision;
+        private readonly HashSet<string> _consumedEventIds = new(StringComparer.Ordinal);
+        private readonly HashSet<string> _appliedFactEventIds = new(StringComparer.Ordinal);
+        private readonly HashSet<string> _receivedGiftEventIds = new(StringComparer.Ordinal);
+        private uint _lastAppliedFactRevision;
         private bool _eventsAttached;
         private bool _participationEventsAttached;
         private bool _targetEventsAttached;
@@ -58,6 +71,87 @@ namespace DemonViglu.FirePlay.Activity
         public bool IsReady => _runtime != null
             || (_isLocalPlayer && _requestTransport != null && _catalog != null);
         public string PlayerId => _playerId;
+
+        public bool TryReceiveMarshmallow(MarshmallowGift gift, out string reason)
+        {
+            if (!_hasAuthority || _flame == null)
+            {
+                reason = "Target Player authority is unavailable";
+                return false;
+            }
+            if (!gift.IsValid || gift.SourcePlayerId == _playerId)
+            {
+                reason = "Marshmallow gift is invalid";
+                return false;
+            }
+            var receiveEventId = $"{gift.EventId}:receive";
+            if (!IsValidStableText(receiveEventId))
+            {
+                reason = "Marshmallow gift EventId is too long to derive a receive fact";
+                return false;
+            }
+            if (!_receivedGiftEventIds.Add(gift.EventId))
+            {
+                reason = "Marshmallow gift EventId was already received";
+                return false;
+            }
+            if (gift.FuelValue > 0f
+                && _flame.CurrentFuel + gift.FuelValue > _flame.MaximumFuel + 0.0001f)
+            {
+                reason = "Target Player does not have room for the full marshmallow value";
+                return false;
+            }
+            if (gift.FuelValue > 0f && !_flame.Restore(gift.FuelValue))
+            {
+                reason = "Target Player cannot receive the marshmallow value";
+                return false;
+            }
+
+            // Receiving a gift is a standalone social fact. The receiver does
+            // not need to be inside a marshmallow Session, and this fact is
+            // intentionally excluded from late-join snapshots.
+            var receiveFact = new ActivityInteractionOccurred(
+                _playerId,
+                string.Empty,
+                MarshmallowActivityLogic.ActivityId,
+                MarshmallowReceiveActionId,
+                $"{(int)gift.Quality}|{gift.FuelValue:R}",
+                ActiveSession?.Revision ?? 1u,
+                endsSession: false,
+                ActivityEndReason.Requested,
+                "Marshmallow received",
+                ActivityTargetKind.Player,
+                _playerId,
+                CreateFactMetadata(gift.SourcePlayerId, receiveEventId),
+                isSessionBound: false);
+            _events?.Publish(receiveFact);
+            _asyncFactStore?.AppendActivity(ActivityFactDto.From(receiveFact), out _);
+
+            var request = new ActivityPlayerRequest(
+                ActivityPlayerRequestKind.AnimationCue,
+                _playerId,
+                MarshmallowActivityLogic.ActivityId,
+                gift.SourcePlayerId,
+                PlayerAnimationCueIds.MarshmallowReceive,
+                active: true,
+                sessionRevision: ActiveSession?.Revision ?? 1u);
+            if (_isLocalPlayer)
+                _presentation?.RequestPlayer(request);
+            _events?.Publish(new ActivityPlayerPresentationRequested(request));
+            var vfxRequest = new ActivityPlayerRequest(
+                ActivityPlayerRequestKind.VfxCue,
+                _playerId,
+                MarshmallowActivityLogic.ActivityId,
+                gift.SourcePlayerId,
+                MarshmallowActivityLogic.ReceiveVfxCueId,
+                active: true,
+                sessionRevision: ActiveSession?.Revision ?? 1u);
+            if (_isLocalPlayer)
+                _presentation?.RequestPlayer(vfxRequest);
+            _events?.Publish(new ActivityPlayerPresentationRequested(vfxRequest));
+            reason = "Marshmallow received";
+            return true;
+        }
         public ActivitySession ActiveSession => _runtime != null
             && _runtime.System.TryGetSession(_playerId, out var session)
             ? session
@@ -160,6 +254,10 @@ namespace DemonViglu.FirePlay.Activity
             DetachEvents();
             End(ActivityEndReason.OwnerDisabled);
             ClearMirroredSession(closePresentation: true, ActivityEndReason.OwnerDisabled);
+            _appliedFactEventIds.Clear();
+            _lastAppliedFactRevision = 0;
+            _consumedEventIds.Clear();
+            _receivedGiftEventIds.Clear();
             _isLocalPlayer = isLocalPlayer;
             _hasAuthority = hasAuthority;
             if (isLocalPlayer)
@@ -411,8 +509,23 @@ namespace DemonViglu.FirePlay.Activity
         /// </summary>
         public ActivityActionResult HandleAction(ActivityActionRequestDto request)
         {
-            if (!request.IsValid || request.PlayerId != _playerId)
+            if (string.IsNullOrWhiteSpace(request.PlayerId)
+                || string.IsNullOrWhiteSpace(request.ActivityId)
+                || string.IsNullOrWhiteSpace(request.ActionId)
+                || request.SessionRevision == 0
+                || request.PlayerId != _playerId)
                 return ActivityActionResult.Reject("Activity action request is not owned by this Player");
+            var eventId = string.IsNullOrWhiteSpace(request.EventId)
+                ? CreateActionEventId()
+                : request.EventId;
+            if (!IsValidStableText(eventId))
+                return ActivityActionResult.Reject("Activity action EventId is invalid");
+            if (!_consumedEventIds.Add(eventId))
+                return ActivityActionResult.Reject("Activity action EventId was already consumed");
+            if ((request.Payload?.Length ?? 0) > MaximumActionPayloadLength)
+                return ActivityActionResult.Reject("Activity action payload is too large");
+            if (!ValidateActionTarget(request.TargetKind, request.TargetId, out var targetReason))
+                return ActivityActionResult.Reject(targetReason);
             if (_runtime == null)
                 return ActivityActionResult.Reject("PlayerActivityHost is not ready");
             if (!_runtime.System.TryGetSession(_playerId, out var session))
@@ -425,12 +538,53 @@ namespace DemonViglu.FirePlay.Activity
             if (request.SessionRevision != session.Revision)
                 return ActivityActionResult.Reject("Activity action uses a stale session revision");
 
-            return SubmitAction(new ActivityActionRequest(
+            var activityRequest = new ActivityActionRequest(
                 _playerId,
                 session.Definition.ActivityId,
                 request.ActionId,
                 request.Payload,
-                session.Revision));
+                session.Revision,
+                request.TargetKind,
+                request.TargetId,
+                eventId);
+            var result = request.ActionId == MarshmallowActivityLogic.GiveActionId
+                ? SubmitMarshmallowGive(session, activityRequest)
+                : SubmitAction(activityRequest);
+            return result;
+        }
+
+        private ActivityActionResult SubmitMarshmallowGive(
+            ActivitySession session,
+            ActivityActionRequest request)
+        {
+            if (session.Logic is not MarshmallowActivityLogic logic)
+                return ActivityActionResult.Reject("Marshmallow logic is unavailable");
+            if (request.TargetKind != ActivityTargetKind.Player
+                || string.IsNullOrWhiteSpace(request.TargetId))
+            {
+                return ActivityActionResult.Reject("Marshmallow give needs a Player target");
+            }
+            var accepted = logic.TryGive(
+                session.Context.PlayerId,
+                request.EventId,
+                gift =>
+                {
+                    if (_targetDirectory == null)
+                        return "Target Player directory is unavailable";
+                    if (!_targetDirectory.TryDeliverMarshmallow(
+                            request.TargetId,
+                            gift,
+                            out var receiverReason))
+                        return receiverReason;
+                    return string.Empty;
+                },
+                out var reason);
+            if (!accepted)
+                return ActivityActionResult.Reject(reason);
+
+            PublishInteraction(session, request, ActivityActionResult.Consume("Marshmallow given"));
+            PublishStateIfChanged(session);
+            return ActivityActionResult.Consume("Marshmallow given");
         }
 
         public ActivityStartResult TryStart(
@@ -501,7 +655,10 @@ namespace DemonViglu.FirePlay.Activity
             return result;
         }
 
-        public ActivityActionResult RequestAction(string actionId, string payload = null)
+        public ActivityActionResult RequestAction(
+            string actionId,
+            string payload = null,
+            ActivityTargetReference target = default)
         {
             ActivityActionRequestDto request;
             if (_runtime != null && _runtime.System.TryGetSession(_playerId, out var session))
@@ -512,7 +669,10 @@ namespace DemonViglu.FirePlay.Activity
                     session.Definition.ActivityId,
                     actionId,
                     payload,
-                    session.Revision);
+                    session.Revision,
+                    target.Kind,
+                    target.Id,
+                    CreateActionEventId());
             }
             else if (_mirroredDefinition != null && _mirroredRevision > 0)
             {
@@ -522,7 +682,10 @@ namespace DemonViglu.FirePlay.Activity
                     _mirroredDefinition.ActivityId,
                     actionId,
                     payload,
-                    _mirroredRevision);
+                    _mirroredRevision,
+                    target.Kind,
+                    target.Id,
+                    CreateActionEventId());
             }
             else
             {
@@ -545,7 +708,11 @@ namespace DemonViglu.FirePlay.Activity
             if (_hasAuthority
                 || fact.PlayerId != _playerId
                 || string.IsNullOrWhiteSpace(fact.ActivityId)
-                || fact.SessionRevision == 0)
+                || fact.SessionRevision == 0
+                || !fact.Metadata.IsValid
+                || (fact.Kind != ActivityNetworkFactKind.StateChanged
+                    && fact.Metadata.FactRevision <= _lastAppliedFactRevision)
+                || !_appliedFactEventIds.Add(fact.Metadata.EventId))
             {
                 return false;
             }
@@ -555,11 +722,13 @@ namespace DemonViglu.FirePlay.Activity
                 case ActivityNetworkFactKind.SessionStarted:
                     if (_mirroredRevision == fact.SessionRevision)
                         return MatchesMirroredSession(fact)
-                            && _mirroredTargetId == fact.TargetId;
+                            && _mirroredTargetId == fact.TargetId
+                            && AcceptAppliedFactRevision(fact);
                     if (_mirroredRevision > fact.SessionRevision
                         || _catalog == null
                         || !_catalog.TryGet(fact.ActivityId, out var definition)
                         || definition.ParticipationMode != fact.ParticipationMode
+                        || !IsTargetShapeValid(fact.TargetKind, fact.TargetId)
                         || (definition.Scope == ActivityScope.Targeted)
                             != !string.IsNullOrWhiteSpace(fact.TargetId)
                         || (definition.Scope == ActivityScope.Targeted
@@ -584,7 +753,9 @@ namespace DemonViglu.FirePlay.Activity
                         fact.ActivityId,
                         fact.ParticipationMode,
                         fact.SessionRevision,
-                        fact.TargetId));
+                        fact.TargetId,
+                        fact.TargetKind,
+                        fact.Metadata));
                     if (_isLocalPlayer)
                     {
                         RequestMirroredPresentation(
@@ -592,12 +763,22 @@ namespace DemonViglu.FirePlay.Activity
                             ActivityCameraRequestKind.Enter);
                     }
                     PublishMirroredFact(fact);
-                    return true;
+                    return AcceptAppliedFactRevision(fact);
 
                 case ActivityNetworkFactKind.InteractionOccurred:
                     if (!MatchesMirroredSession(fact)) return false;
                     PublishMirroredFact(fact);
-                    return true;
+                    return AcceptAppliedFactRevision(fact);
+
+                case ActivityNetworkFactKind.SocialInteractionOccurred:
+                    if (!IsTargetShapeValid(fact.TargetKind, fact.TargetId)
+                        || fact.TargetKind != ActivityTargetKind.Player
+                        || fact.TargetId != _playerId)
+                    {
+                        return false;
+                    }
+                    PublishMirroredFact(fact);
+                    return AcceptAppliedFactRevision(fact);
 
                 case ActivityNetworkFactKind.StateChanged:
                     if (!MatchesMirroredSession(fact)
@@ -609,7 +790,7 @@ namespace DemonViglu.FirePlay.Activity
                     _mirroredStateRevision = fact.StateRevision;
                     _mirroredStatePayload = fact.Payload ?? string.Empty;
                     PublishMirroredFact(fact);
-                    return true;
+                    return AcceptAppliedFactRevision(fact);
 
                 case ActivityNetworkFactKind.SessionEnded:
                     if (!MatchesMirroredSession(fact)) return false;
@@ -617,7 +798,7 @@ namespace DemonViglu.FirePlay.Activity
                     ClearMirroredSession(
                         closePresentation: _isLocalPlayer,
                         fact.EndReason);
-                    return true;
+                    return AcceptAppliedFactRevision(fact);
 
                 default:
                     return false;
@@ -644,7 +825,11 @@ namespace DemonViglu.FirePlay.Activity
                 session.Definition.ActivityId,
                 session.Definition.ParticipationMode,
                 session.Revision,
-                session.Context.Target?.TargetId));
+                session.Context.Target?.TargetId,
+                session.Context.Target == null
+                    ? ActivityTargetKind.None
+                    : ActivityTargetKind.Player,
+                CreateFactMetadata()));
 
             if (session.Logic is IActivityNetworkStateProvider provider
                 && provider.NetworkStateRevision > 0)
@@ -655,7 +840,8 @@ namespace DemonViglu.FirePlay.Activity
                     session.Definition.ActivityId,
                     session.Revision,
                     provider.NetworkStateRevision,
-                    provider.CaptureNetworkState()));
+                    provider.CaptureNetworkState(),
+                    CreateFactMetadata()));
             }
 
             return true;
@@ -666,13 +852,17 @@ namespace DemonViglu.FirePlay.Activity
             if (!_isLocalPlayer
                 || _hasAuthority
                 || _presentation == null
-                || _mirroredDefinition == null
-                || request.PlayerId != _playerId
-                || request.ActivityId != _mirroredDefinition.ActivityId
-                || request.SessionRevision != _mirroredRevision)
+                || request.PlayerId != _playerId)
             {
                 return false;
             }
+
+            if (_mirroredDefinition == null)
+                return IsOutOfSessionPresentation(request)
+                    && _presentation.RequestPlayer(request);
+            if (request.ActivityId != _mirroredDefinition.ActivityId
+                || request.SessionRevision != _mirroredRevision)
+                return false;
 
             return _presentation.RequestPlayer(request);
         }
@@ -680,17 +870,24 @@ namespace DemonViglu.FirePlay.Activity
         public bool ApplyNetworkObserverPresentation(ActivityPlayerRequest request)
         {
             if (_hasAuthority
-                || _mirroredDefinition == null
                 || request.PlayerId != _playerId
-                || request.ActivityId != _mirroredDefinition.ActivityId
-                || request.SessionRevision != _mirroredRevision
                 || _presentationBehaviour is not IActivityObserverPlayerRequestExecutor observer)
             {
                 return false;
             }
 
+            if (_mirroredDefinition == null)
+                return IsOutOfSessionPresentation(request) && observer.ExecuteObserver(request);
+            if (request.ActivityId != _mirroredDefinition.ActivityId
+                || request.SessionRevision != _mirroredRevision)
+                return false;
+
             return observer.ExecuteObserver(request);
         }
+
+        private static bool IsOutOfSessionPresentation(ActivityPlayerRequest request) =>
+            request.Kind == ActivityPlayerRequestKind.AnimationCue
+                || request.Kind == ActivityPlayerRequestKind.VfxCue;
 
         public bool End(ActivityEndReason reason = ActivityEndReason.Requested)
         {
@@ -716,7 +913,11 @@ namespace DemonViglu.FirePlay.Activity
                 session.Definition.ActivityId,
                 session.Definition.ParticipationMode,
                 session.Revision,
-                session.Context.Target?.TargetId);
+                session.Context.Target?.TargetId,
+                session.Context.Target == null
+                    ? ActivityTargetKind.None
+                    : ActivityTargetKind.Player,
+                CreateFactMetadata());
             _participationDirectory?.Register(fact);
             _events.Publish(fact);
         }
@@ -727,7 +928,7 @@ namespace DemonViglu.FirePlay.Activity
             ActivityActionResult result)
         {
             if (_events == null || session == null) return;
-            _events.Publish(new ActivityInteractionOccurred(
+            var fact = new ActivityInteractionOccurred(
                 session.Context.PlayerId,
                 session.Context.AnchorId,
                 session.Definition.ActivityId,
@@ -736,7 +937,12 @@ namespace DemonViglu.FirePlay.Activity
                 session.Revision,
                 result.EndsSession,
                 result.EndReason,
-                result.Reason));
+                result.Reason,
+                request.TargetKind,
+                request.TargetId,
+                CreateFactMetadata(request.EventId));
+            _events.Publish(fact);
+            _asyncFactStore?.AppendActivity(ActivityFactDto.From(fact), out _);
         }
 
         private void PublishSessionEnded(ActivitySession session, ActivityEndReason reason)
@@ -747,7 +953,8 @@ namespace DemonViglu.FirePlay.Activity
                 session.Context.AnchorId,
                 session.Definition.ActivityId,
                 session.Revision,
-                reason);
+                reason,
+                CreateFactMetadata());
             _participationDirectory?.Remove(fact);
             _events.Publish(fact);
             if (_publishedStateSessionRevision == session.Revision)
@@ -796,12 +1003,15 @@ namespace DemonViglu.FirePlay.Activity
                 session.Definition.ActivityId,
                 session.Revision,
                 provider.NetworkStateRevision,
-                payload));
+                payload,
+                CreateFactMetadata()));
         }
 
         private void AttachEvents()
         {
             _events = GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
+            _asyncFactStore = GameInstanceSubsystem.GetOrCreate<IAsyncInteractionFactStore>(
+                () => new LocalAsyncInteractionFactStore());
             if (_isLocalPlayer && !_eventsAttached)
             {
                 _events.Subscribe<ActivitySelectionRequested>(OnActivitySelectionRequested);
@@ -946,6 +1156,19 @@ namespace DemonViglu.FirePlay.Activity
                 return;
 
             var dto = ActivityNetworkMapper.ToDto(request, revision);
+            if (string.IsNullOrWhiteSpace(dto.EventId))
+            {
+                dto = new ActivityActionRequestDto(
+                    dto.PlayerId,
+                    dto.AnchorId,
+                    dto.ActivityId,
+                    dto.ActionId,
+                    dto.Payload,
+                    dto.SessionRevision,
+                    dto.TargetKind,
+                    dto.TargetId,
+                    CreateActionEventId());
+            }
             var result = _requestTransport != null
                 ? _requestTransport.RequestAction(dto)
                 : HandleAction(dto);
@@ -1093,9 +1316,12 @@ namespace DemonViglu.FirePlay.Activity
                         fact.ActivityId,
                         fact.ParticipationMode,
                         fact.SessionRevision,
-                        fact.TargetId));
+                        fact.TargetId,
+                        fact.TargetKind,
+                        fact.Metadata));
                     break;
                 case ActivityNetworkFactKind.InteractionOccurred:
+                case ActivityNetworkFactKind.SocialInteractionOccurred:
                     _events.Publish(new ActivityInteractionOccurred(
                         fact.PlayerId,
                         fact.AnchorId,
@@ -1105,7 +1331,12 @@ namespace DemonViglu.FirePlay.Activity
                         fact.SessionRevision,
                         fact.EndsSession,
                         fact.EndReason,
-                        fact.Reason));
+                        fact.Reason,
+                        fact.TargetKind,
+                        fact.TargetId,
+                        fact.Metadata,
+                        isSessionBound: fact.Kind
+                            == ActivityNetworkFactKind.InteractionOccurred));
                     break;
                 case ActivityNetworkFactKind.SessionEnded:
                     _events.Publish(new ActivitySessionEnded(
@@ -1113,7 +1344,8 @@ namespace DemonViglu.FirePlay.Activity
                         fact.AnchorId,
                         fact.ActivityId,
                         fact.SessionRevision,
-                        fact.EndReason));
+                        fact.EndReason,
+                        fact.Metadata));
                     break;
                 case ActivityNetworkFactKind.StateChanged:
                     _events.Publish(new ActivityStateChanged(
@@ -1122,7 +1354,8 @@ namespace DemonViglu.FirePlay.Activity
                         fact.ActivityId,
                         fact.SessionRevision,
                         fact.StateRevision,
-                        fact.Payload));
+                        fact.Payload,
+                        fact.Metadata));
                     break;
             }
         }
@@ -1139,6 +1372,97 @@ namespace DemonViglu.FirePlay.Activity
 
             _events.Publish(new ActivityPlayerPresentationRequested(request));
         }
+
+        private ActivityFactMetadata CreateFactMetadata(string eventId = null)
+        {
+            var revision = ++_nextFactRevision;
+            if (revision == 0)
+                revision = ++_nextFactRevision;
+            return ActivityFactMetadata.Create(_playerId, revision, eventId);
+        }
+
+        private ActivityFactMetadata CreateFactMetadata(
+            string actorId,
+            string eventId)
+        {
+            var revision = ++_nextFactRevision;
+            if (revision == 0)
+                revision = ++_nextFactRevision;
+            return ActivityFactMetadata.Create(actorId, revision, eventId);
+        }
+
+        private bool AcceptAppliedFactRevision(ActivityFactDto fact)
+        {
+            // Continuous StateChanged snapshots use an unreliable live lane
+            // and may overtake an older reliable interaction. Their own
+            // StateRevision orders them; only the reliable fact lane advances
+            // the cross-fact revision watermark.
+            if (fact.Kind != ActivityNetworkFactKind.StateChanged)
+                _lastAppliedFactRevision = fact.Metadata.FactRevision;
+            return true;
+        }
+
+        private string CreateActionEventId()
+        {
+            var revision = ++_nextFactRevision;
+            if (revision == 0)
+                revision = ++_nextFactRevision;
+            return $"{_playerId}:action:{revision}";
+        }
+
+        private bool ValidateActionTarget(
+            ActivityTargetKind targetKind,
+            string targetId,
+            out string reason)
+        {
+            if (!IsTargetShapeValid(targetKind, targetId))
+            {
+                reason = "Activity action target shape is invalid";
+                return false;
+            }
+            if (targetKind == ActivityTargetKind.None)
+            {
+                reason = string.Empty;
+                return true;
+            }
+            if (targetKind != ActivityTargetKind.Player)
+            {
+                // Place/instance targets are valid protocol values. Their
+                // concrete authority rules are supplied by the owning logic.
+                reason = string.Empty;
+                return true;
+            }
+            if (targetId == _playerId)
+            {
+                reason = "Activity action cannot target the acting Player";
+                return false;
+            }
+            if (_targetDirectory == null
+                || !_targetDirectory.TryResolve(targetId, out var target)
+                || target == null
+                || !target.IsAvailable
+                || !target.HasTag("player"))
+            {
+                reason = "Activity action target Player is unavailable";
+                return false;
+            }
+            reason = string.Empty;
+            return true;
+        }
+
+        private static bool IsTargetShapeValid(
+            ActivityTargetKind targetKind,
+            string targetId)
+        {
+            if (!Enum.IsDefined(typeof(ActivityTargetKind), targetKind))
+                return false;
+            return targetKind == ActivityTargetKind.None
+                ? string.IsNullOrWhiteSpace(targetId)
+                : !string.IsNullOrWhiteSpace(targetId);
+        }
+
+        private static bool IsValidStableText(string value) =>
+            !string.IsNullOrWhiteSpace(value) && value.Length <= 128;
 
         private sealed class AuthorityPresentationRelay : IActivityPresentationRequests
         {

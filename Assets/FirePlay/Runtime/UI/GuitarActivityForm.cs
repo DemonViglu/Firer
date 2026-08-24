@@ -25,35 +25,65 @@ namespace DemonViglu.FirePlay.UI
         [SerializeField] private Button _closeButton;
         [SerializeField] private Button[] _keyButtons;
 
-        private UnityAction[] _keyHandlers;
         private UnityAction _closeHandler;
         private IActivityActionRequester _requester;
+        private bool _acceptInput;
 
         private void Awake()
         {
+            // Keep the instrument above the persistent Fixed HUD. Otherwise the
+            // keys are visible and keyboard input works, but HUD graphics win the
+            // pointer raycast before the piano-key Buttons receive OnClick.
+            CurrentUIType = new UIType
+            {
+                UIForms_Type = UIFormsType.PopUp,
+                UIForms_ShowMode = UIFormsShowMode.ReverseChange,
+                UIForms_LucencyType = UIFormsLucencyType.Lucency
+            };
+
+            FirePlayMinimalUiTheme.Apply(gameObject);
             ResolveControls();
         }
 
         public override void Display()
         {
             base.Display();
+            transform.SetAsLastSibling();
             ResolveControls();
+            EnsurePointerTargets();
             ResolveRequester();
             BindButtons();
             Refresh();
+            _acceptInput = true;
         }
 
         public override void Hiding()
         {
+            _acceptInput = false;
             UnbindButtons();
             base.Hiding();
         }
 
+        public override void Freeze()
+        {
+            _acceptInput = false;
+            base.Freeze();
+        }
+
+        public override void Redisplay()
+        {
+            base.Redisplay();
+            transform.SetAsLastSibling();
+            EnsurePointerTargets();
+            _acceptInput = true;
+        }
+
         private void Update()
         {
-            if (!gameObject.activeInHierarchy)
+            if (!gameObject.activeInHierarchy || !_acceptInput)
                 return;
 
+            ProcessPointerInput();
             ProcessKeyboardInput();
             Refresh();
         }
@@ -93,6 +123,24 @@ namespace DemonViglu.FirePlay.UI
                 closeLabel.text = "关闭";
         }
 
+        private void EnsurePointerTargets()
+        {
+            if (TryGetComponent<Image>(out var rootImage))
+                rootImage.raycastTarget = false;
+
+            foreach (var button in GetComponentsInChildren<Button>(true))
+            {
+                if (button.targetGraphic != null)
+                    button.targetGraphic.raycastTarget = true;
+
+                foreach (var graphic in button.GetComponentsInChildren<Graphic>(true))
+                {
+                    if (graphic != button.targetGraphic)
+                        graphic.raycastTarget = false;
+                }
+            }
+        }
+
         private void ResolveRequester()
         {
             _requester = PlayerActivityHost.Local;
@@ -101,18 +149,6 @@ namespace DemonViglu.FirePlay.UI
         private void BindButtons()
         {
             UnbindButtons();
-            _keyHandlers = new UnityAction[GuitarActivityLogic.KeyCount];
-
-            for (var i = 0; i < _keyButtons.Length; i++)
-            {
-                var button = _keyButtons[i];
-                if (button == null) continue;
-
-                var keyIndex = i + 1;
-                UnityAction handler = () => Submit(GuitarActivityLogic.GetKeyActionId(keyIndex));
-                _keyHandlers[i] = handler;
-                button.onClick.AddListener(handler);
-            }
 
             if (_closeButton != null)
             {
@@ -123,18 +159,32 @@ namespace DemonViglu.FirePlay.UI
 
         private void UnbindButtons()
         {
-            if (_keyButtons != null && _keyHandlers != null)
-            {
-                for (var i = 0; i < _keyButtons.Length && i < _keyHandlers.Length; i++)
-                {
-                    if (_keyButtons[i] != null && _keyHandlers[i] != null)
-                        _keyButtons[i].onClick.RemoveListener(_keyHandlers[i]);
-                }
-            }
-
             if (_closeButton != null && _closeHandler != null)
                 _closeButton.onClick.RemoveListener(_closeHandler);
             _closeHandler = null;
+        }
+
+        private void ProcessPointerInput()
+        {
+            var pointer = Pointer.current;
+            if (pointer == null || !pointer.press.wasPressedThisFrame || !TryGetActiveState(out _))
+                return;
+
+            var screenPoint = pointer.position.ReadValue();
+            for (var index = 0; index < _keyButtons.Length; index++)
+            {
+                var button = _keyButtons[index];
+                if (button == null
+                    || !button.interactable
+                    || button.transform is not RectTransform keyRect
+                    || !RectTransformUtility.RectangleContainsScreenPoint(keyRect, screenPoint, null))
+                {
+                    continue;
+                }
+
+                Submit(GuitarActivityLogic.GetKeyActionId(index + 1));
+                return;
+            }
         }
 
         private void Refresh()

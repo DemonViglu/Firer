@@ -52,7 +52,7 @@ namespace DemonViglu.FirePlay.Player
 
         private void OnEnable()
         {
-            Initialize(GetComponent<LocalPlayerContext>());
+            Initialize(GetComponent<LocalPlayerContext>() ?? GetComponentInParent<LocalPlayerContext>());
         }
 
         private void OnDisable()

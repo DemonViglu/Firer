@@ -36,6 +36,8 @@ namespace DemonViglu.FirePlay.Network
 
         [Header("Network Pose")]
         [SerializeField, Min(0.02f)] private float _poseSendInterval = 0.05f;
+        [Tooltip("Reliable pose checkpoint interval for late-join and correction. Live motion uses an unreliable RPC stream.")]
+        [SerializeField, Min(0.1f)] private float _persistentPoseSnapshotInterval = 0.5f;
         [SerializeField, Min(1f)] private float _maximumAcceptedSpeed = 12f;
         [SerializeField, Min(1f)] private float _poseValidationSlack = 1.5f;
         [SerializeField, Min(1f)] private float _remotePoseLerpSpeed = 15f;
@@ -52,6 +54,7 @@ namespace DemonViglu.FirePlay.Network
         private const double WorldCommandCooldownSeconds = 0.12d;
         private float _nextFuelSnapshotTime;
         private float _nextPoseSendTime;
+        private float _nextPersistentPoseSnapshotTime;
         private float _lastAcceptedPoseTime;
         private bool _ownsLocalCameraBinding;
         private bool _activityFactsAttached;
@@ -59,6 +62,7 @@ namespace DemonViglu.FirePlay.Network
         private uint _nextOwnerPoseRevision;
         private uint _lastAcceptedOwnerPoseRevision;
         private uint _serverPoseRevision;
+        private FirePlayNetworkPoseSnapshot _latestPoseSnapshot;
         private readonly NetworkVariable<float> _fuelSnapshot = new(
             0f,
             NetworkVariableReadPermission.Everyone,
@@ -76,7 +80,9 @@ namespace DemonViglu.FirePlay.Network
         public bool IsLocallyOwned { get; private set; }
         public bool HasLocalGameplayControl { get; private set; }
         public float NetworkFuel => _fuelSnapshot.Value;
-        public FirePlayNetworkPoseSnapshot NetworkPose => _poseSnapshot.Value;
+        public FirePlayNetworkPoseSnapshot NetworkPose => _latestPoseSnapshot.Revision != 0
+            ? _latestPoseSnapshot
+            : _poseSnapshot.Value;
         public bool NetworkResting => _restingSnapshot.Value;
 
         private void Awake()
@@ -125,16 +131,18 @@ namespace DemonViglu.FirePlay.Network
             }
 
             _fuelSnapshot.OnValueChanged += OnFuelSnapshotChanged;
+            _poseSnapshot.OnValueChanged += OnPersistentPoseSnapshotChanged;
             _restingSnapshot.OnValueChanged += OnRestingSnapshotChanged;
             if (IsServer)
             {
                 _lastAcceptedPoseTime = Time.unscaledTime;
-                PublishPoseSnapshot(transform.position, transform.rotation);
+                PublishPoseSnapshot(transform.position, transform.rotation, forcePersistent: true);
                 _restingSnapshot.Value = _restInteraction != null && _restInteraction.IsResting;
             }
             else
             {
-                ApplyPoseImmediately(_poseSnapshot.Value);
+                _latestPoseSnapshot = _poseSnapshot.Value;
+                ApplyPoseImmediately(_latestPoseSnapshot);
             }
             var anotherLocalPlayer = _playerContext != null
                 && LocalPlayerContext.Current != null
@@ -229,6 +237,7 @@ namespace DemonViglu.FirePlay.Network
                 HasLocalGameplayControl ? this : null);
             _activityHost?.ConfigureNetworkRole(HasLocalGameplayControl, IsServer, PlayerId);
             _activityHost?.ConfigureRequestTransport(HasLocalGameplayControl ? this : null);
+            _activityTargetDirectory?.RegisterPlayer(PlayerId, _activityHost);
             AttachWorldCommandEvents();
             AttachRestAuthorityEvents();
             if (!IsServer && _restInteraction != null)
@@ -238,6 +247,7 @@ namespace DemonViglu.FirePlay.Network
                     IsOwner && HasLocalGameplayControl);
             }
             AttachActivityFactEvents();
+            AttachExpressionEvents();
             if (!IsServer && _activityHost != null)
                 RequestActivitySnapshotRpc();
 
@@ -256,13 +266,18 @@ namespace DemonViglu.FirePlay.Network
         public override void OnNetworkDespawn()
         {
             DetachActivityFactEvents();
+            DetachExpressionEvents();
             DetachWorldCommandEvents();
             _worldCommandRateLimiter.Clear();
             _activeObserverAnimationStates.Clear();
+            _pendingPersistentActivityState = default;
+            _receivedActivityActionEventIds.Clear();
+            _lastAcceptedExpressionSequence = 0;
             _activityTargetDirectory?.Remove(PlayerId);
             _activityTargetDirectory = null;
             DetachRestAuthorityEvents();
             _fuelSnapshot.OnValueChanged -= OnFuelSnapshotChanged;
+            _poseSnapshot.OnValueChanged -= OnPersistentPoseSnapshotChanged;
             _restingSnapshot.OnValueChanged -= OnRestingSnapshotChanged;
 
             Publish(new FirePlayNetworkPlayerRoleChanged(
@@ -301,6 +316,7 @@ namespace DemonViglu.FirePlay.Network
                 return;
 
             UpdatePoseReplication();
+            FlushPersistentActivityStateIfDue();
 
             if (!IsServer || Time.unscaledTime < _nextFuelSnapshotTime)
                 return;
@@ -339,7 +355,7 @@ namespace DemonViglu.FirePlay.Network
             }
 
             if (!IsOwner)
-                ApplyRemotePose(_poseSnapshot.Value);
+                ApplyRemotePose(NetworkPose);
         }
 
         public bool RequestRestToggle()
@@ -444,7 +460,7 @@ namespace DemonViglu.FirePlay.Network
             {
                 // Advance the server snapshot revision even when rejecting so
                 // the owner receives an explicit correction fact.
-                PublishPoseSnapshot(transform.position, transform.rotation);
+                PublishPoseSnapshot(transform.position, transform.rotation, forcePersistent: true);
                 return;
             }
 
@@ -455,15 +471,46 @@ namespace DemonViglu.FirePlay.Network
             PublishPoseSnapshot(position, rotation);
         }
 
-        private void PublishPoseSnapshot(Vector3 position, Quaternion rotation)
+        private void PublishPoseSnapshot(
+            Vector3 position,
+            Quaternion rotation,
+            bool forcePersistent = false)
         {
             if (!IsServer)
                 return;
 
-            _poseSnapshot.Value = new FirePlayNetworkPoseSnapshot(
+            var snapshot = new FirePlayNetworkPoseSnapshot(
                 position,
                 Quaternion.Normalize(rotation),
                 ++_serverPoseRevision);
+            _latestPoseSnapshot = snapshot;
+
+            // Live poses are transient and stale packets are disposable. Keep
+            // them out of NGO's reliable NetworkVariable stream so an older
+            // movement packet cannot delay gameplay facts or activity cues.
+            PushPoseRpc(snapshot);
+
+            var now = Time.unscaledTime;
+            if (forcePersistent
+                || _poseSnapshot.Value.Revision == 0
+                || now >= _nextPersistentPoseSnapshotTime)
+            {
+                _poseSnapshot.Value = snapshot;
+                _nextPersistentPoseSnapshotTime = now + _persistentPoseSnapshotInterval;
+            }
+        }
+
+        [Rpc(SendTo.NotServer, Delivery = RpcDelivery.Unreliable)]
+        private void PushPoseRpc(FirePlayNetworkPoseSnapshot snapshot)
+        {
+            if (!IsFinite(snapshot.Position)
+                || !IsFinite(snapshot.Rotation)
+                || snapshot.Revision <= _latestPoseSnapshot.Revision)
+            {
+                return;
+            }
+
+            _latestPoseSnapshot = snapshot;
         }
 
         private void ApplyRemotePose(FirePlayNetworkPoseSnapshot snapshot)
@@ -505,6 +552,18 @@ namespace DemonViglu.FirePlay.Network
         {
             if (!IsServer)
                 _flameModule?.ResourceController?.ApplyFuelSnapshot(currentFuel);
+        }
+
+        private void OnPersistentPoseSnapshotChanged(
+            FirePlayNetworkPoseSnapshot previous,
+            FirePlayNetworkPoseSnapshot current)
+        {
+            if (current.Revision > _latestPoseSnapshot.Revision
+                && IsFinite(current.Position)
+                && IsFinite(current.Rotation))
+            {
+                _latestPoseSnapshot = current;
+            }
         }
 
         private void OnRestingSnapshotChanged(bool previousResting, bool currentResting)

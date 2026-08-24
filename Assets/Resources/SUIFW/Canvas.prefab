@@ -46,6 +46,7 @@ GameObject:
   - component: {fileID: 4000010147631302}
   - component: {fileID: 114000013946633274}
   - component: {fileID: 114000011328364854}
+  - component: {fileID: 930000000000000001}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -103,6 +104,37 @@ MonoBehaviour:
   m_InputActionsPerSecond: 10
   m_RepeatDelay: 0.5
   m_ForceModuleActive: 0
+--- !u!114 &930000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000010517132534}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01614664b831546d2ae94a42149d80ac, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.UI.InputSystemUIInputModule
+  m_SendPointerHoverToParent: 1
+  m_MoveRepeatDelay: 0.5
+  m_MoveRepeatRate: 0.1
+  m_XRTrackingOrigin: {fileID: 0}
+  m_ActionsAsset: {fileID: -944628639613478452, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_PointAction: {fileID: -1654692200621890270, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_MoveAction: {fileID: -8784545083839296357, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_SubmitAction: {fileID: 392368643174621059, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_CancelAction: {fileID: 7727032971491509709, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_LeftClickAction: {fileID: 3001919216989983466, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_MiddleClickAction: {fileID: -2185481485913320682, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_RightClickAction: {fileID: -4090225696740746782, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_ScrollWheelAction: {fileID: 6240969308177333660, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_TrackedDevicePositionAction: {fileID: 6564999863303420839, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_TrackedDeviceOrientationAction: {fileID: 7970375526676320489, guid: ca9f5fa95ffab41fb9a615ab714db018, type: 3}
+  m_DeselectOnBackgroundClick: 1
+  m_PointerBehavior: 0
+  m_CursorLockBehavior: 0
+  m_ScrollDeltaPerTick: 6
 --- !u!1 &1000010880587452
 GameObject:
   m_ObjectHideFlags: 0
@@ -432,6 +464,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 224000012673019010}
+  - component: {fileID: 910000000009999992}
   m_Layer: 5
   m_Name: _UIScripts
   m_TagString: Untagged
@@ -458,6 +491,18 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &910000000009999992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000012381109278}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a918acbd18d154e8d8d5ec97ed78e7, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::SUIFW.UIMaskMgr
 --- !u!1 &1000013313497024
 GameObject:
   m_ObjectHideFlags: 0
@@ -807,7 +852,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Interact
+  m_Text: "\u4EA4\u4E92 [E]"
 --- !u!114 &7033144484318767634
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1052,7 +1097,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u8DF3\u8DC3"
+  m_Text: "\u8DF3\u8DC3 [Space]"
 --- !u!114 &2629072560094134504
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1514,7 +1559,6 @@ GameObject:
   - component: {fileID: 9115102668191643101}
   - component: {fileID: 7696146763000996723}
   - component: {fileID: 7463834020734742584}
-  - component: {fileID: 6108344304640745054}
   - component: {fileID: 2979154068419087371}
   m_Layer: 5
   m_Name: UIController
@@ -1577,22 +1621,6 @@ MonoBehaviour:
   _warmthText: {fileID: 6975671515119768887}
   _remainingTimeText: {fileID: 3078300112385206335}
   _warmthFill: {fileID: 3189376191027948063}
---- !u!114 &6108344304640745054
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1912452919509940744}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4d9b330e730d4d5c81fb870df6de0b45, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.FirePlayPlacementPanel
-  _placement: {fileID: 0}
-  _localPlayer: {fileID: 0}
-  _panelRoot: {fileID: 8122532420290157584}
-  _statusText: {fileID: 0}
 --- !u!114 &2979154068419087371
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3809,7 +3837,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Rest
+  m_Text: "\u4F11\u606F [R]"
 --- !u!114 &6663023256120944287
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4054,9 +4082,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Playce Fire
-
-'
+  m_Text: "\u653E\u7F6E\u5C0F\u706B\u79CD [F]"
 --- !u!114 &6265724420274103030
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4938,7 +4964,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8623448171637832097
 RectTransform:
   m_ObjectHideFlags: 0

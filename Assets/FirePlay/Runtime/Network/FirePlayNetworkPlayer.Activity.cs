@@ -1,4 +1,5 @@
 using DemonViglu.FirePlay.Activity;
+using DemonViglu.FirePlay.Player;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -6,6 +7,15 @@ namespace DemonViglu.FirePlay.Network
 {
     public sealed partial class FirePlayNetworkPlayer
     {
+        private readonly System.Collections.Generic.HashSet<string>
+            _receivedActivityActionEventIds = new(System.StringComparer.Ordinal);
+        private IEventPublisher _expressionEvents;
+        private bool _expressionEventsAttached;
+        private uint _lastAcceptedExpressionSequence;
+        private const float PersistentActivityStateInterval = 0.5f;
+        private ActivityFactDto _pendingPersistentActivityState;
+        private float _nextPersistentActivityStateTime;
+
         public ActivityStartResult RequestSelection(ActivitySelectionRequestDto request)
         {
             if (!CanSubmitOwnedActivityRequest(
@@ -37,6 +47,12 @@ namespace DemonViglu.FirePlay.Network
                     out var reason)
                 || !IsValidStableId(request.ActionId)
                 || request.SessionRevision == 0
+                || !System.Enum.IsDefined(typeof(ActivityTargetKind), request.TargetKind)
+                || !IsValidOptionalStableId(request.TargetId)
+                || (request.TargetKind == ActivityTargetKind.None
+                    ? !string.IsNullOrWhiteSpace(request.TargetId)
+                    : string.IsNullOrWhiteSpace(request.TargetId))
+                || !IsValidStableId(request.EventId)
                 || (request.Payload?.Length ?? 0) > MaximumActivityPayloadLength)
             {
                 return ActivityActionResult.Reject(string.IsNullOrWhiteSpace(reason)
@@ -51,7 +67,10 @@ namespace DemonViglu.FirePlay.Network
                     request.ActivityId,
                     request.ActionId,
                     request.Payload,
-                    request.SessionRevision);
+                    request.SessionRevision,
+                    request.TargetKind,
+                    request.TargetId,
+                    request.EventId);
             }
 
             SubmitActivityActionRpc(
@@ -59,7 +78,10 @@ namespace DemonViglu.FirePlay.Network
                 request.ActivityId,
                 request.ActionId,
                 request.Payload,
-                request.SessionRevision);
+                request.SessionRevision,
+                (int)request.TargetKind,
+                request.TargetId,
+                request.EventId);
             return ActivityActionResult.Consume("Activity action submitted to Host authority");
         }
 
@@ -90,14 +112,20 @@ namespace DemonViglu.FirePlay.Network
             string activityId,
             string actionId,
             string payload,
-            uint sessionRevision)
+            uint sessionRevision,
+            int targetKind,
+            string targetId,
+            string eventId)
         {
             var result = HandleAuthorityAction(
                 anchorId,
                 activityId,
                 actionId,
                 payload,
-                sessionRevision);
+                sessionRevision,
+                (ActivityTargetKind)targetKind,
+                targetId,
+                eventId);
             if (!result.Consumed)
             {
                 Debug.LogWarning(
@@ -137,14 +165,26 @@ namespace DemonViglu.FirePlay.Network
             string activityId,
             string actionId,
             string payload,
-            uint sessionRevision)
+            uint sessionRevision,
+            ActivityTargetKind targetKind,
+            string targetId,
+            string eventId)
         {
             if (!IsServer || _activityHost == null)
                 return ActivityActionResult.Reject("Activity authority is unavailable");
+            if (!IsValidStableId(eventId))
+                return ActivityActionResult.Reject("Activity action EventId is invalid");
+            if (!_receivedActivityActionEventIds.Add(eventId))
+                return ActivityActionResult.Reject("Activity action EventId was already handled");
             if (!IsValidOptionalStableId(anchorId)
                 || !IsValidStableId(activityId)
                 || !IsValidStableId(actionId)
                 || sessionRevision == 0
+                || !System.Enum.IsDefined(typeof(ActivityTargetKind), targetKind)
+                || !IsValidOptionalStableId(targetId)
+                || (targetKind == ActivityTargetKind.None
+                    ? !string.IsNullOrWhiteSpace(targetId)
+                    : string.IsNullOrWhiteSpace(targetId))
                 || (payload?.Length ?? 0) > MaximumActivityPayloadLength)
             {
                 return ActivityActionResult.Reject("Activity action contains invalid network data");
@@ -156,7 +196,10 @@ namespace DemonViglu.FirePlay.Network
                 activityId,
                 actionId,
                 payload,
-                sessionRevision));
+                sessionRevision,
+                targetKind,
+                targetId,
+                eventId));
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             Debug.Log(
                 $"[FirePlayNetworkPlayer] Host authority action: player={PlayerId}, activity={activityId}, action={actionId}, revision={sessionRevision}, consumed={result.Consumed}, reason={result.Reason}",
@@ -179,6 +222,141 @@ namespace DemonViglu.FirePlay.Network
             _activityFactsAttached = true;
         }
 
+        private void AttachExpressionEvents()
+        {
+            if (_expressionEventsAttached
+                || !IsLocallyOwned
+                || !HasLocalGameplayControl)
+            {
+                return;
+            }
+
+            _expressionEvents = GameInstanceSubsystem.GetOrCreate<IEventPublisher>(
+                () => new GameEventBus());
+            _expressionEvents.Subscribe<PlayerExpressionPlayed>(OnLocalExpressionPlayed);
+            _expressionEventsAttached = true;
+        }
+
+        private void DetachExpressionEvents()
+        {
+            if (!_expressionEventsAttached || _expressionEvents == null)
+                return;
+
+            _expressionEvents.Unsubscribe<PlayerExpressionPlayed>(OnLocalExpressionPlayed);
+            _expressionEventsAttached = false;
+            _expressionEvents = null;
+            _lastAcceptedExpressionSequence = 0;
+        }
+
+        private void OnLocalExpressionPlayed(PlayerExpressionPlayed expression)
+        {
+            if (expression == null
+                || !IsLocallyOwned
+                || !HasLocalGameplayControl
+                || expression.PlayerId != PlayerId)
+            {
+                return;
+            }
+
+            if (IsServer)
+            {
+                HandleAuthorityExpression(
+                    expression.ExpressionId,
+                    expression.CueId,
+                    expression.Sequence);
+                return;
+            }
+
+            SubmitExpressionRpc(
+                expression.ExpressionId,
+                expression.CueId,
+                expression.Sequence);
+        }
+
+        [Rpc(
+            SendTo.Server,
+            Delivery = RpcDelivery.Reliable,
+            InvokePermission = RpcInvokePermission.Owner)]
+        private void SubmitExpressionRpc(
+            string expressionId,
+            string cueId,
+            uint sequence)
+        {
+            HandleAuthorityExpression(expressionId, cueId, sequence);
+        }
+
+        private bool HandleAuthorityExpression(
+            string expressionId,
+            string cueId,
+            uint sequence)
+        {
+            if (!IsServer
+                || !IsValidStableId(expressionId)
+                || !IsValidStableId(cueId)
+                || sequence == 0
+                || sequence <= _lastAcceptedExpressionSequence
+                || !IsSupportedRemoteExpression(expressionId, cueId))
+            {
+                return false;
+            }
+
+            _lastAcceptedExpressionSequence = sequence;
+            var request = new ActivityPlayerRequest(
+                ActivityPlayerRequestKind.AnimationCue,
+                PlayerId,
+                EmoteActivityLogic.ActivityId,
+                string.Empty,
+                cueId,
+                active: true,
+                sessionRevision: 1u);
+            BroadcastRemoteExpression(request);
+            return true;
+        }
+
+        private void BroadcastRemoteExpression(ActivityPlayerRequest request)
+        {
+            // The local owner already played the expression. The Host still
+            // executes it on its own observer mirror when this Player belongs
+            // to a remote client, then sends the one-shot cue to every other
+            // client. No UI, camera, movement lock, or late-join replay is
+            // involved.
+            if (!IsOwner)
+                _presentationHost?.ExecuteObserver(request);
+
+            if (!IsServer || NetworkManager == null)
+                return;
+
+            foreach (var clientId in NetworkManager.ConnectedClientsIds)
+            {
+                if (clientId == OwnerClientId)
+                    continue;
+
+                ReceiveActivityPresentationRpc(
+                    (int)request.Kind,
+                    request.ActivityId,
+                    request.TargetId,
+                    request.CueId,
+                    request.Active,
+                    request.SessionRevision,
+                    RpcTarget.Single(clientId, RpcTargetUse.Temp));
+            }
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.Log(
+                $"[FirePlayNetworkPlayer] Remote expression cue broadcast: player={PlayerId}, cue={request.CueId}",
+                this);
+#endif
+        }
+
+        private static bool IsSupportedRemoteExpression(
+            string expressionId,
+            string cueId)
+        {
+            return (expressionId == "wave"
+                    && cueId == PlayerAnimationCueIds.EmoteWave)
+                || (expressionId == "thanks"
+                    && cueId == PlayerAnimationCueIds.EmoteThanks);
+        }
+
         private void DetachActivityFactEvents()
         {
             if (!_activityFactsAttached || _activityEvents == null)
@@ -199,6 +377,7 @@ namespace DemonViglu.FirePlay.Network
                 return;
 
             _activeObserverAnimationStates.Clear();
+            _pendingPersistentActivityState = default;
             SendActivityFactToClients(ActivityFactDto.From(fact));
         }
 
@@ -215,12 +394,18 @@ namespace DemonViglu.FirePlay.Network
 
             SendActivityFactToClients(ActivityFactDto.From(fact));
             _activeObserverAnimationStates.Clear();
+            _pendingPersistentActivityState = default;
         }
 
         private void OnAuthorityStateChanged(ActivityStateChanged fact)
         {
-            if (fact?.PlayerId == PlayerId)
-                SendActivityFactToClients(ActivityFactDto.From(fact));
+            if (fact?.PlayerId != PlayerId)
+                return;
+
+            var dto = ActivityFactDto.From(fact);
+            SendTransientActivityStateToClients(dto);
+            _pendingPersistentActivityState = dto;
+            FlushPersistentActivityStateIfDue();
         }
 
         private void OnAuthorityPresentationRequested(ActivityPlayerPresentationRequested fact)
@@ -269,7 +454,12 @@ namespace DemonViglu.FirePlay.Network
 
             ReceiveActivityFactRpc(
                 (int)fact.Kind,
+                fact.Metadata.ActorId,
+                fact.Metadata.EventId,
+                fact.Metadata.OccurredAtUnixMs,
+                fact.Metadata.FactRevision,
                 fact.AnchorId,
+                (int)fact.TargetKind,
                 fact.TargetId,
                 fact.ActivityId,
                 (int)fact.ParticipationMode,
@@ -294,7 +484,12 @@ namespace DemonViglu.FirePlay.Network
 
             ReceiveActivityFactRpc(
                 (int)fact.Kind,
+                fact.Metadata.ActorId,
+                fact.Metadata.EventId,
+                fact.Metadata.OccurredAtUnixMs,
+                fact.Metadata.FactRevision,
                 fact.AnchorId,
+                (int)fact.TargetKind,
                 fact.TargetId,
                 fact.ActivityId,
                 (int)fact.ParticipationMode,
@@ -306,6 +501,53 @@ namespace DemonViglu.FirePlay.Network
                 (int)fact.EndReason,
                 fact.Reason,
                 RpcTarget.Single(clientId, RpcTargetUse.Temp));
+        }
+
+        /// <summary>
+        /// Continuously changing activity gauges are transient presentation
+        /// snapshots. They use an unreliable stream so fishing/marshmallow
+        /// motion cannot queue in front of lifecycle or social facts.
+        /// </summary>
+        private void SendTransientActivityStateToClients(ActivityFactDto fact)
+        {
+            if (!IsServer
+                || fact.Kind != ActivityNetworkFactKind.StateChanged
+                || fact.SessionRevision == 0
+                || fact.StateRevision == 0)
+            {
+                return;
+            }
+
+            ReceiveActivityStateFactRpc(
+                fact.Metadata.ActorId,
+                fact.Metadata.EventId,
+                fact.Metadata.OccurredAtUnixMs,
+                fact.Metadata.FactRevision,
+                fact.AnchorId,
+                fact.ActivityId,
+                fact.Payload,
+                fact.SessionRevision,
+                fact.StateRevision);
+        }
+
+        /// <summary>
+        /// The newest transient state is also checkpointed reliably at a low
+        /// rate. This guarantees a terminal gauge/state is eventually seen
+        /// even if the last unreliable packet was dropped.
+        /// </summary>
+        private void FlushPersistentActivityStateIfDue()
+        {
+            if (!IsServer
+                || _pendingPersistentActivityState.SessionRevision == 0
+                || Time.unscaledTime < _nextPersistentActivityStateTime)
+            {
+                return;
+            }
+
+            SendActivityFactToClients(_pendingPersistentActivityState);
+            _pendingPersistentActivityState = default;
+            _nextPersistentActivityStateTime =
+                Time.unscaledTime + PersistentActivityStateInterval;
         }
 
         [Rpc(
@@ -352,7 +594,12 @@ namespace DemonViglu.FirePlay.Network
             AllowTargetOverride = true)]
         private void ReceiveActivityFactRpc(
             int kind,
+            string actorId,
+            string eventId,
+            long occurredAtUnixMs,
+            uint factRevision,
             string anchorId,
+            int targetKind,
             string targetId,
             string activityId,
             int participationMode,
@@ -375,8 +622,16 @@ namespace DemonViglu.FirePlay.Network
             if (!System.Enum.IsDefined(typeof(ActivityNetworkFactKind), kind)
                 || !System.Enum.IsDefined(typeof(ActivityParticipationMode), participationMode)
                 || !System.Enum.IsDefined(typeof(ActivityEndReason), endReason)
+                || !System.Enum.IsDefined(typeof(ActivityTargetKind), targetKind)
+                || !IsValidStableId(actorId)
+                || !IsValidStableId(eventId)
+                || occurredAtUnixMs <= 0
+                || factRevision == 0
                 || !IsValidOptionalStableId(anchorId)
                 || !IsValidOptionalStableId(targetId)
+                || ((ActivityTargetKind)targetKind == ActivityTargetKind.None
+                    ? !string.IsNullOrWhiteSpace(targetId)
+                    : string.IsNullOrWhiteSpace(targetId))
                 || !IsValidStableId(activityId)
                 || !IsValidOptionalStableId(actionId)
                 || (payload?.Length ?? 0) > MaximumActivityPayloadLength
@@ -399,6 +654,7 @@ namespace DemonViglu.FirePlay.Network
                 (ActivityNetworkFactKind)kind,
                 PlayerId,
                 anchorId,
+                (ActivityTargetKind)targetKind,
                 targetId,
                 activityId,
                 (ActivityParticipationMode)participationMode,
@@ -408,8 +664,69 @@ namespace DemonViglu.FirePlay.Network
                 stateRevision,
                 endsSession,
                 (ActivityEndReason)endReason,
-                reason);
-            var applied = _activityHost.ApplyNetworkFact(fact);
+                reason,
+                actorId,
+                eventId,
+                occurredAtUnixMs,
+                factRevision);
+            ApplyReceivedActivityFact(fact);
+        }
+
+        [Rpc(SendTo.NotServer, Delivery = RpcDelivery.Unreliable)]
+        private void ReceiveActivityStateFactRpc(
+            string actorId,
+            string eventId,
+            long occurredAtUnixMs,
+            uint factRevision,
+            string anchorId,
+            string activityId,
+            string payload,
+            uint sessionRevision,
+            uint stateRevision)
+        {
+            if (IsServer
+                || _activityHost == null
+                || (IsOwner && !HasLocalGameplayControl))
+            {
+                return;
+            }
+            if (!IsValidStableId(actorId)
+                || !IsValidStableId(eventId)
+                || occurredAtUnixMs <= 0
+                || factRevision == 0
+                || !IsValidOptionalStableId(anchorId)
+                || !IsValidStableId(activityId)
+                || (payload?.Length ?? 0) > MaximumActivityPayloadLength
+                || sessionRevision == 0
+                || stateRevision == 0)
+            {
+                return;
+            }
+
+            ApplyReceivedActivityFact(ActivityFactDto.FromTransport(
+                ActivityNetworkFactKind.StateChanged,
+                PlayerId,
+                anchorId,
+                ActivityTargetKind.None,
+                string.Empty,
+                activityId,
+                ActivityParticipationMode.Independent,
+                string.Empty,
+                payload,
+                sessionRevision,
+                stateRevision,
+                endsSession: false,
+                ActivityEndReason.Requested,
+                string.Empty,
+                actorId,
+                eventId,
+                occurredAtUnixMs,
+                factRevision));
+        }
+
+        private void ApplyReceivedActivityFact(ActivityFactDto fact)
+        {
+            var applied = _activityHost != null && _activityHost.ApplyNetworkFact(fact);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             Debug.Log(
                 $"[FirePlayNetworkPlayer] Client fact applied: player={PlayerId}, role={(IsOwner ? "Owner" : "Observer")}, kind={fact.Kind}, activity={fact.ActivityId}, revision={fact.SessionRevision}, applied={applied}",
@@ -511,4 +828,3 @@ namespace DemonViglu.FirePlay.Network
 
     }
 }
-

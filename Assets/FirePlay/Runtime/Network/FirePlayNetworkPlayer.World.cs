@@ -11,6 +11,7 @@ namespace DemonViglu.FirePlay.Network
     public sealed partial class FirePlayNetworkPlayer
     {
         private uint _nextAsyncWorldFactRevision;
+        private readonly string _asyncWorldRunId = System.Guid.NewGuid().ToString("N");
 
         public SmallFirePlacementRequestResult RequestSmallFirePlacement(Vector3 requestedPoint)
         {
@@ -302,6 +303,16 @@ namespace DemonViglu.FirePlay.Network
             if (resource != null)
                 _fuelSnapshot.Value = resource.CurrentFuel;
             RecordAsyncWorldFact(intentKind, targetKind, targetId);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            var appliedVersion = target is IWorldCommandVersioned versioned
+                ? versioned.CommandVersion
+                : 0u;
+            Debug.Log(
+                $"[FirePlayNetworkPlayer] Host applied world command: player={PlayerId}, " +
+                $"kind={intentKind}, target={targetId}, revision={appliedVersion}, " +
+                $"fuel={_fuelSnapshot.Value:0.00}.",
+                this);
+#endif
             return true;
         }
 
@@ -326,7 +337,7 @@ namespace DemonViglu.FirePlay.Network
             var metadata = ActivityFactMetadata.Create(
                 PlayerId,
                 revision,
-                $"{PlayerId}:world:{revision}");
+                $"world:{_asyncWorldRunId}:{revision}");
             var target = targetKind switch
             {
                 PlayerInteractTargetKind.Campfire => new ActivityTargetReference(
@@ -361,7 +372,7 @@ namespace DemonViglu.FirePlay.Network
             var metadata = ActivityFactMetadata.Create(
                 PlayerId,
                 revision,
-                $"{PlayerId}:smallfire:{revision}");
+                $"smallfire:{_asyncWorldRunId}:{revision}");
             var store = GameInstanceSubsystem.GetOrCreate<IAsyncInteractionFactStore>(
                 () => new LocalAsyncInteractionFactStore());
             store.AppendWorld(

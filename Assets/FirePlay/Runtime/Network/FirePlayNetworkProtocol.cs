@@ -9,7 +9,7 @@ namespace DemonViglu.FirePlay.Network
     /// </summary>
     public static class FirePlayNetworkProtocol
     {
-        public const int CurrentVersion = 3;
+        public const int CurrentVersion = 7;
         public const int MaximumPayloadBytes = 64;
 
         private const string ProtocolName = "fireplay.realtime";

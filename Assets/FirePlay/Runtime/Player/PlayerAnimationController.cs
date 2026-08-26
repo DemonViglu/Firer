@@ -49,8 +49,10 @@ namespace DemonViglu.FirePlay.Player
         }
 
         [SerializeField] private Animator _animator;
-        [Tooltip("没有 Animator 时用于验证网络姿态的占位模型；配置正式 Animator 后自动停止修改它。")]
+        [Tooltip("没有 Animator 时用于验证网络姿态的占位模型；也可作为尚未提供正式社交动作时的明确表现根。")]
         [SerializeField] private Transform _placeholderVisual;
+        [Tooltip("仅在挥手/感谢尚无正式动画状态时使用轻量根节点动作；补齐动画后可在 Inspector 关闭。")]
+        [SerializeField] private bool _useSocialCueFallback;
         [SerializeField, Min(1f)] private float _placeholderBlendSpeed = 10f;
         [Tooltip("吉他逐键 cue 会映射到此前缀加两位键号，例如 GuitarKey01。没有对应 Animator 参数时会安全忽略。")]
         [SerializeField] private string _guitarKeyTriggerPrefix = "GuitarKey";
@@ -84,6 +86,8 @@ namespace DemonViglu.FirePlay.Player
         private Vector3 _placeholderBaseScale;
         private Quaternion _placeholderBaseRotation;
         private float _placeholderCuePulse;
+        private float _placeholderCueElapsed;
+        private string _placeholderCueId = string.Empty;
 
         public event Action<string> CuePlayed;
         public string LastCueId { get; private set; } = string.Empty;
@@ -110,38 +114,57 @@ namespace DemonViglu.FirePlay.Player
 
         private void Update()
         {
-            if (_animator != null || _placeholderVisual == null)
+            var fullPlaceholder = _animator == null;
+            var socialCueFallback = _useSocialCueFallback
+                && IsSocialCue(_placeholderCueId)
+                && (_placeholderCuePulse > 0f || !IsPlaceholderAtBase());
+            if (_placeholderVisual == null || (!fullPlaceholder && !socialCueFallback))
                 return;
 
             var targetPosition = _placeholderBasePosition;
             var targetScale = _placeholderBaseScale;
             var targetRotation = _placeholderBaseRotation;
 
-            if (IsStateActive(PlayerAnimationStateIds.Resting))
+            if (fullPlaceholder && IsStateActive(PlayerAnimationStateIds.Resting))
             {
                 targetPosition += Vector3.down * 0.38f;
                 targetScale = Vector3.Scale(targetScale, new Vector3(1.08f, 0.62f, 1.08f));
             }
-            else if (IsStateActive(PlayerAnimationStateIds.GuitarPlaying))
+            else if (fullPlaceholder && IsStateActive(PlayerAnimationStateIds.GuitarPlaying))
             {
                 targetRotation *= Quaternion.Euler(0f, 0f, -8f);
             }
-            else if (IsStateActive(PlayerAnimationStateIds.Fishing))
+            else if (fullPlaceholder && IsStateActive(PlayerAnimationStateIds.Fishing))
             {
                 targetRotation *= Quaternion.Euler(8f, 0f, 0f);
             }
-            else if (IsStateActive(PlayerAnimationStateIds.MarshmallowRoasting))
+            else if (fullPlaceholder && IsStateActive(PlayerAnimationStateIds.MarshmallowRoasting))
             {
                 targetRotation *= Quaternion.Euler(-5f, 0f, 0f);
             }
 
             if (_placeholderCuePulse > 0f)
             {
-                targetScale *= 1f + 0.08f * _placeholderCuePulse;
+                _placeholderCueElapsed += Time.deltaTime;
+                if (_placeholderCueId == PlayerAnimationCueIds.EmoteWave)
+                {
+                    var wave = Mathf.Sin(_placeholderCueElapsed * Mathf.PI * 6f);
+                    targetRotation *= Quaternion.Euler(0f, 0f, wave * 16f * _placeholderCuePulse);
+                }
+                else if (_placeholderCueId == PlayerAnimationCueIds.EmoteThanks)
+                {
+                    var bow = Mathf.Sin((1f - _placeholderCuePulse) * Mathf.PI);
+                    targetPosition += Vector3.down * (0.08f * bow);
+                    targetRotation *= Quaternion.Euler(22f * bow, 0f, 0f);
+                }
+                else
+                {
+                    targetScale *= 1f + 0.08f * _placeholderCuePulse;
+                }
                 _placeholderCuePulse = Mathf.MoveTowards(
                     _placeholderCuePulse,
                     0f,
-                    Time.deltaTime * 5f);
+                    Time.deltaTime * 1.5f);
             }
 
             var blend = 1f - Mathf.Exp(-_placeholderBlendSpeed * Time.deltaTime);
@@ -157,6 +180,18 @@ namespace DemonViglu.FirePlay.Player
                 _placeholderVisual.localRotation,
                 targetRotation,
                 blend);
+
+            // A social fallback is a bounded local presentation, not a new owner
+            // of the character transform. Stop writing as soon as the visual has
+            // returned to its authored local pose.
+            if (!fullPlaceholder
+                && socialCueFallback
+                && _placeholderCuePulse <= 0f
+                && IsPlaceholderAtBase())
+            {
+                ResetPlaceholderToBase();
+                _placeholderCueId = string.Empty;
+            }
         }
 
         public void SetState(string stateId, bool active)
@@ -180,6 +215,8 @@ namespace DemonViglu.FirePlay.Player
             if (string.IsNullOrWhiteSpace(cueId)) return;
             LastCueId = cueId;
             _placeholderCuePulse = 1f;
+            _placeholderCueElapsed = 0f;
+            _placeholderCueId = cueId;
             if (!TryPlayGuitarKeyCue(cueId))
             {
                 foreach (var binding in _triggerBindings)
@@ -207,6 +244,30 @@ namespace DemonViglu.FirePlay.Player
             return true;
         }
 
+        private static bool IsSocialCue(string cueId) =>
+            cueId == PlayerAnimationCueIds.EmoteWave ||
+            cueId == PlayerAnimationCueIds.EmoteThanks;
+
+        private bool IsPlaceholderAtBase()
+        {
+            if (_placeholderVisual == null) return true;
+            return Vector3.SqrMagnitude(
+                       _placeholderVisual.localPosition - _placeholderBasePosition) <= 0.000001f
+                   && Vector3.SqrMagnitude(
+                       _placeholderVisual.localScale - _placeholderBaseScale) <= 0.000001f
+                   && Quaternion.Angle(
+                       _placeholderVisual.localRotation,
+                       _placeholderBaseRotation) <= 0.1f;
+        }
+
+        private void ResetPlaceholderToBase()
+        {
+            if (_placeholderVisual == null) return;
+            _placeholderVisual.localPosition = _placeholderBasePosition;
+            _placeholderVisual.localScale = _placeholderBaseScale;
+            _placeholderVisual.localRotation = _placeholderBaseRotation;
+        }
+
         public void ApplySharedState(PlayerSharedStateSnapshot snapshot)
         {
             // PlayerSharedState currently owns only the generic Resting mode.
@@ -221,10 +282,9 @@ namespace DemonViglu.FirePlay.Player
         {
             _activeStates.Clear();
             _placeholderCuePulse = 0f;
-            if (_placeholderVisual == null) return;
-            _placeholderVisual.localPosition = _placeholderBasePosition;
-            _placeholderVisual.localScale = _placeholderBaseScale;
-            _placeholderVisual.localRotation = _placeholderBaseRotation;
+            _placeholderCueElapsed = 0f;
+            _placeholderCueId = string.Empty;
+            ResetPlaceholderToBase();
         }
 
         private void SetBool(string parameterName, bool value)

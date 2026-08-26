@@ -60,6 +60,8 @@ namespace DemonViglu.FirePlay.Player
         public bool IsSprinting { get; private set; }
         public bool MovementLocked { get; private set; }
         public bool HasLocalControl => _localControl;
+        public float BaseMoveSpeed => _moveSpeed;
+        public float SprintSpeed => _moveSpeed * _sprintSpeedMultiplier;
         public bool IsInWater => _waterSource != null;
         public bool IsGrounded { get; private set; }
         public bool IsJumping => !IsInWater && !IsGrounded && _verticalVelocity > 0f;
@@ -83,12 +85,13 @@ namespace DemonViglu.FirePlay.Player
                 _cameraTransform = Camera.main.transform;
             }
 
-            // The built character prefab is deliberately a direct child of Player.
-            // Rotating that child instead of Player prevents camera yaw from being
-            // compounded by movement-facing yaw.
+            // The authored facing root is deliberately separate from the animated
+            // visual child. Locomotion owns this root; presentation cues may only
+            // add local offsets below it.
             if (_visualTransform == null)
             {
-                _visualTransform = transform.Find("SnowTravelerVisual");
+                _visualTransform = transform.Find("CharacterFacingRoot")
+                    ?? transform.Find("SnowTravelerVisual");
             }
         }
 

@@ -27,6 +27,10 @@ namespace DemonViglu.FirePlay.UI
 
         private IActivityActionRequester _requester;
         private string _selectedTargetId = string.Empty;
+        private IEventPublisher _events;
+        private bool _authorityResultAttached;
+        private string _authorityResultMessage = string.Empty;
+        private float _authorityResultUntil;
 
         private void Awake()
         {
@@ -56,6 +60,7 @@ namespace DemonViglu.FirePlay.UI
             base.Display();
             ResolveControls();
             ResolveRequester();
+            AttachAuthorityResult();
             BindButtons();
             Refresh();
         }
@@ -63,6 +68,7 @@ namespace DemonViglu.FirePlay.UI
         public override void Hiding()
         {
             UnbindButtons();
+            DetachAuthorityResult();
             base.Hiding();
         }
 
@@ -96,6 +102,7 @@ namespace DemonViglu.FirePlay.UI
                     logic.TargetCenter,
                     logic.PerfectZoneWidth));
                 RefreshTargetControls(host, logic.IsReadyToEat);
+                ApplyAuthorityResultOverlay();
                 return;
             }
 
@@ -107,6 +114,7 @@ namespace DemonViglu.FirePlay.UI
             {
                 ApplyState(snapshot);
                 RefreshTargetControls(host, snapshot.IsReadyToEat);
+                ApplyAuthorityResultOverlay();
                 return;
             }
 
@@ -116,6 +124,51 @@ namespace DemonViglu.FirePlay.UI
             SetInteractable(_eatButton, false);
             SetInteractable(_giveButton, false);
             SetTimingVisible(false);
+            ApplyAuthorityResultOverlay();
+        }
+
+        private void AttachAuthorityResult()
+        {
+            if (_authorityResultAttached)
+                return;
+            _events ??= GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
+            _events.Subscribe<ActivityActionAuthorityResolved>(OnAuthorityActionResolved);
+            _authorityResultAttached = true;
+        }
+
+        private void DetachAuthorityResult()
+        {
+            if (!_authorityResultAttached || _events == null)
+                return;
+            _events.Unsubscribe<ActivityActionAuthorityResolved>(OnAuthorityActionResolved);
+            _authorityResultAttached = false;
+        }
+
+        private void OnAuthorityActionResolved(ActivityActionAuthorityResolved result)
+        {
+            var host = PlayerActivityHost.Local;
+            if (result == null
+                || host == null
+                || result.PlayerId != host.PlayerId
+                || result.ActivityId != MarshmallowActivityLogic.ActivityId)
+            {
+                return;
+            }
+
+            _authorityResultMessage = result.Accepted
+                ? result.Reason
+                : $"未执行：{result.Reason}";
+            _authorityResultUntil = Time.unscaledTime + 2.5f;
+            ApplyAuthorityResultOverlay();
+        }
+
+        private void ApplyAuthorityResultOverlay()
+        {
+            if (Time.unscaledTime < _authorityResultUntil
+                && !string.IsNullOrWhiteSpace(_authorityResultMessage))
+            {
+                SetStatus(_authorityResultMessage);
+            }
         }
 
         private void ApplyState(MarshmallowActivityStateSnapshot state)
@@ -361,6 +414,7 @@ namespace DemonViglu.FirePlay.UI
         private void OnDisable()
         {
             UnbindButtons();
+            DetachAuthorityResult();
         }
     }
 }

@@ -452,11 +452,7 @@ MonoBehaviour:
   _visualRoot: {fileID: 1917531652596367429}
   _fireLight: {fileID: 0}
   _fireVfx: {fileID: 0}
-  _stageVisualRoots:
-  - {fileID: 4632934166947303754, guid: 6820af6efa36512438d65dc4e8d4567e, type: 3}
-  - {fileID: 919132149155446097, guid: 611acf50bc761554fb3fb8fedbced4a7, type: 3}
-  - {fileID: 919132149155446097, guid: 611acf50bc761554fb3fb8fedbced4a7, type: 3}
-  - {fileID: 919132149155446097, guid: 611acf50bc761554fb3fb8fedbced4a7, type: 3}
+  _stageVisualRoots: []
   _scalePerLevel: 0.2
   _lightIntensityPerLevel: 0.5
 --- !u!114 &8292225297649727681

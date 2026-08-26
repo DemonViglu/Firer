@@ -148,7 +148,7 @@ Player / Campfire / Activity command
 2. 配置 EventSystem、SUIFW/UI Bootstrap 与活动目录/Logic Registry；
 3. 放入主相机和场景级 `ActivityCameraRigExecutor`，把 Camera Profiles/TargetGroup 绑定在场景执行器，不塞回 Player；
 4. 世界持久化或同步对象配置 `StableSceneId`；活动地点配置 `ActivityAnchorNode` 与活动定义引用；
-5. 篝火、余火源、小火种和世界树继续使用各自独立的状态组件，不复制状态到活动；
+5. 篝火、余火源、小火种和世界树继续使用各自独立的状态组件，不复制状态到活动；联机场景在 `FirePlayNetworkBootstrap` 显式绑定 `NetworkWorldState.prefab`，由 Host/Server 启动后生成并统一运输预放置世界对象快照；
 6. 先验收移动、余火、活动打开/退出与相机恢复，再添加美术、动画和网络表现。
 
 `PlayerSceneServiceBindings` 的活动执行器、相机执行器、玩家火苗工厂和网络出生点是彼此独立的可选场景服务。实验场景可以只配置当前模块需要的字段；例如只接 Flame 时，只需显式配置玩家火苗 Prefab，不得为了满足统一 `IsReady` 把 Activity 或 Network 占位对象一起带入。
@@ -165,6 +165,16 @@ Client intent
 ```
 
 网络层只运输稳定 DTO 和不透明活动状态，不传输 Unity 对象或 `ActivityLogic` 实例。`PlayerActivityHost` 是本地 EventBus 与网络权威共用的活动入口。异步功能未来只保存实时玩法产生的必要事实，不维护另一套兼容逻辑。
+
+预放置的 FlameSource/公共 Campfire 不各自堆 NetworkObject，而由 Host/Server 生成的唯一 `FirePlayNetworkWorldState` 按 `StableSceneId` 发布权威快照；运行时生成的 SmallFire/Campfire 使用其 Prefab 上的 NetworkObject/专用适配器。两者按是否运行时生成分流，玩法状态仍只存在于原世界组件中。
+
+`PlayerNetworkGameplay` 可以复用单机 Player 的角色模型、Avatar 和 Animator Controller，但必须在网络 Prefab 中显式序列化绑定。角色 Transform 的写入权固定分层：`CharacterFacingRoot` 只由 Movement/Locomotion 写世界朝向；其下的 `SnowTravelerVisual` 只由 Animator 或短时 Presentation Cue 写局部动作偏移。表情、受击和活动动作不得直接回写朝向根。远端 Locomotion 只读取已同步位姿推导表现速度和朝向，不读取对方输入，也不把动画参数升级为第二套网络状态。正式角色视觉替换不能改变 Player 根 NetworkObject、稳定 PlayerId、碰撞根或 Camera Target 语义。
+
+NGO 注册的运行时世界 Prefab 根对象必须保持 Active；玩法预览应隐藏独立的预览实例，不能通过停用源 Prefab 实现。Host 在生成前做的本地激活不是同步事实，不能依赖它修复 Client 的 Prefab 初始状态。
+
+一次性社交表现（例如 `expression.wave`、`expression.thanks`、`marshmallow.receive`）不拥有 Activity 表现 Session。它们可以在玩家进行其他活动时播放，但不得替换或清空当前 UI、Camera、移动锁和 Look 锁的恢复记录；只有 MovementLock、LookTarget 与持续 AnimationState 参与活动表现生命周期。
+
+异步事实的 EventId 必须跨应用运行周期保持唯一，不能只使用会在重启后归零的本地 revision。当前本地适配器使用“权威运行 nonce + 单调 revision”；后续后端可替换 nonce 来源，但不得改变相同请求重试沿用同一 EventId 的幂等语义。
 
 ### 实时/异步共用互动事实
 

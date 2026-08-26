@@ -97,7 +97,12 @@ namespace DemonViglu.FirePlay.UI
                 return false;
             }
 
-            BeginPlayerRequestSession(request);
+            // One-shot cues never own the activity presentation session. A
+            // social cue may arrive while Fishing/Guitar/etc. owns movement
+            // and look locks; replacing that bookkeeping here would leave the
+            // original activity unable to restore Player control on exit.
+            if (request.Kind != ActivityPlayerRequestKind.AnimationCue)
+                BeginPlayerRequestSession(request);
             return Execute(request);
         }
 
@@ -207,6 +212,9 @@ namespace DemonViglu.FirePlay.UI
             {
                 return;
             }
+
+            if (_hasPlayerRequestSession)
+                ReleasePlayerRequests();
 
             _playerRequestActivityId = request.ActivityId;
             _playerRequestRevision = request.SessionRevision;

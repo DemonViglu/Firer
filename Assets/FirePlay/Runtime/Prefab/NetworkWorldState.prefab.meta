@@ -1,0 +1,7 @@
+fileFormatVersion: 2
+guid: 93ad18c4e52b4f16a7d890c2b3e46571
+PrefabImporter:
+  externalObjects: {}
+  userData: Host-spawned scene world state transport; explicit Bootstrap dependency.
+  assetBundleName:
+  assetBundleVariant:

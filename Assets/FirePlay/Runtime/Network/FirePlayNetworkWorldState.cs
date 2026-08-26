@@ -36,10 +36,35 @@ namespace DemonViglu.FirePlay.Network
         public override int GetHashCode() => HashCode.Combine(SourceId, IsAvailable, CommandVersion);
     }
 
+    public struct FirePlayAuthoredCampfireSnapshot : INetworkSerializable, IEquatable<FirePlayAuthoredCampfireSnapshot>
+    {
+        public FixedString128Bytes CampfireId;
+        public FirePlayCampfireSnapshot State;
+
+        public FirePlayAuthoredCampfireSnapshot(Campfire campfire)
+        {
+            CampfireId = campfire.CampfireId ?? string.Empty;
+            State = new FirePlayCampfireSnapshot(campfire);
+        }
+
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref CampfireId);
+            serializer.SerializeValue(ref State);
+        }
+
+        public bool Equals(FirePlayAuthoredCampfireSnapshot other) =>
+            CampfireId.Equals(other.CampfireId) && State.Equals(other.State);
+
+        public override bool Equals(object obj) => obj is FirePlayAuthoredCampfireSnapshot other && Equals(other);
+        public override int GetHashCode() => HashCode.Combine(CampfireId, State);
+    }
+
     /// <summary>
-    /// Scene-level network boundary for authored FlameSources. One visible scene
-    /// component synchronizes every stable source; individual collectibles remain
-    /// small domain objects and do not each require a NetworkObject.
+    /// Scene-level network boundary for authored FlameSources and Campfires. One
+    /// visible scene component synchronizes stable authored objects; individual
+    /// scene props remain small domain objects and do not each require a NetworkObject.
+    /// Runtime-created Campfires keep using FirePlayNetworkCampfire.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(NetworkObject))]
@@ -52,31 +77,54 @@ namespace DemonViglu.FirePlay.Network
             default,
             NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Server);
+        private readonly NetworkList<FirePlayAuthoredCampfireSnapshot> _authoredCampfires = new(
+            default,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server);
         private float _nextDiscoveryTime;
         private bool _mirrorInitialized;
+        private bool _campfireEventsAttached;
 
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
             _flameSources.OnListChanged += OnFlameSourceListChanged;
+            _authoredCampfires.OnListChanged += OnAuthoredCampfireListChanged;
             RefreshSources();
 
             if (IsServer)
             {
+                Campfire.StateChanged += OnAuthorityCampfireChanged;
+                _campfireEventsAttached = true;
                 ConfigureAllSources(simulateAuthority: true);
+                ConfigureAllAuthoredCampfires(simulateAuthority: true);
                 PublishAllAuthorityStates();
             }
             else
             {
                 ConfigureAllSources(simulateAuthority: false);
+                ConfigureAllAuthoredCampfires(simulateAuthority: false);
                 ApplyAllMirrorStates(playCollectedFeedback: false);
+                ApplyAllCampfireMirrorStates();
                 _mirrorInitialized = true;
             }
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.Log(
+                $"[FirePlayNetworkWorldState] Spawned: authority={IsServer}, " +
+                $"flameSources={_flameSources.Count}, authoredCampfires={_authoredCampfires.Count}.",
+                this);
+#endif
         }
 
         public override void OnNetworkDespawn()
         {
             _flameSources.OnListChanged -= OnFlameSourceListChanged;
+            _authoredCampfires.OnListChanged -= OnAuthoredCampfireListChanged;
+            if (_campfireEventsAttached)
+            {
+                Campfire.StateChanged -= OnAuthorityCampfireChanged;
+                _campfireEventsAttached = false;
+            }
             UnsubscribeAll();
             _mirrorInitialized = false;
             base.OnNetworkDespawn();
@@ -90,10 +138,14 @@ namespace DemonViglu.FirePlay.Network
             _nextDiscoveryTime = Time.unscaledTime + _sourceDiscoveryInterval;
             RefreshSources();
             ConfigureAllSources(IsServer);
+            ConfigureAllAuthoredCampfires(IsServer);
             if (IsServer)
                 PublishAllAuthorityStates();
             else
+            {
                 ApplyAllMirrorStates(playCollectedFeedback: false);
+                ApplyAllCampfireMirrorStates();
+            }
         }
 
         private void RefreshSources()
@@ -135,6 +187,15 @@ namespace DemonViglu.FirePlay.Network
             }
         }
 
+        private static void ConfigureAllAuthoredCampfires(bool simulateAuthority)
+        {
+            foreach (var campfire in Campfire.ActiveInstances)
+            {
+                if (IsAuthoredCampfire(campfire))
+                    campfire.ConfigureSimulation(simulateAuthority);
+            }
+        }
+
         private void PublishAllAuthorityStates()
         {
             if (!IsServer)
@@ -155,6 +216,28 @@ namespace DemonViglu.FirePlay.Network
             {
                 if (!liveIds.Contains(_flameSources[index].SourceId))
                     _flameSources.RemoveAt(index);
+            }
+
+            PublishAllAuthoredCampfireStates();
+        }
+
+        private void PublishAllAuthoredCampfireStates()
+        {
+            var liveIds = new HashSet<FixedString128Bytes>();
+            foreach (var campfire in Campfire.ActiveInstances)
+            {
+                if (!IsAuthoredCampfire(campfire))
+                    continue;
+
+                var snapshot = new FirePlayAuthoredCampfireSnapshot(campfire);
+                liveIds.Add(snapshot.CampfireId);
+                Upsert(snapshot);
+            }
+
+            for (var index = _authoredCampfires.Count - 1; index >= 0; index--)
+            {
+                if (!liveIds.Contains(_authoredCampfires[index].CampfireId))
+                    _authoredCampfires.RemoveAt(index);
             }
         }
 
@@ -177,6 +260,25 @@ namespace DemonViglu.FirePlay.Network
             _flameSources.Add(snapshot);
         }
 
+        private void OnAuthorityCampfireChanged(Campfire campfire)
+        {
+            if (IsServer && IsAuthoredCampfire(campfire))
+                Upsert(new FirePlayAuthoredCampfireSnapshot(campfire));
+        }
+
+        private void Upsert(FirePlayAuthoredCampfireSnapshot snapshot)
+        {
+            for (var index = 0; index < _authoredCampfires.Count; index++)
+            {
+                if (!_authoredCampfires[index].CampfireId.Equals(snapshot.CampfireId))
+                    continue;
+                if (!_authoredCampfires[index].Equals(snapshot))
+                    _authoredCampfires[index] = snapshot;
+                return;
+            }
+            _authoredCampfires.Add(snapshot);
+        }
+
         private void OnFlameSourceListChanged(NetworkListEvent<FirePlayFlameSourceSnapshot> change)
         {
             if (IsServer)
@@ -190,6 +292,21 @@ namespace DemonViglu.FirePlay.Network
             }
 
             ApplyAllMirrorStates(playCollectedFeedback: false);
+        }
+
+        private void OnAuthoredCampfireListChanged(NetworkListEvent<FirePlayAuthoredCampfireSnapshot> change)
+        {
+            if (IsServer)
+                return;
+
+            if (change.Type == NetworkListEvent<FirePlayAuthoredCampfireSnapshot>.EventType.Add
+                || change.Type == NetworkListEvent<FirePlayAuthoredCampfireSnapshot>.EventType.Value)
+            {
+                ApplyCampfireMirrorState(change.Value);
+                return;
+            }
+
+            ApplyAllCampfireMirrorStates();
         }
 
         private void ApplyAllMirrorStates(bool playCollectedFeedback)
@@ -209,6 +326,44 @@ namespace DemonViglu.FirePlay.Network
                 }
             }
         }
+
+        private void ApplyAllCampfireMirrorStates()
+        {
+            foreach (var snapshot in _authoredCampfires)
+                ApplyCampfireMirrorState(snapshot);
+        }
+
+        private static void ApplyCampfireMirrorState(FirePlayAuthoredCampfireSnapshot snapshot)
+        {
+            foreach (var campfire in Campfire.ActiveInstances)
+            {
+                if (!IsAuthoredCampfire(campfire)
+                    || !string.Equals(
+                        campfire.CampfireId,
+                        snapshot.CampfireId.ToString(),
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var state = snapshot.State;
+                campfire.ApplyNetworkSnapshot(
+                    new DemonViglu.FirePlay.World.CampfireAuthoritySnapshot(
+                        state.Level,
+                        state.TotalContribution,
+                        state.Warmth),
+                    state.IsRuntimeCreated,
+                    state.IsRetired,
+                    state.SourceSmallFireId.ToString(),
+                    state.CommandVersion);
+                return;
+            }
+        }
+
+        private static bool IsAuthoredCampfire(Campfire campfire) =>
+            campfire != null
+            && !campfire.IsRuntimeCreated
+            && !string.IsNullOrWhiteSpace(campfire.CampfireId);
 
         private void UnsubscribeAll()
         {

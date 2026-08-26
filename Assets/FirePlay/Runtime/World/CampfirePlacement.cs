@@ -60,7 +60,11 @@ namespace DemonViglu.FirePlay.World
         public string PlacementStatus { get; private set; } = "Idle";
         public int ActiveFireCount => SmallFire.ActiveCount;
         public int MaximumActiveFireCount => _config != null ? _config.MaximumActiveCount : 0;
-        public bool HasRequiredSetup => _resourceController != null && _config != null && _smallFirePrefab != null;
+        public bool HasRequiredSetup =>
+            _resourceController != null
+            && _config != null
+            && _smallFirePrefab != null
+            && _smallFirePrefab.gameObject.activeSelf;
 
         private void Awake()
         {
@@ -79,7 +83,9 @@ namespace DemonViglu.FirePlay.World
             if (!HasRequiredSetup)
             {
                 PlacementStatus = "Missing setup";
-                Debug.LogError("[CampfirePlacement] 缺少余火控制器、小火种配置或小火种 Prefab。", this);
+                Debug.LogError(
+                    "[CampfirePlacement] 缺少余火控制器、小火种配置或有效 Prefab；SmallFire Prefab 根对象必须保持 Active，供单机与 NGO 使用。",
+                    this);
             }
 
             CreateRuntimePreviewIfNeeded();

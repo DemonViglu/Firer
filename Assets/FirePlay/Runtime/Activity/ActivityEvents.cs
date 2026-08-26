@@ -54,6 +54,36 @@ namespace DemonViglu.FirePlay.Activity
         }
     }
 
+    /// <summary>
+    /// Final Host result for an action previously queued by a network Client.
+    /// Forms may surface the reason without owning RPCs or guessing from state.
+    /// </summary>
+    public sealed class ActivityActionAuthorityResolved : IGameEvent
+    {
+        public string PlayerId { get; }
+        public string ActivityId { get; }
+        public string ActionId { get; }
+        public string EventId { get; }
+        public bool Accepted { get; }
+        public string Reason { get; }
+
+        public ActivityActionAuthorityResolved(
+            string playerId,
+            string activityId,
+            string actionId,
+            string eventId,
+            bool accepted,
+            string reason)
+        {
+            PlayerId = playerId ?? string.Empty;
+            ActivityId = activityId ?? string.Empty;
+            ActionId = actionId ?? string.Empty;
+            EventId = eventId ?? string.Empty;
+            Accepted = accepted;
+            Reason = reason ?? string.Empty;
+        }
+    }
+
     /// <summary>Canonical cross-module request for an action in an active session.</summary>
     public sealed class ActivityActionRequested : IGameEvent
     {

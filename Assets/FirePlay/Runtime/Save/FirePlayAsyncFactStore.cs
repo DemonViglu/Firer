@@ -79,6 +79,8 @@ namespace DemonViglu.FirePlay.Save
     public sealed class LocalAsyncInteractionFactStore : IAsyncInteractionFactStore
     {
         private const string FileName = "fireplay-async-facts.json";
+        private const int MaximumStableIdLength = 128;
+        private const int MaximumPayloadLength = 512;
         private readonly List<FirePlayAsyncFactRecord> _records = new();
         private readonly HashSet<string> _eventIds = new(StringComparer.Ordinal);
         private bool _loaded;
@@ -91,6 +93,14 @@ namespace DemonViglu.FirePlay.Save
                 && fact.Kind != ActivityNetworkFactKind.SocialInteractionOccurred)
             {
                 reason = "Only activity interaction facts are async social records";
+                return false;
+            }
+            if (!IsValidStableText(fact.ActivityId)
+                || !IsValidStableText(fact.ActionId)
+                || !IsValidTargetShape(fact.TargetKind, fact.TargetId)
+                || (fact.Payload?.Length ?? 0) > MaximumPayloadLength)
+            {
+                reason = "Async activity fact contains invalid stable data";
                 return false;
             }
             return AppendRecord(FirePlayAsyncFactRecord.FromActivity(fact), out reason);
@@ -109,6 +119,14 @@ namespace DemonViglu.FirePlay.Save
                 && kind != FirePlayAsyncFactKind.WorldTree)
             {
                 reason = "Invalid async world fact kind";
+                return false;
+            }
+            if (!target.IsValid
+                || !IsValidStableText(target.Id)
+                || !IsValidStableText(actionId)
+                || (payload?.Length ?? 0) > MaximumPayloadLength)
+            {
+                reason = "Async world fact contains invalid stable data";
                 return false;
             }
             var record = new FirePlayAsyncFactRecord
@@ -135,9 +153,9 @@ namespace DemonViglu.FirePlay.Save
         private bool AppendRecord(FirePlayAsyncFactRecord record, out string reason)
         {
             EnsureLoaded();
-            if (record == null || !record.Metadata.IsValid)
+            if (!IsValidRecord(record))
             {
-                reason = "Async fact metadata is invalid";
+                reason = "Async fact record is invalid";
                 return false;
             }
             if (!_eventIds.Add(record.eventId))
@@ -177,7 +195,7 @@ namespace DemonViglu.FirePlay.Save
                     return;
                 foreach (var record in wrapper.records)
                 {
-                    if (record == null || !record.Metadata.IsValid || !_eventIds.Add(record.eventId))
+                    if (!IsValidRecord(record) || !_eventIds.Add(record.eventId))
                         continue;
                     _records.Add(record);
                 }
@@ -187,5 +205,42 @@ namespace DemonViglu.FirePlay.Save
                 Debug.LogWarning($"[LocalAsyncInteractionFactStore] Load failed: {exception.Message}");
             }
         }
+
+        private static bool IsValidRecord(FirePlayAsyncFactRecord record)
+        {
+            if (record == null
+                || !record.Metadata.IsValid
+                || !IsValidStableText(record.actorId)
+                || !IsValidStableText(record.eventId)
+                || !IsValidStableText(record.actionId)
+                || (record.payload?.Length ?? 0) > MaximumPayloadLength
+                || !Enum.IsDefined(typeof(FirePlayAsyncFactKind), record.kind))
+            {
+                return false;
+            }
+
+            if (record.kind == FirePlayAsyncFactKind.ActivityInteraction)
+            {
+                return IsValidStableText(record.activityId)
+                    && IsValidTargetShape(record.targetKind, record.targetId);
+            }
+
+            return string.IsNullOrWhiteSpace(record.activityId)
+                && record.targetKind != ActivityTargetKind.None
+                && IsValidTargetShape(record.targetKind, record.targetId);
+        }
+
+        private static bool IsValidTargetShape(ActivityTargetKind kind, string id)
+        {
+            if (!Enum.IsDefined(typeof(ActivityTargetKind), kind))
+                return false;
+            return kind == ActivityTargetKind.None
+                ? string.IsNullOrWhiteSpace(id)
+                : IsValidStableText(id);
+        }
+
+        private static bool IsValidStableText(string value) =>
+            !string.IsNullOrWhiteSpace(value)
+            && value.Length <= MaximumStableIdLength;
     }
 }

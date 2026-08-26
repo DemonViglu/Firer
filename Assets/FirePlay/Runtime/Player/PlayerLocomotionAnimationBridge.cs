@@ -25,6 +25,8 @@ namespace DemonViglu.FirePlay.Player
         private bool _hasIsGrounded;
         private bool _hasIsInWater;
         private bool _hasVerticalVelocity;
+        private Vector3 _lastObservedPosition;
+        private bool _hasObservedPosition;
 
         private void Awake()
         {
@@ -44,6 +46,11 @@ namespace DemonViglu.FirePlay.Player
             }
 
             CacheParameters();
+            if (_movement != null)
+            {
+                _lastObservedPosition = _movement.transform.position;
+                _hasObservedPosition = true;
+            }
         }
 
         private void Update()
@@ -53,7 +60,34 @@ namespace DemonViglu.FirePlay.Player
                 return;
             }
 
-            var inputMagnitude = _input == null ? 0f : Mathf.Clamp01(_input.Move.magnitude);
+            var deltaTime = Mathf.Max(Time.deltaTime, 0.0001f);
+            var currentPosition = _movement.transform.position;
+            var observedVelocity = _hasObservedPosition
+                ? (currentPosition - _lastObservedPosition) / deltaTime
+                : Vector3.zero;
+            _lastObservedPosition = currentPosition;
+            _hasObservedPosition = true;
+
+            var hasLocalControl = _movement.HasLocalControl;
+            var planarVelocity = Vector3.ProjectOnPlane(observedVelocity, Vector3.up);
+            var inputMagnitude = hasLocalControl && _input != null
+                ? Mathf.Clamp01(_input.Move.magnitude)
+                : Mathf.Clamp01(planarVelocity.magnitude / Mathf.Max(0.01f, _movement.BaseMoveSpeed));
+            var isSprinting = hasLocalControl
+                ? _movement.IsSprinting
+                : planarVelocity.magnitude > _movement.BaseMoveSpeed * 1.15f;
+            var isGrounded = hasLocalControl
+                ? _movement.IsGrounded
+                : Mathf.Abs(observedVelocity.y) < 0.35f;
+            var verticalVelocity = hasLocalControl
+                ? _movement.VerticalVelocity
+                : observedVelocity.y;
+
+            if (!hasLocalControl && planarVelocity.sqrMagnitude > 0.0025f)
+            {
+                _movement.TryFaceDirection(planarVelocity);
+            }
+
             var blend = 1f - Mathf.Exp(-_parameterBlendSpeed * Time.deltaTime);
             if (_hasMoveSpeed)
             {
@@ -62,12 +96,12 @@ namespace DemonViglu.FirePlay.Player
 
             if (_hasIsSprinting)
             {
-                _animator.SetBool(IsSprintingId, _movement.IsSprinting);
+                _animator.SetBool(IsSprintingId, isSprinting);
             }
 
             if (_hasIsGrounded)
             {
-                _animator.SetBool(IsGroundedId, _movement.IsGrounded);
+                _animator.SetBool(IsGroundedId, isGrounded);
             }
 
             if (_hasIsInWater)
@@ -79,7 +113,7 @@ namespace DemonViglu.FirePlay.Player
             {
                 _animator.SetFloat(VerticalVelocityId, Mathf.Lerp(
                     _animator.GetFloat(VerticalVelocityId),
-                    _movement.VerticalVelocity,
+                    verticalVelocity,
                     blend));
             }
         }

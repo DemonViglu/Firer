@@ -3033,6 +3033,68 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 240369579}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1001 &241420718
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 900000000000110021}
+    m_Modifications:
+    - target: {fileID: 1000000000000001, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_Name
+      value: PlayerActivityVisualModule
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.69
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.1109087
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.025057495
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.9746208
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.22386236
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -25.872
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+--- !u!4 &241420719 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+  m_PrefabInstance: {fileID: 241420718}
+  m_PrefabAsset: {fileID: 0}
 --- !u!43 &242888643
 Mesh:
   m_ObjectHideFlags: 0
@@ -4868,6 +4930,84 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: d8181483764525d48b683e823230623c, type: 3}
   m_PrefabInstance: {fileID: 339255349}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &345559340
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2099904384}
+    m_Modifications:
+    - target: {fileID: 7000000000000201, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 4202326613
+      objectReference: {fileID: 0}
+    - target: {fileID: 7000000000000201, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: SceneMigrationSynchronization
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7000000000000201, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: InScenePlacedSourceGlobalObjectIdHash
+      value: 2463002109
+      objectReference: {fileID: 0}
+    - target: {fileID: 7000000000000202, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: _value
+      value: snow.world-tree.main
+      objectReference: {fileID: 0}
+    - target: {fileID: 1419990807003707074, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -4
+      objectReference: {fileID: 0}
+    - target: {fileID: 1419990807003707074, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.36
+      objectReference: {fileID: 0}
+    - target: {fileID: 1419990807003707074, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1419990807003707074, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1419990807003707074, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1419990807003707074, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1419990807003707074, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1419990807003707074, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1419990807003707074, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1419990807003707074, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7102734036486377281, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+      propertyPath: m_Name
+      value: WorldTree_Main
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+--- !u!4 &345559341 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1419990807003707074, guid: b0ba72b9eff21594eaf2f8d86aa32576, type: 3}
+  m_PrefabInstance: {fileID: 345559340}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &357981755
 PrefabInstance:
@@ -17899,6 +18039,37 @@ Mesh:
       - serializedVersion: 1
         m_IndexStart: 0
         m_IndexCount: 0
+--- !u!1 &557477374
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 557477375}
+  m_Layer: 0
+  m_Name: NetworkPlayerSpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &557477375
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 557477374}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 4.56, y: 0.5, z: -3.72}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 900000000000100201}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &562785735
 GameObject:
   m_ObjectHideFlags: 0
@@ -23757,6 +23928,72 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: dc16bc75465ab6341903fc3c727cd708, type: 3}
   m_PrefabInstance: {fileID: 637276113}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &641376372
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2099904384}
+    m_Modifications:
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 16
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.48
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 11.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6531238920863022784, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: _value
+      value: snow.flame-source.lake-route
+      objectReference: {fileID: 0}
+    - target: {fileID: 9184706709910926123, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_Name
+      value: FlameSource_LakeRoute
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+--- !u!4 &641376373 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+  m_PrefabInstance: {fileID: 641376372}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &649373023
 GameObject:
@@ -30563,6 +30800,72 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: d995782d146159448a8481defbc64f8a, type: 3}
   m_PrefabInstance: {fileID: 795204381}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &795499023
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2099904384}
+    m_Modifications:
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.52
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6531238920863022784, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: _value
+      value: snow.flame-source.camp-route
+      objectReference: {fileID: 0}
+    - target: {fileID: 9184706709910926123, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_Name
+      value: FlameSource_CampRoute
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+--- !u!4 &795499024 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+  m_PrefabInstance: {fileID: 795499023}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &805192209
 GameObject:
   m_ObjectHideFlags: 0
@@ -32498,18 +32801,6 @@ Transform:
   - {fileID: 203103943}
   m_Father: {fileID: 1836592047}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &910000000009999991
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 947067149}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 35a346a9dc3643bcab6107d04febd697, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.CampfirePlacementSurface
 --- !u!1 &960881428
 GameObject:
   m_ObjectHideFlags: 0
@@ -38332,6 +38623,68 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1022855249}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1001 &1024537199
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 900000000000110021}
+    m_Modifications:
+    - target: {fileID: 1000000000000001, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_Name
+      value: PlayerActivityVisualModule
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.69
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.1109087
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.025057495
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.9746208
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.22386236
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -25.872
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+--- !u!4 &1024537200 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+  m_PrefabInstance: {fileID: 1024537199}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1037979740
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -41404,6 +41757,72 @@ Transform:
   - {fileID: 165356178}
   m_Father: {fileID: 1052347134}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1244441423
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2099904384}
+    m_Modifications:
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.52
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6531238920863022784, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: _value
+      value: snow.flame-source.valley-route
+      objectReference: {fileID: 0}
+    - target: {fileID: 9184706709910926123, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+      propertyPath: m_Name
+      value: FlameSource_ValleyRoute
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+--- !u!4 &1244441424 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1867272179084187733, guid: f37c75bfbd5199e4a8c2a763119e6ad5, type: 3}
+  m_PrefabInstance: {fileID: 1244441423}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1261058759
 GameObject:
   m_ObjectHideFlags: 0
@@ -47174,6 +47593,68 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1278931371}
   m_Mesh: {fileID: 549096577}
+--- !u!1001 &1292183481
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 900000000000110021}
+    m_Modifications:
+    - target: {fileID: 1000000000000001, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_Name
+      value: PlayerActivityVisualModule
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.69
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.1109087
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.025057495
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.9746208
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.22386236
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -25.872
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+--- !u!4 &1292183482 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+  m_PrefabInstance: {fileID: 1292183481}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1292184934
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -71853,6 +72334,68 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: c416cbb97d837ba49b90a94eff67e8e9, type: 3}
   m_PrefabInstance: {fileID: 2005061630}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &2006098509
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 900000000000110021}
+    m_Modifications:
+    - target: {fileID: 1000000000000001, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_Name
+      value: PlayerActivityVisualModule
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.69
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.1109087
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.025057495
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.9746208
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.22386236
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: -25.872
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+--- !u!4 &2006098510 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+  m_PrefabInstance: {fileID: 2006098509}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2008290133
 GameObject:
   m_ObjectHideFlags: 0
@@ -73069,6 +73612,41 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!1 &2099904383
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2099904384}
+  m_Layer: 0
+  m_Name: Gameplay_WorldContent
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2099904384
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2099904383}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 795499024}
+  - {fileID: 1244441424}
+  - {fileID: 641376373}
+  - {fileID: 345559341}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2104629153
 GameObject:
   m_ObjectHideFlags: 0
@@ -73553,14 +74131,26 @@ PrefabInstance:
       propertyPath: _playerId
       value: local.player
       objectReference: {fileID: 0}
-    - target: {fileID: 1000000000000008, guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135, type: 3}
-      propertyPath: _activityFollowTarget
-      value:
-      objectReference: {fileID: 900000000000500001}
+    - target: {fileID: 1000000000000007, guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135, type: 3}
+      propertyPath: _expressions
+      value: 
+      objectReference: {fileID: 900000000000110026}
     - target: {fileID: 1000000000000007, guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135, type: 3}
       propertyPath: _localCamera
-      value:
+      value: 
       objectReference: {fileID: 900000000000320003}
+    - target: {fileID: 1000000000000007, guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135, type: 3}
+      propertyPath: _commandExecutor
+      value: 
+      objectReference: {fileID: 900000000000110015}
+    - target: {fileID: 1000000000000007, guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135, type: 3}
+      propertyPath: _interactionRouter
+      value: 
+      objectReference: {fileID: 900000000000110014}
+    - target: {fileID: 1000000000000008, guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135, type: 3}
+      propertyPath: _activityFollowTarget
+      value: 
+      objectReference: {fileID: 900000000000500001}
     - target: {fileID: 1722367085532263572, guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135, type: 3}
       propertyPath: m_RenderPostProcessing
       value: 1
@@ -73610,14 +74200,52 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 900000000000100109}
   m_SourcePrefab: {fileID: 100100000, guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135, type: 3}
+--- !u!114 &900000000000100002 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1000000000000006, guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135, type: 3}
+  m_PrefabInstance: {fileID: 900000000000100001}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000100099}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce343a288db3bcf408670b15248063d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerLook
+--- !u!114 &900000000000100003 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1000000000000005, guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135, type: 3}
+  m_PrefabInstance: {fileID: 900000000000100001}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000100099}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e957ef4eb6ecdd5468bdb619c832d15f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerMovement
+--- !u!4 &900000000000100004 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1000000000000023, guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135, type: 3}
+  m_PrefabInstance: {fileID: 900000000000100001}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &900000000000100005 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1000000000000021, guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135, type: 3}
+  m_PrefabInstance: {fileID: 900000000000100001}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &900000000000100097 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1000000000000007, guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135, type: 3}
+  m_PrefabInstance: {fileID: 900000000000100001}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000100099}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a90befe52827f24ba9a9db570a198d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.LocalPlayerContext
 --- !u!1 &900000000000100099 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1000000000000001, guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135, type: 3}
-  m_PrefabInstance: {fileID: 900000000000100001}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &900000000000500001 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 1000000000000025, guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135, type: 3}
   m_PrefabInstance: {fileID: 900000000000100001}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &900000000000100100
@@ -73771,364 +74399,6 @@ MonoBehaviour:
   _input: {fileID: 0}
   _resourceController: {fileID: 900000000000100105}
   _modeController: {fileID: 900000000000110002}
---- !u!1 &900000000000110000
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 900000000000110001}
-  - component: {fileID: 900000000000110002}
-  m_Layer: 0
-  m_Name: PlayerStateModule
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &900000000000110001
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000110000}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 900000000000100102}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &900000000000110002
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000110000}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6bc2cda1ec9b4abe938b4455c3ef190d, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerModeController
---- !u!1 &900000000000110010
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 900000000000110011}
-  - component: {fileID: 900000000000110012}
-  - component: {fileID: 900000000000110013}
-  - component: {fileID: 900000000000110014}
-  - component: {fileID: 900000000000110015}
-  m_Layer: 0
-  m_Name: InteractionModule
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &900000000000110011
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000110010}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 900000000000100102}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &900000000000110012
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000110010}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4a7c9e1b2d3f40568192a4b5c6d7e8f0, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.InteractionModule
-  _scanner: {fileID: 900000000000110013}
-  _router: {fileID: 900000000000110014}
---- !u!114 &900000000000110013
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000110010}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f2da766bb8fb14b448712ff8edca2b0c, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerInteraction
-  _flameController: {fileID: 900000000000100104}
-  _interactionLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  _modeController: {fileID: 900000000000110002}
---- !u!114 &900000000000110014
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000110010}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dca478a9c8c5b914298ce515315761a9, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.InteractionRouter
---- !u!114 &900000000000110015
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000110010}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1b7a4f83c2d94d34b56e8e74c289f461, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.WorldCommandExecutor
---- !u!1 &900000000000110020
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 900000000000110021}
-  - component: {fileID: 900000000000110022}
-  - component: {fileID: 900000000000110023}
-  - component: {fileID: 900000000000110024}
-  - component: {fileID: 900000000000110025}
-  - component: {fileID: 900000000000110026}
-  m_Layer: 0
-  m_Name: ActivityModule
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &900000000000110021
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000110020}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 900000000000110061}
-  m_Father: {fileID: 900000000000100102}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &900000000000110022
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000110020}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b8f1a2c3d4e5f60718293a4b5c6d7e8, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.ActivityModule
-  _activityHost: {fileID: 900000000000110025}
-  _presentationHost: {fileID: 900000000000110024}
---- !u!114 &900000000000110023
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000110020}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6aadbcd9a8644b14baadfb8e93e5ee8c, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerAnimationController
-  _animator: {fileID: 0}
-  _placeholderVisual: {fileID: 0}
-  _placeholderBlendSpeed: 10
-  _guitarKeyTriggerPrefix: GuitarKey
-  _boolBindings:
-  - stateId: resting
-    parameterName: IsResting
-  - stateId: marshmallow.roasting
-    parameterName: IsMarshmallowRoasting
-  - stateId: guitar.playing
-    parameterName: IsGuitarPlaying
-  - stateId: fishing
-    parameterName: IsFishing
-  _triggerBindings:
-  - cueId: marshmallow.materialize
-    parameterName: MarshmallowMaterialize
-  - cueId: marshmallow.turn
-    parameterName: MarshmallowTurn
-  - cueId: marshmallow.eat
-    parameterName: MarshmallowEat
-  - cueId: marshmallow.cancel
-    parameterName: MarshmallowCancel
-  - cueId: marshmallow.receive
-    parameterName: MarshmallowReceive
-  - cueId: ritual.offer
-    parameterName: RitualOffer
-  - cueId: guitar.begin
-    parameterName: GuitarBegin
-  - cueId: guitar.play
-    parameterName: GuitarPlay
-  - cueId: fishing.cast
-    parameterName: FishingCast
-  - cueId: fishing.reel
-    parameterName: FishingReel
-  - cueId: expression.wave
-    parameterName: EmoteWave
-  - cueId: expression.thanks
-    parameterName: EmoteThanks
-  - cueId: expression.warmth
-    parameterName: EmoteWarmth
-  - cueId: expression.sit
-    parameterName: EmoteSit
---- !u!114 &900000000000110024
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000110020}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4d3e2a1f8b7c4e6a9d5f0c2b1a7e8d33, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.PlayerActivityPresentationHost
-  _cameraExecutorBehaviour: {fileID: 900000000000310003}
-  _vfxExecutorBehaviour: {fileID: 0}
-  _movement: {fileID: 0}
-  _look: {fileID: 0}
-  _animation: {fileID: 900000000000110023}
---- !u!114 &900000000000110025
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000110020}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5ef8d6c02f7e4c2abddf5cb2e2b4e8a9, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.PlayerActivityHost
-  _playerId: local.player
-  _isLocalPlayer: 1
-  _catalogAsset: {fileID: 11400000, guid: 1a9e7c5b3d2f0e8a6c4b2d1f9e7a5c30, type: 2}
-  _logicFactoryBehaviour: {fileID: 900000000000300003}
-  _presentationBehaviour: {fileID: 900000000000110024}
-  _flameBehaviour: {fileID: 900000000000100105}
-  _playerStateBehaviour: {fileID: 900000000000110002}
-  _nearestAnchorDistance: 3
---- !u!114 &900000000000110026
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000110020}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 34722deff75a486cacb67a3518aec9f6, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerExpressionController
-  _defaultExpressionId: wave
---- !u!1001 &900000000000110060
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 900000000000110021}
-    m_Modifications: []
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
---- !u!4 &900000000000110061 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
-  m_PrefabInstance: {fileID: 900000000000110060}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &900000000000110040
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 900000000000110041}
-  - component: {fileID: 900000000000110042}
-  m_Layer: 0
-  m_Name: RestModule
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &900000000000110041
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000110040}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 900000000000100102}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &900000000000110042
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000110040}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 291ea573c36b4607b6e94e75b9e22942, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.RestInteraction
-  _movement: {fileID: 0}
-  _look: {fileID: 0}
-  _modeController: {fileID: 900000000000110002}
-  _resourceController: {fileID: 900000000000100105}
-  _animation: {fileID: 900000000000110023}
-  _cameraDrop: 0.55
-  _cameraTransitionSpeed: 5
 --- !u!1 &900000000000100200
 GameObject:
   m_ObjectHideFlags: 0
@@ -74158,7 +74428,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 557477375}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &900000000000100202
@@ -74177,7 +74448,7 @@ MonoBehaviour:
   _activityCameraExecutor: {fileID: 900000000000310003}
   _activityVfxExecutor: {fileID: 0}
   _playerFlamePrefab: {fileID: 717587634032829789, guid: 2166c6fd03445c248a00741cee482721, type: 3}
-  _networkPlayerSpawnPoint: {fileID: 900000000000100221}
+  _networkPlayerSpawnPoint: {fileID: 557477375}
   _networkPlayerSpawnSpacing: 1.5
 --- !u!1 &900000000000100210
 GameObject:
@@ -74255,6 +74526,720 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &900000000000110000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 900000000000110001}
+  - component: {fileID: 900000000000110002}
+  m_Layer: 0
+  m_Name: PlayerStateModule
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &900000000000110001
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000110000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 900000000000100102}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &900000000000110002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000110000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6bc2cda1ec9b4abe938b4455c3ef190d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerModeController
+--- !u!1 &900000000000110010
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 900000000000110011}
+  - component: {fileID: 900000000000110012}
+  - component: {fileID: 900000000000110013}
+  - component: {fileID: 900000000000110014}
+  - component: {fileID: 900000000000110015}
+  m_Layer: 0
+  m_Name: InteractionModule
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &900000000000110011
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000110010}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 900000000000100102}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &900000000000110012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000110010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a7c9e1b2d3f40568192a4b5c6d7e8f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.InteractionModule
+  _scanner: {fileID: 900000000000110013}
+  _router: {fileID: 900000000000110014}
+--- !u!114 &900000000000110013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000110010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2da766bb8fb14b448712ff8edca2b0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerInteraction
+  _flameController: {fileID: 900000000000100104}
+  _interactionLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  _modeController: {fileID: 900000000000110002}
+--- !u!114 &900000000000110014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000110010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dca478a9c8c5b914298ce515315761a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.InteractionRouter
+--- !u!114 &900000000000110015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000110010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b7a4f83c2d94d34b56e8e74c289f461, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.WorldCommandExecutor
+--- !u!1 &900000000000110020
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 900000000000110021}
+  - component: {fileID: 900000000000110022}
+  - component: {fileID: 900000000000110023}
+  - component: {fileID: 900000000000110024}
+  - component: {fileID: 900000000000110025}
+  - component: {fileID: 900000000000110026}
+  m_Layer: 0
+  m_Name: ActivityModule
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &900000000000110021
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000110020}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 900000000000110061}
+  - {fileID: 241420719}
+  - {fileID: 1024537200}
+  - {fileID: 1292183482}
+  - {fileID: 2006098510}
+  m_Father: {fileID: 900000000000100102}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &900000000000110022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000110020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b8f1a2c3d4e5f60718293a4b5c6d7e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.ActivityModule
+  _activityHost: {fileID: 900000000000110025}
+  _presentationHost: {fileID: 900000000000110024}
+--- !u!114 &900000000000110023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000110020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6aadbcd9a8644b14baadfb8e93e5ee8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerAnimationController
+  _animator: {fileID: 0}
+  _placeholderVisual: {fileID: 0}
+  _useSocialCueFallback: 0
+  _placeholderBlendSpeed: 10
+  _guitarKeyTriggerPrefix: GuitarKey
+  _boolBindings:
+  - stateId: resting
+    parameterName: IsResting
+  - stateId: marshmallow.roasting
+    parameterName: IsMarshmallowRoasting
+  - stateId: guitar.playing
+    parameterName: IsGuitarPlaying
+  - stateId: fishing
+    parameterName: IsFishing
+  _triggerBindings:
+  - cueId: marshmallow.materialize
+    parameterName: MarshmallowMaterialize
+  - cueId: marshmallow.turn
+    parameterName: MarshmallowTurn
+  - cueId: marshmallow.eat
+    parameterName: MarshmallowEat
+  - cueId: marshmallow.cancel
+    parameterName: MarshmallowCancel
+  - cueId: marshmallow.receive
+    parameterName: MarshmallowReceive
+  - cueId: ritual.offer
+    parameterName: RitualOffer
+  - cueId: guitar.begin
+    parameterName: GuitarBegin
+  - cueId: guitar.play
+    parameterName: GuitarPlay
+  - cueId: fishing.cast
+    parameterName: FishingCast
+  - cueId: fishing.reel
+    parameterName: FishingReel
+  - cueId: expression.wave
+    parameterName: EmoteWave
+  - cueId: expression.thanks
+    parameterName: EmoteThanks
+  - cueId: expression.warmth
+    parameterName: EmoteWarmth
+  - cueId: expression.sit
+    parameterName: EmoteSit
+--- !u!114 &900000000000110024
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000110020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d3e2a1f8b7c4e6a9d5f0c2b1a7e8d33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.PlayerActivityPresentationHost
+  _cameraExecutorBehaviour: {fileID: 900000000000310003}
+  _vfxExecutorBehaviour: {fileID: 0}
+  _movement: {fileID: 900000000000100003}
+  _look: {fileID: 900000000000100002}
+  _animation: {fileID: 900000000000110023}
+--- !u!114 &900000000000110025
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000110020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ef8d6c02f7e4c2abddf5cb2e2b4e8a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.PlayerActivityHost
+  _playerId: local.player
+  _isLocalPlayer: 1
+  _catalogAsset: {fileID: 11400000, guid: 1a9e7c5b3d2f0e8a6c4b2d1f9e7a5c30, type: 2}
+  _logicFactoryBehaviour: {fileID: 900000000000300003}
+  _presentationBehaviour: {fileID: 900000000000110024}
+  _flameBehaviour: {fileID: 900000000000100105}
+  _playerStateBehaviour: {fileID: 900000000000110002}
+  _nearestAnchorDistance: 3
+--- !u!114 &900000000000110026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000110020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34722deff75a486cacb67a3518aec9f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.PlayerExpressionController
+  _defaultExpressionId: wave
+  _definitions:
+  - expressionId: wave
+    displayName: "\u6325\u624B"
+    icon: {fileID: 0}
+    animationCueId: expression.wave
+    allowWhileExploring: 1
+    allowWhileResting: 0
+  - expressionId: thanks
+    displayName: "\u611F\u8C22"
+    icon: {fileID: 0}
+    animationCueId: expression.thanks
+    allowWhileExploring: 1
+    allowWhileResting: 0
+  - expressionId: warmth
+    displayName: "\u53D6\u6696"
+    icon: {fileID: 0}
+    animationCueId: expression.warmth
+    allowWhileExploring: 1
+    allowWhileResting: 0
+  - expressionId: sit
+    displayName: "\u5750\u4E0B"
+    icon: {fileID: 0}
+    animationCueId: expression.sit
+    allowWhileExploring: 1
+    allowWhileResting: 0
+--- !u!1 &900000000000110040
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 900000000000110041}
+  - component: {fileID: 900000000000110042}
+  m_Layer: 0
+  m_Name: RestModule
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &900000000000110041
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000110040}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 900000000000100102}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &900000000000110042
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000110040}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 291ea573c36b4607b6e94e75b9e22942, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Player.RestInteraction
+  _movement: {fileID: 900000000000100003}
+  _look: {fileID: 900000000000100002}
+  _modeController: {fileID: 900000000000110002}
+  _resourceController: {fileID: 900000000000100105}
+  _animation: {fileID: 900000000000110023}
+  _cameraDrop: 0.55
+  _cameraTransitionSpeed: 5
+--- !u!1001 &900000000000110060
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 900000000000110021}
+    m_Modifications: []
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+--- !u!4 &900000000000110061 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1000000000000002, guid: e93b21cf47a84bb9a36f5cd18e72a604, type: 3}
+  m_PrefabInstance: {fileID: 900000000000110060}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &900000000000120000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 900000000000120001}
+  m_Layer: 0
+  m_Name: Gameplay_ActivityAnchors
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &900000000000120001
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000120000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 900000000000120011}
+  - {fileID: 900000000000120021}
+  - {fileID: 900000000000120031}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &900000000000120010
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 900000000000120011}
+  - component: {fileID: 900000000000120012}
+  - component: {fileID: 900000000000120013}
+  - component: {fileID: 900000000000120014}
+  m_Layer: 0
+  m_Name: CampfireActivityAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &900000000000120011
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000120010}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.5, y: 0.38, z: 0.8}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 900000000000120001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &900000000000120012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000120010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96a61ae6f42b4de2bc177b982a039bc3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Core.StableSceneId
+  _value: snow.activity.campfire.main
+  _allowRuntimeAssignment: 0
+--- !u!114 &900000000000120013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000120010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97e8a7bd4f7c4eb7a2f9c3df01a9e001, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.ActivityAnchorNode
+  _anchorId: snow.activity.campfire.main
+  _displayName: "\u7BDD\u706B\u65C1"
+  _regionId: snow.camp
+  _tags: []
+  _activities:
+  - {fileID: 11400000, guid: 6d5a4f3e2c1b0a9876543210fedcba98, type: 2}
+  _ruleProviderBehaviours: []
+--- !u!114 &900000000000120014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000120010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b44c9ed4a4d4781aca16896bb2a6e3a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.RestSpot
+  _interactionRadius: 2.75
+  _restHint: "\u8FD9\u91CC\u53EF\u4EE5\u5728\u7BDD\u706B\u65C1\u5750\u4E0B\u4F11\u606F"
+  _shortRestHint: " \xB7 \u53EF\u4EE5\u5750\u4E0B\u4F11\u606F"
+--- !u!1 &900000000000120020
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 900000000000120021}
+  - component: {fileID: 900000000000120022}
+  - component: {fileID: 900000000000120023}
+  m_Layer: 0
+  m_Name: FishingActivityAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &900000000000120021
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000120020}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 18, y: 0.36, z: 14}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 900000000000120001}
+  m_LocalEulerAnglesHint: {x: 0, y: -24, z: 0}
+--- !u!114 &900000000000120022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000120020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96a61ae6f42b4de2bc177b982a039bc3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Core.StableSceneId
+  _value: snow.activity.fishing.lake
+  _allowRuntimeAssignment: 0
+--- !u!114 &900000000000120023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000120020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97e8a7bd4f7c4eb7a2f9c3df01a9e001, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.ActivityAnchorNode
+  _anchorId: snow.activity.fishing.lake
+  _displayName: "\u51B0\u6E56\u8FB9"
+  _regionId: snow.frozen-lake
+  _tags: []
+  _activities:
+  - {fileID: 11400000, guid: 4b8d2f6a1c3e5b7d9f0a2c4e6b8d1f35, type: 2}
+  _ruleProviderBehaviours: []
+--- !u!1 &900000000000120030
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 900000000000120031}
+  - component: {fileID: 900000000000120032}
+  - component: {fileID: 900000000000120033}
+  - component: {fileID: 900000000000120034}
+  - component: {fileID: 900000000000120035}
+  - component: {fileID: 900000000000120036}
+  m_Layer: 0
+  m_Name: TentRestAnchor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &900000000000120031
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000120030}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -8, y: 0.36, z: 6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 900000000000120041}
+  m_Father: {fileID: 900000000000120001}
+  m_LocalEulerAnglesHint: {x: 0, y: 28, z: 0}
+--- !u!114 &900000000000120032
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000120030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96a61ae6f42b4de2bc177b982a039bc3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Core.StableSceneId
+  _value: snow.activity.rest.tent
+  _allowRuntimeAssignment: 0
+--- !u!114 &900000000000120033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000120030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97e8a7bd4f7c4eb7a2f9c3df01a9e001, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.ActivityAnchorNode
+  _anchorId: snow.activity.rest.tent
+  _displayName: "\u5E10\u7BF7\u65C1"
+  _regionId: snow.camp
+  _tags: []
+  _activities:
+  - {fileID: 11400000, guid: 9d3e1f5b7a8c0d2e4f6a1b3c5d7e9f02, type: 2}
+  _ruleProviderBehaviours: []
+--- !u!114 &900000000000120034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000120030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b44c9ed4a4d4781aca16896bb2a6e3a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.RestSpot
+  _interactionRadius: 3.25
+  _restHint: "\u8FD9\u91CC\u53EF\u4EE5\u5750\u4E0B\u770B\u661F\u661F"
+  _shortRestHint: " \xB7 \u53EF\u4EE5\u5750\u4E0B\u89C2\u661F"
+--- !u!114 &900000000000120035
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000120030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b1e9c3f4a5d6e8f0c2b3d4e5f607182, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.StargazingActivityTrigger
+  _restSpot: {fileID: 900000000000120034}
+  _anchor: {fileID: 900000000000120033}
+--- !u!114 &900000000000120036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000120030}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c2f0d4a5b6e7f9a1d3c4e5f60718293, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.CameraSystem.ActivityCameraAnchorTargets
+  _lookTarget: {fileID: 900000000000120041}
+  _additionalTargets: []
+--- !u!1 &900000000000120040
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 900000000000120041}
+  m_Layer: 0
+  m_Name: SkyLookTarget
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &900000000000120041
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000120040}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 6, z: 2.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 900000000000120031}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &900000000000300001
 GameObject:
   m_ObjectHideFlags: 0
@@ -74302,7 +75287,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7b3c9a6e1d5f4a28b0e7c2d9f6a13485, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.ActivityLogicRegistryBehaviour
   _factories:
   - {fileID: 900000000000300004}
@@ -74320,7 +75305,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7e4c2a9f1b6d48a3c5f0e8d2b7a1c639, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.MarshmallowActivityLogicFactory
   _materializeFuelCost: 3
   _turnsRequired: 2
@@ -74340,7 +75325,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4c1f3f0c4dca4b64a8b7f29e8d33b6a1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.FishingActivityLogicFactory
   _rodFuelCost: 30
   _catchesPerRod: 4
@@ -74368,7 +75353,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b8e4d9f3a2154c7b0e6d8f2a3b9c5d1e, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.EmoteActivityLogicFactory
 --- !u!114 &900000000000300007
 MonoBehaviour:
@@ -74380,7 +75365,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f2c8a3d7e6598b1f4a0c2d6e7b3f9a5d, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.GuitarActivityLogicFactory
 --- !u!114 &900000000000300008
 MonoBehaviour:
@@ -74392,9 +75377,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6a0d8b2e3f4c5d7e9b1a2c3d4e5f6071, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.StargazingActivityLogicFactory
---- !u!1 &900000000000400001
+--- !u!1 &900000000000310001
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -74402,144 +75387,427 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 900000000000400002}
-  - component: {fileID: 900000000000400003}
-  - component: {fileID: 900000000000400004}
-  - component: {fileID: 900000000000400005}
-  - component: {fileID: 900000000000400006}
+  - component: {fileID: 900000000000310002}
+  - component: {fileID: 900000000000310003}
   m_Layer: 0
-  m_Name: Gameplay_NetworkBootstrap
+  m_Name: Gameplay_ActivityCameraRig
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &900000000000400002
+--- !u!4 &900000000000310002
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000400001}
+  m_GameObject: {fileID: 900000000000310001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 900000000000310012}
+  - {fileID: 900000000000310032}
+  - {fileID: 900000000000310022}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &900000000000310003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000310001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7e8f901a2b3c45d6b7e8f901a2b3c4d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.CameraSystem.ActivityCameraRigExecutor
+  _exploreCamera: {fileID: 900000000000310013}
+  _fallbackPlayerFrameTarget: {fileID: 900000000000500001}
+  _profiles:
+  - _profileId: activity.ritual
+    _camera: {fileID: 900000000000310033}
+    _targetGroup: {fileID: 900000000000310023}
+    _followAnchor: {fileID: 0}
+    _lookTarget: {fileID: 0}
+    _priority: 20
+    _playerWeight: 1
+    _playerRadius: 0.7
+    _lookTargetWeight: 1
+    _lookTargetRadius: 0.3
+  - _profileId: custom.fishing
+    _camera: {fileID: 900000000000310033}
+    _targetGroup: {fileID: 900000000000310023}
+    _followAnchor: {fileID: 0}
+    _lookTarget: {fileID: 0}
+    _priority: 20
+    _playerWeight: 1
+    _playerRadius: 0.7
+    _lookTargetWeight: 1
+    _lookTargetRadius: 0.3
+  - _profileId: activity.stargazing
+    _camera: {fileID: 900000000000310033}
+    _targetGroup: {fileID: 900000000000310023}
+    _followAnchor: {fileID: 0}
+    _lookTarget: {fileID: 0}
+    _priority: 20
+    _playerWeight: 1
+    _playerRadius: 0.7
+    _lookTargetWeight: 1
+    _lookTargetRadius: 0.3
+--- !u!1 &900000000000310011
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 900000000000310012}
+  - component: {fileID: 900000000000310013}
+  - component: {fileID: 900000000000310014}
+  - component: {fileID: 900000000000310015}
+  - component: {fileID: 900000000000310016}
+  m_Layer: 0
+  m_Name: ExploreCamera
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &900000000000310012
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000310011}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 2, z: -6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 900000000000310002}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &900000000000310013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000310011}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9dfa5b682dcd46bda6128250e975f58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineCamera
+  Priority:
+    Enabled: 1
+    m_Value: 10
+  OutputChannel: 1
+  StandbyUpdate: 2
+  m_StreamingVersion: 20241001
+  m_LegacyPriority: 0
+  Target:
+    TrackingTarget: {fileID: 900000000000100005}
+    LookAtTarget: {fileID: 900000000000100004}
+    CustomLookAtTarget: 1
+  Lens:
+    FieldOfView: 50
+    OrthographicSize: 5
+    NearClipPlane: 0.3
+    FarClipPlane: 1400
+    Dutch: 0
+    ModeOverride: 0
+    PhysicalProperties:
+      GateFit: 2
+      SensorSize: {x: 36, y: 24}
+      LensShift: {x: 0, y: 0}
+      FocusDistance: 10
+      Iso: 200
+      ShutterSpeed: 0.005
+      Aperture: 16
+      BladeCount: 5
+      Curvature: {x: 2, y: 11}
+      BarrelClipping: 0.25
+      Anamorphism: 0
+  BlendHint: 0
+--- !u!114 &900000000000310014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000310011}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36d1163fa822e8b418a0a603ec078d5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineHardLockToTarget
+  Damping: 0
+--- !u!114 &900000000000310015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000310011}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f38bda98361e1de48a4ca2bd86ea3c17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineRotationComposer
+  Composition:
+    ScreenPosition: {x: 0, y: 0}
+    DeadZone:
+      Enabled: 0
+      Size: {x: 0.2, y: 0.2}
+    HardLimits:
+      Enabled: 0
+      Size: {x: 0.8, y: 0.8}
+      Offset: {x: 0, y: 0}
+  CenterOnActivate: 1
+  TargetOffset: {x: 0, y: 0, z: 0}
+  Damping: {x: 0, y: 0}
+  Lookahead:
+    Enabled: 0
+    Time: 0
+    Smoothing: 0
+    IgnoreY: 0
+--- !u!114 &900000000000310016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000310011}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca7de3aefa901374ba29464584a3109a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineDecollider
+  CameraRadius: 0.28
+  Decollision:
+    Enabled: 0
+    ObstacleLayers:
+      serializedVersion: 2
+      m_Bits: 0
+    UseFollowTarget:
+      Enabled: 0
+      YOffset: 0
+    Damping: 0.2
+    SmoothingTime: 0
+  TerrainResolution:
+    Enabled: 1
+    TerrainLayers:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    MaximumRaycast: 12
+    Damping: 0.4
+--- !u!1 &900000000000310021
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 900000000000310022}
+  - component: {fileID: 900000000000310023}
+  m_Layer: 0
+  m_Name: ActivityTargetGroup
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &900000000000310022
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000310021}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 900000000000310002}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &900000000000400003
+--- !u!114 &900000000000310023
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000400001}
+  m_GameObject: {fileID: 900000000000310021}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 593a2fe42fa9d37498c96f9a383b6521, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkManager
-  NetworkManagerExpanded: 0
-  NetworkConfig:
-    ProtocolVersion: 0
-    NetworkTransport: {fileID: 900000000000400004}
-    PlayerPrefab: {fileID: 1292492784500737, guid: 2d1e3f5a7b9c4d6e8f0123456789abcd, type: 3}
-    Prefabs:
-      NetworkPrefabsLists:
-      - {fileID: 11400000, guid: d5647039ca517fe4b97ec76c96f07211, type: 2}
-    TickRate: 30
-    ClientConnectionBufferTimeout: 10
-    ConnectionApproval: 1
-    ConnectionData:
-    EnableTimeResync: 0
-    TimeResyncInterval: 30
-    EnsureNetworkVariableLengthSafety: 0
-    EnableSceneManagement: 1
-    ForceSamePrefabs: 1
-    RecycleNetworkIds: 1
-    NetworkIdRecycleDelay: 120
-    RpcHashSize: 0
-    LoadSceneTimeOut: 120
-    SpawnTimeout: 10
-    EnableNetworkLogs: 1
-    NetworkTopology: 0
-    UseCMBService: 0
-    AutoSpawnPlayerPrefabClientSide: 1
-    NetworkProfilingMetrics: 1
-    OldPrefabList: []
-  RunInBackground: 1
-  LogLevel: 1
---- !u!114 &900000000000400004
+  m_Script: {fileID: 11500000, guid: e5eb80d8e62d9d145bb50fb783c0f731, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineTargetGroup
+  PositionMode: 0
+  RotationMode: 0
+  UpdateMethod: 2
+  Targets: []
+  m_LegacyTargets: []
+--- !u!1 &900000000000310031
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 900000000000310032}
+  - component: {fileID: 900000000000310033}
+  - component: {fileID: 900000000000310034}
+  - component: {fileID: 900000000000310035}
+  - component: {fileID: 900000000000310036}
+  m_Layer: 0
+  m_Name: ActivityCamera
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &900000000000310032
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000310031}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 2, z: -6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 900000000000310002}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &900000000000310033
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000400001}
+  m_GameObject: {fileID: 900000000000310031}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6960e84d07fb87f47956e7a81d71c4e6, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Transports.UTP.UnityTransport
-  m_ProtocolType: 0
-  m_UseWebSockets: 0
-  m_UseEncryption: 0
-  m_MaxPacketQueueSize: 128
-  m_MaxPayloadSize: 6144
-  m_HeartbeatTimeoutMS: 500
-  m_ConnectTimeoutMS: 1000
-  m_MaxConnectAttempts: 60
-  m_DisconnectTimeoutMS: 30000
-  ConnectionData:
-    Address: 127.0.0.1
-    Port: 7777
-    ServerListenAddress: 0.0.0.0
-    ClientBindPort: 0
-  DebugSimulator:
-    PacketDelayMS: 0
-    PacketJitterMS: 0
-    PacketDropRate: 0
---- !u!114 &900000000000400005
+  m_Script: {fileID: 11500000, guid: f9dfa5b682dcd46bda6128250e975f58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineCamera
+  Priority:
+    Enabled: 1
+    m_Value: 0
+  OutputChannel: 1
+  StandbyUpdate: 2
+  m_StreamingVersion: 20241001
+  m_LegacyPriority: 0
+  Target:
+    TrackingTarget: {fileID: 0}
+    LookAtTarget: {fileID: 0}
+    CustomLookAtTarget: 0
+  Lens:
+    FieldOfView: 50
+    OrthographicSize: 5
+    NearClipPlane: 0.3
+    FarClipPlane: 1400
+    Dutch: 0
+    ModeOverride: 0
+    PhysicalProperties:
+      GateFit: 2
+      SensorSize: {x: 36, y: 24}
+      LensShift: {x: 0, y: 0}
+      FocusDistance: 10
+      Iso: 200
+      ShutterSpeed: 0.005
+      Aperture: 16
+      BladeCount: 5
+      Curvature: {x: 2, y: 11}
+      BarrelClipping: 0.25
+      Anamorphism: 0
+  BlendHint: 0
+--- !u!114 &900000000000310034
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000400001}
+  m_GameObject: {fileID: 900000000000310031}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 82b9a5a7a15b6b64a97d75f2f6128888, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Network.FirePlayNetworkBootstrap
-  _networkManager: {fileID: 900000000000400003}
-  _transport: {fileID: 900000000000400004}
-  _autoStart: 0
-  _serverAddress: 127.0.0.1
-  _listenAddress: 0.0.0.0
-  _port: 7777
-  _allowCommandLineOverrides: 1
-  _maximumPlayers: 4
---- !u!114 &900000000000400006
+  m_Script: {fileID: 11500000, guid: 36d1163fa822e8b418a0a603ec078d5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineHardLockToTarget
+  Damping: 0.15
+--- !u!114 &900000000000310035
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000400001}
+  m_GameObject: {fileID: 900000000000310031}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f7c0ab3b2de4f37a8c1e6d9057b2134, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Network.StandalonePlayerNetworkHandoff
-  _standalonePlayer: {fileID: 900000000000100097}
-  _sceneBindings: {fileID: 900000000000100202}
---- !u!114 &900000000000100097 stripped
+  m_Script: {fileID: 11500000, guid: f38bda98361e1de48a4ca2bd86ea3c17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineRotationComposer
+  Composition:
+    ScreenPosition: {x: 0, y: 0}
+    DeadZone:
+      Enabled: 0
+      Size: {x: 0.2, y: 0.2}
+    HardLimits:
+      Enabled: 0
+      Size: {x: 0.8, y: 0.8}
+      Offset: {x: 0, y: 0}
+  CenterOnActivate: 1
+  TargetOffset: {x: 0, y: 0, z: 0}
+  Damping: {x: 0.2, y: 0.2}
+  Lookahead:
+    Enabled: 0
+    Time: 0
+    Smoothing: 0
+    IgnoreY: 0
+--- !u!114 &900000000000310036
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1000000000000007, guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135, type: 3}
-  m_PrefabInstance: {fileID: 900000000000100001}
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000310031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca7de3aefa901374ba29464584a3109a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineDecollider
+  CameraRadius: 0.28
+  Decollision:
+    Enabled: 0
+    ObstacleLayers:
+      serializedVersion: 2
+      m_Bits: 0
+    UseFollowTarget:
+      Enabled: 0
+      YOffset: 0
+    Damping: 0.2
+    SmoothingTime: 0
+  TerrainResolution:
+    Enabled: 1
+    TerrainLayers:
+      serializedVersion: 2
+      m_Bits: 4294967295
+    MaximumRaycast: 12
+    Damping: 0.4
 --- !u!1 &900000000000320001
 GameObject:
   m_ObjectHideFlags: 0
@@ -74569,7 +75837,7 @@ Transform:
   m_GameObject: {fileID: 900000000000320001}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 4, z: -6}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -74644,7 +75912,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
   m_RenderShadows: 1
   m_RequiresDepthTextureOption: 2
@@ -74688,7 +75956,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 72ece51f2901e7445ab60da3685d6b5f, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineBrain
   ShowDebugText: 0
   ShowCameraFrustum: 1
@@ -74710,7 +75978,7 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   CustomBlends: {fileID: 0}
---- !u!1 &900000000000310001
+--- !u!1 &900000000000400001
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -74718,748 +75986,157 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 900000000000310002}
-  - component: {fileID: 900000000000310003}
+  - component: {fileID: 900000000000400002}
+  - component: {fileID: 900000000000400003}
+  - component: {fileID: 900000000000400004}
+  - component: {fileID: 900000000000400005}
+  - component: {fileID: 900000000000400006}
   m_Layer: 0
-  m_Name: Gameplay_ActivityCameraRig
+  m_Name: Gameplay_NetworkBootstrap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &900000000000310002
+--- !u!4 &900000000000400002
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000310001}
+  m_GameObject: {fileID: 900000000000400001}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 900000000000310012}
-  - {fileID: 900000000000310032}
-  - {fileID: 900000000000310022}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &900000000000310003
+--- !u!114 &900000000000400003
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000310001}
+  m_GameObject: {fileID: 900000000000400001}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7e8f901a2b3c45d6b7e8f901a2b3c4d5, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.CameraSystem.ActivityCameraRigExecutor
-  _exploreCamera: {fileID: 900000000000310013}
-  _fallbackPlayerFrameTarget: {fileID: 900000000000500001}
-  _profiles:
-  - _profileId: activity.ritual
-    _camera: {fileID: 900000000000310033}
-    _targetGroup: {fileID: 900000000000310023}
-    _followAnchor: {fileID: 0}
-    _lookTarget: {fileID: 0}
-    _priority: 20
-    _playerWeight: 1
-    _playerRadius: 0.7
-    _lookTargetWeight: 1
-    _lookTargetRadius: 0.3
-  - _profileId: custom.fishing
-    _camera: {fileID: 900000000000310033}
-    _targetGroup: {fileID: 900000000000310023}
-    _followAnchor: {fileID: 0}
-    _lookTarget: {fileID: 0}
-    _priority: 20
-    _playerWeight: 1
-    _playerRadius: 0.7
-    _lookTargetWeight: 1
-    _lookTargetRadius: 0.3
-  - _profileId: activity.stargazing
-    _camera: {fileID: 900000000000310033}
-    _targetGroup: {fileID: 900000000000310023}
-    _followAnchor: {fileID: 0}
-    _lookTarget: {fileID: 0}
-    _priority: 20
-    _playerWeight: 1
-    _playerRadius: 0.7
-    _lookTargetWeight: 1
-    _lookTargetRadius: 0.3
---- !u!1 &900000000000310011
-GameObject:
+  m_Script: {fileID: 11500000, guid: 593a2fe42fa9d37498c96f9a383b6521, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkManager
+  NetworkManagerExpanded: 0
+  NetworkConfig:
+    ProtocolVersion: 0
+    NetworkTransport: {fileID: 900000000000400004}
+    PlayerPrefab: {fileID: 1292492784500737, guid: 2d1e3f5a7b9c4d6e8f0123456789abcd, type: 3}
+    Prefabs:
+      NetworkPrefabsLists:
+      - {fileID: 11400000, guid: d5647039ca517fe4b97ec76c96f07211, type: 2}
+    TickRate: 30
+    ClientConnectionBufferTimeout: 10
+    ConnectionApproval: 1
+    ConnectionData: 
+    EnableTimeResync: 0
+    TimeResyncInterval: 30
+    EnsureNetworkVariableLengthSafety: 0
+    EnableSceneManagement: 1
+    ForceSamePrefabs: 1
+    RecycleNetworkIds: 1
+    NetworkIdRecycleDelay: 120
+    RpcHashSize: 0
+    LoadSceneTimeOut: 120
+    SpawnTimeout: 10
+    EnableNetworkLogs: 1
+    NetworkTopology: 0
+    UseCMBService: 0
+    AutoSpawnPlayerPrefabClientSide: 1
+    NetworkProfilingMetrics: 1
+    OldPrefabList: []
+  RunInBackground: 1
+  LogLevel: 1
+--- !u!114 &900000000000400004
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 900000000000310012}
-  - component: {fileID: 900000000000310013}
-  - component: {fileID: 900000000000310014}
-  - component: {fileID: 900000000000310015}
-  - component: {fileID: 900000000000310016}
-  m_Layer: 0
-  m_Name: ExploreCamera
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &900000000000310012
+  m_GameObject: {fileID: 900000000000400001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6960e84d07fb87f47956e7a81d71c4e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Transports.UTP.UnityTransport
+  m_ProtocolType: 0
+  m_UseWebSockets: 0
+  m_UseEncryption: 0
+  m_MaxPacketQueueSize: 128
+  m_MaxPayloadSize: 6144
+  m_HeartbeatTimeoutMS: 500
+  m_ConnectTimeoutMS: 1000
+  m_MaxConnectAttempts: 60
+  m_DisconnectTimeoutMS: 30000
+  ConnectionData:
+    Address: 127.0.0.1
+    Port: 7777
+    ServerListenAddress: 0.0.0.0
+    ClientBindPort: 0
+  DebugSimulator:
+    PacketDelayMS: 0
+    PacketJitterMS: 0
+    PacketDropRate: 0
+--- !u!114 &900000000000400005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000400001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82b9a5a7a15b6b64a97d75f2f6128888, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Network.FirePlayNetworkBootstrap
+  _networkManager: {fileID: 900000000000400003}
+  _transport: {fileID: 900000000000400004}
+  _worldStatePrefab: {fileID: 810000000000000003, guid: 93ad18c4e52b4f16a7d890c2b3e46571, type: 3}
+  _autoStart: 0
+  _serverAddress: 127.0.0.1
+  _listenAddress: 0.0.0.0
+  _port: 7777
+  _allowCommandLineOverrides: 1
+  _maximumPlayers: 4
+--- !u!114 &900000000000400006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000400001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f7c0ab3b2de4f37a8c1e6d9057b2134, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Network.StandalonePlayerNetworkHandoff
+  _standalonePlayer: {fileID: 900000000000100097}
+  _sceneBindings: {fileID: 900000000000100202}
+--- !u!4 &900000000000500001 stripped
 Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 1000000000000025, guid: 7f3c9d2e8b1a46f5a0c7d9e2f4b68135, type: 3}
+  m_PrefabInstance: {fileID: 900000000000100001}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000310011}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: -6}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 900000000000310002}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &900000000000310013
+--- !u!114 &910000000009999991
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000310011}
+  m_GameObject: {fileID: 947067149}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f9dfa5b682dcd46bda6128250e975f58, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineCamera
-  Priority:
-    Enabled: 1
-    m_Value: 10
-  OutputChannel: 1
-  StandbyUpdate: 2
-  m_StreamingVersion: 20241001
-  m_LegacyPriority: 0
-  Target:
-    TrackingTarget: {fileID: 0}
-    LookAtTarget: {fileID: 0}
-    CustomLookAtTarget: 0
-  Lens:
-    FieldOfView: 50
-    OrthographicSize: 5
-    NearClipPlane: 0.3
-    FarClipPlane: 1400
-    Dutch: 0
-    ModeOverride: 0
-    PhysicalProperties:
-      GateFit: 2
-      SensorSize: {x: 36, y: 24}
-      LensShift: {x: 0, y: 0}
-      FocusDistance: 10
-      Iso: 200
-      ShutterSpeed: 0.005
-      Aperture: 16
-      BladeCount: 5
-      Curvature: {x: 2, y: 11}
-      BarrelClipping: 0.25
-      Anamorphism: 0
-  BlendHint: 0
---- !u!114 &900000000000310014
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000310011}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 36d1163fa822e8b418a0a603ec078d5c, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineHardLockToTarget
-  Damping: 0
---- !u!114 &900000000000310015
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000310011}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f38bda98361e1de48a4ca2bd86ea3c17, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineRotationComposer
-  Composition:
-    ScreenPosition: {x: 0, y: 0}
-    DeadZone:
-      Enabled: 0
-      Size: {x: 0.2, y: 0.2}
-    HardLimits:
-      Enabled: 0
-      Size: {x: 0.8, y: 0.8}
-      Offset: {x: 0, y: 0}
-  CenterOnActivate: 1
-  TargetOffset: {x: 0, y: 0, z: 0}
-  Damping: {x: 0, y: 0}
-  Lookahead:
-    Enabled: 0
-    Time: 0
-    Smoothing: 0
-    IgnoreY: 0
---- !u!114 &900000000000310016
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000310011}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ca7de3aefa901374ba29464584a3109a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineDecollider
-  CameraRadius: 0.28
-  Decollision:
-    Enabled: 0
-    ObstacleLayers:
-      serializedVersion: 2
-      m_Bits: 0
-    UseFollowTarget:
-      Enabled: 0
-      YOffset: 0
-    Damping: 0.2
-    SmoothingTime: 0
-  TerrainResolution:
-    Enabled: 1
-    TerrainLayers:
-      serializedVersion: 2
-      m_Bits: 4294967295
-    MaximumRaycast: 12
-    Damping: 0.12
---- !u!1 &900000000000310021
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 900000000000310022}
-  - component: {fileID: 900000000000310023}
-  m_Layer: 0
-  m_Name: ActivityTargetGroup
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &900000000000310022
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000310021}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 900000000000310002}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &900000000000310023
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000310021}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e5eb80d8e62d9d145bb50fb783c0f731, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineTargetGroup
-  PositionMode: 0
-  RotationMode: 0
-  UpdateMethod: 2
-  Targets: []
---- !u!1 &900000000000310031
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 900000000000310032}
-  - component: {fileID: 900000000000310033}
-  - component: {fileID: 900000000000310034}
-  - component: {fileID: 900000000000310035}
-  - component: {fileID: 900000000000310036}
-  m_Layer: 0
-  m_Name: ActivityCamera
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &900000000000310032
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000310031}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: -6}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 900000000000310002}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &900000000000310033
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000310031}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f9dfa5b682dcd46bda6128250e975f58, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineCamera
-  Priority:
-    Enabled: 1
-    m_Value: 0
-  OutputChannel: 1
-  StandbyUpdate: 2
-  m_StreamingVersion: 20241001
-  m_LegacyPriority: 0
-  Target:
-    TrackingTarget: {fileID: 0}
-    LookAtTarget: {fileID: 0}
-    CustomLookAtTarget: 0
-  Lens:
-    FieldOfView: 50
-    OrthographicSize: 5
-    NearClipPlane: 0.3
-    FarClipPlane: 1400
-    Dutch: 0
-    ModeOverride: 0
-    PhysicalProperties:
-      GateFit: 2
-      SensorSize: {x: 36, y: 24}
-      LensShift: {x: 0, y: 0}
-      FocusDistance: 10
-      Iso: 200
-      ShutterSpeed: 0.005
-      Aperture: 16
-      BladeCount: 5
-      Curvature: {x: 2, y: 11}
-      BarrelClipping: 0.25
-      Anamorphism: 0
-  BlendHint: 0
---- !u!114 &900000000000310034
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000310031}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 36d1163fa822e8b418a0a603ec078d5c, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineHardLockToTarget
-  Damping: 0.15
---- !u!114 &900000000000310035
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000310031}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f38bda98361e1de48a4ca2bd86ea3c17, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineRotationComposer
-  Composition:
-    ScreenPosition: {x: 0, y: 0}
-    DeadZone:
-      Enabled: 0
-      Size: {x: 0.2, y: 0.2}
-    HardLimits:
-      Enabled: 0
-      Size: {x: 0.8, y: 0.8}
-      Offset: {x: 0, y: 0}
-  CenterOnActivate: 1
-  TargetOffset: {x: 0, y: 0, z: 0}
-  Damping: {x: 0.2, y: 0.2}
-  Lookahead:
-    Enabled: 0
-    Time: 0
-    Smoothing: 0
-    IgnoreY: 0
---- !u!114 &900000000000310036
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000310031}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ca7de3aefa901374ba29464584a3109a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineDecollider
-  CameraRadius: 0.28
-  Decollision:
-    Enabled: 0
-    ObstacleLayers:
-      serializedVersion: 2
-      m_Bits: 0
-    UseFollowTarget:
-      Enabled: 0
-      YOffset: 0
-    Damping: 0.2
-    SmoothingTime: 0
-  TerrainResolution:
-    Enabled: 1
-    TerrainLayers:
-      serializedVersion: 2
-      m_Bits: 4294967295
-    MaximumRaycast: 12
-    Damping: 0.12
---- !u!1 &900000000000120000
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 900000000000120001}
-  m_Layer: 0
-  m_Name: Gameplay_ActivityAnchors
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &900000000000120001
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000120000}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 900000000000120011}
-  - {fileID: 900000000000120021}
-  - {fileID: 900000000000120031}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &900000000000120010
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 900000000000120011}
-  - component: {fileID: 900000000000120012}
-  - component: {fileID: 900000000000120013}
-  - component: {fileID: 900000000000120014}
-  m_Layer: 0
-  m_Name: CampfireActivityAnchor
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &900000000000120011
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000120010}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 0.38, z: 0.8}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 900000000000120001}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &900000000000120012
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000120010}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 96a61ae6f42b4de2bc177b982a039bc3, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Core.StableSceneId
-  _value: snow.activity.campfire.main
-  _allowRuntimeAssignment: 0
---- !u!114 &900000000000120013
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000120010}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 97e8a7bd4f7c4eb7a2f9c3df01a9e001, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.ActivityAnchorNode
-  _anchorId: snow.activity.campfire.main
-  _displayName: 篝火旁
-  _regionId: snow.camp
-  _tags: []
-  _activities:
-  - {fileID: 11400000, guid: 6d5a4f3e2c1b0a9876543210fedcba98, type: 2}
-  _ruleProviderBehaviours: []
---- !u!114 &900000000000120014
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000120010}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7b44c9ed4a4d4781aca16896bb2a6e3a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.RestSpot
-  _interactionRadius: 2.75
-  _restHint: 这里可以在篝火旁坐下休息
-  _shortRestHint: ' · 可以坐下休息'
---- !u!1 &900000000000120020
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 900000000000120021}
-  - component: {fileID: 900000000000120022}
-  - component: {fileID: 900000000000120023}
-  m_Layer: 0
-  m_Name: FishingActivityAnchor
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &900000000000120021
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000120020}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.2079117, z: 0, w: 0.9781476}
-  m_LocalPosition: {x: 18, y: 0.36, z: 14}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 900000000000120001}
-  m_LocalEulerAnglesHint: {x: 0, y: -24, z: 0}
---- !u!114 &900000000000120022
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000120020}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 96a61ae6f42b4de2bc177b982a039bc3, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Core.StableSceneId
-  _value: snow.activity.fishing.lake
-  _allowRuntimeAssignment: 0
---- !u!114 &900000000000120023
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000120020}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 97e8a7bd4f7c4eb7a2f9c3df01a9e001, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.ActivityAnchorNode
-  _anchorId: snow.activity.fishing.lake
-  _displayName: 冰湖边
-  _regionId: snow.frozen-lake
-  _tags: []
-  _activities:
-  - {fileID: 11400000, guid: 4b8d2f6a1c3e5b7d9f0a2c4e6b8d1f35, type: 2}
-  _ruleProviderBehaviours: []
---- !u!1 &900000000000120030
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 900000000000120031}
-  - component: {fileID: 900000000000120032}
-  - component: {fileID: 900000000000120033}
-  - component: {fileID: 900000000000120034}
-  - component: {fileID: 900000000000120035}
-  - component: {fileID: 900000000000120036}
-  m_Layer: 0
-  m_Name: TentRestAnchor
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &900000000000120031
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000120030}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.2419219, z: 0, w: 0.9702957}
-  m_LocalPosition: {x: -8, y: 0.36, z: 6}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 900000000000120041}
-  m_Father: {fileID: 900000000000120001}
-  m_LocalEulerAnglesHint: {x: 0, y: 28, z: 0}
---- !u!114 &900000000000120032
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000120030}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 96a61ae6f42b4de2bc177b982a039bc3, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Core.StableSceneId
-  _value: snow.activity.rest.tent
-  _allowRuntimeAssignment: 0
---- !u!114 &900000000000120033
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000120030}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 97e8a7bd4f7c4eb7a2f9c3df01a9e001, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.ActivityAnchorNode
-  _anchorId: snow.activity.rest.tent
-  _displayName: 帐篷旁
-  _regionId: snow.camp
-  _tags: []
-  _activities:
-  - {fileID: 11400000, guid: 9d3e1f5b7a8c0d2e4f6a1b3c5d7e9f02, type: 2}
-  _ruleProviderBehaviours: []
---- !u!114 &900000000000120034
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000120030}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7b44c9ed4a4d4781aca16896bb2a6e3a, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.RestSpot
-  _interactionRadius: 3.25
-  _restHint: 这里可以坐下看星星
-  _shortRestHint: ' · 可以坐下观星'
---- !u!114 &900000000000120035
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000120030}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7b1e9c3f4a5d6e8f0c2b3d4e5f607182, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.Activity.StargazingActivityTrigger
-  _restSpot: {fileID: 900000000000120034}
-  _anchor: {fileID: 900000000000120033}
---- !u!114 &900000000000120036
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000120030}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8c2f0d4a5b6e7f9a1d3c4e5f60718293, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.CameraSystem.ActivityCameraAnchorTargets
-  _lookTarget: {fileID: 900000000000120041}
-  _additionalTargets: []
---- !u!1 &900000000000120040
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 900000000000120041}
-  m_Layer: 0
-  m_Name: SkyLookTarget
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &900000000000120041
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000120040}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 6, z: 2.5}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 900000000000120031}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_Script: {fileID: 11500000, guid: 35a346a9dc3643bcab6107d04febd697, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.World.CampfirePlacementSurface
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -75467,10 +76144,12 @@ SceneRoots:
   - {fileID: 2058468256}
   - {fileID: 1836592047}
   - {fileID: 900000000000100001}
-  - {fileID: 900000000000100220}
   - {fileID: 900000000000100211}
-  - {fileID: 900000000000300001}
-  - {fileID: 900000000000400001}
-  - {fileID: 900000000000320001}
-  - {fileID: 900000000000310001}
   - {fileID: 900000000000120001}
+  - {fileID: 900000000000100201}
+  - {fileID: 900000000000100221}
+  - {fileID: 900000000000300002}
+  - {fileID: 900000000000310002}
+  - {fileID: 900000000000320002}
+  - {fileID: 900000000000400002}
+  - {fileID: 2099904384}

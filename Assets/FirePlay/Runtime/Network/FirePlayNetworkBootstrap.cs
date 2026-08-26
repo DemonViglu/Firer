@@ -26,6 +26,7 @@ namespace DemonViglu.FirePlay.Network
         [Header("显式引用")]
         [SerializeField] private NetworkManager _networkManager;
         [SerializeField] private UnityTransport _transport;
+        [SerializeField] private NetworkObject _worldStatePrefab;
 
         [Header("本地测试")]
         [SerializeField] private AutoStartMode _autoStart = AutoStartMode.Manual;
@@ -41,6 +42,7 @@ namespace DemonViglu.FirePlay.Network
         private FirePlayNetworkMode _mode;
         private bool _subscribed;
         private bool _ownsConnectionApprovalCallback;
+        private NetworkObject _spawnedWorldState;
         private readonly HashSet<ulong> _approvedPendingClients = new();
 
         public FirePlayNetworkMode Mode => _mode;
@@ -114,6 +116,16 @@ namespace DemonViglu.FirePlay.Network
             {
                 Debug.LogError(
                     "[FirePlayNetworkBootstrap] NetworkManager.PlayerPrefab 必须挂载 NetworkObject；不会启动网络。",
+                    this);
+                enabled = false;
+                return;
+            }
+
+            if (_worldStatePrefab == null
+                || !_worldStatePrefab.TryGetComponent<FirePlayNetworkWorldState>(out _))
+            {
+                Debug.LogError(
+                    "[FirePlayNetworkBootstrap] World State Prefab 必须显式绑定含 FirePlayNetworkWorldState 的 NetworkObject。",
                     this);
                 enabled = false;
             }
@@ -238,6 +250,7 @@ namespace DemonViglu.FirePlay.Network
             }
 
             _networkManager.Shutdown();
+            _spawnedWorldState = null;
             _approvedPendingClients.Clear();
             var previousMode = _mode;
             _mode = FirePlayNetworkMode.None;
@@ -296,9 +309,52 @@ namespace DemonViglu.FirePlay.Network
                 return false;
             }
 
+            if ((mode == FirePlayNetworkMode.Host || mode == FirePlayNetworkMode.Server)
+                && !TrySpawnAuthorityWorldState(out var worldStateReason))
+            {
+                _networkManager.Shutdown();
+                Publish(FirePlayNetworkState.StartFailed, mode, reason: worldStateReason);
+                Debug.LogError($"[FirePlayNetworkBootstrap] {mode} 启动失败：{worldStateReason}。", this);
+                _mode = FirePlayNetworkMode.None;
+                _approvedPendingClients.Clear();
+                return false;
+            }
+
             Publish(FirePlayNetworkState.Started, mode);
             Debug.Log($"[FirePlayNetworkBootstrap] {mode} 已启动，地址={_serverAddress}，端口={_port}。", this);
             return true;
+        }
+
+        private bool TrySpawnAuthorityWorldState(out string reason)
+        {
+            reason = string.Empty;
+            if (_networkManager == null || !_networkManager.IsServer)
+            {
+                reason = "World State 只能由 Host/Server 生成";
+                return false;
+            }
+
+            if (_spawnedWorldState != null && _spawnedWorldState.IsSpawned)
+                return true;
+
+            NetworkObject instance = null;
+            try
+            {
+                instance = Instantiate(_worldStatePrefab);
+                instance.name = _worldStatePrefab.name;
+                instance.Spawn(destroyWithScene: true);
+                _spawnedWorldState = instance;
+                Debug.Log("[FirePlayNetworkBootstrap] Host 已生成 Network World State。", instance);
+                return true;
+            }
+            catch (Exception exception)
+            {
+                if (instance != null)
+                    Destroy(instance.gameObject);
+                Debug.LogException(exception, this);
+                reason = "Network World State 生成失败";
+                return false;
+            }
         }
 
         private void OnConnectionApproval(

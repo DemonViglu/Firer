@@ -29,7 +29,19 @@ namespace DemonViglu.FirePlay.Editor
         private const string ScenePath = "Assets/Scenes/SnowValley_Playable.unity";
         private const string NetworkPrefabPath =
             "Assets/FirePlay/Runtime/Prefab/PlayerNetworkGameplay.prefab";
+        private const string NetworkWorldStatePrefabPath =
+            "Assets/FirePlay/Runtime/Prefab/NetworkWorldState.prefab";
         private const string NetworkPrefabsListPath = "Assets/DefaultNetworkPrefabs.asset";
+        private const string NetworkCharacterVisualPrefabPath =
+            "Assets/FirePlay/Art/Character/Generated/Prefabs/SnowTraveler_Female.prefab";
+        private const string NetworkCharacterFbxPath =
+            "Assets/FirePlay/Art/Character/Generated/SnowTraveler_Female_Rigged.fbx";
+        private const string NetworkCharacterControllerPath =
+            "Assets/FirePlay/Art/Character/Generated/Controllers/SnowTraveler_Female_Locomotion.controller";
+        private const string FlameSourcePrefabPath =
+            "Assets/FirePlay/Runtime/Prefab/FlameSource.prefab";
+        private const string WorldTreePrefabPath =
+            "Assets/FirePlay/Runtime/Prefab/Tree.prefab";
         private const string ActivityCatalogPath =
             "Assets/FirePlay/Content/Activities/ActivityCatalog.asset";
         private const string ActivityVisualModulePath =
@@ -67,6 +79,9 @@ namespace DemonViglu.FirePlay.Editor
             var services = FindOrCreateRoot(scene, "Gameplay_SceneServices");
             var bindings = GetOrAdd<PlayerSceneServiceBindings>(services);
 
+            ConfigureNetworkPlayerVisual();
+            ConfigureGameplayWorldContent(scene);
+
             var targets = player.GetComponent<PlayerCameraTargetSet>();
             if (targets == null)
                 throw new InvalidOperationException("Player_Core 缺少 PlayerCameraTargetSet。");
@@ -88,8 +103,190 @@ namespace DemonViglu.FirePlay.Editor
             Debug.Log(
                 "[SnowValleySceneBindingBuilder] SnowValley 场景绑定完成：" +
                 "Activity Registry、Activity Camera Rig、Network Bootstrap、Spawn Point " +
-                "和 Player Camera Targets 已显式写入。",
+                "Player Camera Targets、网络角色表现和余火循环内容点已显式写入。",
                 services);
+        }
+
+        private static void ConfigureNetworkPlayerVisual()
+        {
+            var visualPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(NetworkCharacterVisualPrefabPath);
+            var controller = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(NetworkCharacterControllerPath);
+            var avatar = AssetDatabase.LoadAllAssetsAtPath(NetworkCharacterFbxPath)
+                .OfType<Avatar>()
+                .FirstOrDefault(candidate => candidate.isValid);
+            if (visualPrefab == null || controller == null || avatar == null)
+            {
+                throw new InvalidOperationException(
+                    "网络角色表现资源不完整；需要 SnowTraveler Female Prefab、有效 Avatar 和 Locomotion Controller。");
+            }
+
+            var playerRoot = PrefabUtility.LoadPrefabContents(NetworkPrefabPath);
+            try
+            {
+                // Locomotion owns the facing root. Animator/social presentation only
+                // writes local offsets on its child visual, so an emote can never
+                // overwrite the player's persistent yaw.
+                var oldVisual = playerRoot.transform.Find("SnowTravelerVisual");
+                if (oldVisual != null)
+                    UnityEngine.Object.DestroyImmediate(oldVisual.gameObject);
+
+                var facingRoot = playerRoot.transform.Find("CharacterFacingRoot");
+                if (facingRoot == null)
+                {
+                    var facingObject = new GameObject("CharacterFacingRoot");
+                    facingObject.transform.SetParent(playerRoot.transform, false);
+                    facingRoot = facingObject.transform;
+                }
+
+                facingRoot.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+                facingRoot.localScale = Vector3.one;
+
+                var previousNestedVisual = facingRoot.Find("SnowTravelerVisual");
+                if (previousNestedVisual != null)
+                    UnityEngine.Object.DestroyImmediate(previousNestedVisual.gameObject);
+
+                var visual = PrefabUtility.InstantiatePrefab(visualPrefab, facingRoot) as GameObject;
+                if (visual == null)
+                    throw new InvalidOperationException("无法把 SnowTraveler 角色表现写入 PlayerNetworkGameplay。");
+
+                visual.name = "SnowTravelerVisual";
+                visual.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+                visual.transform.localScale = Vector3.one;
+
+                var animator = visual.GetComponentInChildren<Animator>(true);
+                if (animator == null)
+                    animator = visual.AddComponent<Animator>();
+                animator.avatar = avatar;
+                animator.runtimeAnimatorController = controller;
+                animator.applyRootMotion = false;
+
+                var body = playerRoot.transform.Find("Body");
+                if (body != null)
+                {
+                    foreach (var renderer in body.GetComponentsInChildren<Renderer>(true))
+                        renderer.enabled = false;
+                }
+
+                var movement = playerRoot.GetComponent<PlayerMovement>();
+                var input = playerRoot.GetComponent<FirePlayPlayerInput>();
+                var locomotion = playerRoot.GetComponent<PlayerLocomotionAnimationBridge>();
+                if (locomotion == null)
+                    locomotion = playerRoot.AddComponent<PlayerLocomotionAnimationBridge>();
+
+                AssignObjectReference(movement, "_visualTransform", facingRoot);
+                AssignObjectReference(locomotion, "_movement", movement);
+                AssignObjectReference(locomotion, "_input", input);
+                AssignObjectReference(locomotion, "_animator", animator);
+                var animation = playerRoot.GetComponentInChildren<PlayerAnimationController>(true);
+                AssignObjectReference(animation, "_animator", animator);
+                AssignObjectReference(animation, "_placeholderVisual", visual.transform);
+                AssignBool(animation, "_useSocialCueFallback", true);
+
+                PrefabUtility.SaveAsPrefabAsset(playerRoot, NetworkPrefabPath);
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(playerRoot);
+            }
+        }
+
+        private static void ConfigureGameplayWorldContent(Scene scene)
+        {
+            var root = FindOrCreateRoot(scene, "Gameplay_WorldContent");
+            var flameSourcePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(FlameSourcePrefabPath);
+            var worldTreePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(WorldTreePrefabPath);
+            if (flameSourcePrefab == null || worldTreePrefab == null)
+                throw new InvalidOperationException("找不到 FlameSource 或 WorldTree Prefab。");
+
+            ConfigureWorldPrefab(
+                root.transform,
+                flameSourcePrefab,
+                "FlameSource_CampRoute",
+                "snow.flame-source.camp-route",
+                new Vector3(3f, 0.52f, -1.5f));
+            ConfigureWorldPrefab(
+                root.transform,
+                flameSourcePrefab,
+                "FlameSource_ValleyRoute",
+                "snow.flame-source.valley-route",
+                new Vector3(10f, 0.52f, 6f));
+            ConfigureWorldPrefab(
+                root.transform,
+                flameSourcePrefab,
+                "FlameSource_LakeRoute",
+                "snow.flame-source.lake-route",
+                new Vector3(16f, 0.48f, 11.5f));
+            ConfigureWorldPrefab(
+                root.transform,
+                worldTreePrefab,
+                "WorldTree_Main",
+                "snow.world-tree.main",
+                new Vector3(-4f, 0.36f, 3f));
+
+            EditorUtility.SetDirty(root);
+        }
+
+        private static GameObject ConfigureWorldPrefab(
+            Transform parent,
+            GameObject prefab,
+            string objectName,
+            string stableId,
+            Vector3 worldPosition)
+        {
+            var existing = parent.Find(objectName);
+            var instance = existing != null ? existing.gameObject : null;
+            if (instance == null)
+            {
+                instance = PrefabUtility.InstantiatePrefab(prefab, parent) as GameObject;
+                if (instance == null)
+                    throw new InvalidOperationException($"无法实例化世界内容：{objectName}");
+                Undo.RegisterCreatedObjectUndo(instance, $"Add {objectName}");
+            }
+
+            instance.name = objectName;
+            instance.transform.SetPositionAndRotation(worldPosition, Quaternion.identity);
+            instance.transform.localScale = Vector3.one;
+
+            var identity = instance.GetComponent<StableSceneId>();
+            if (identity == null)
+                throw new InvalidOperationException($"世界内容 {objectName} 缺少 StableSceneId。");
+            var serialized = new SerializedObject(identity);
+            serialized.FindProperty("_value").stringValue = stableId;
+            serialized.FindProperty("_allowRuntimeAssignment").boolValue = false;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(instance);
+            return instance;
+        }
+
+        private static void AssignObjectReference(
+            UnityEngine.Object target,
+            string propertyName,
+            UnityEngine.Object value)
+        {
+            if (target == null)
+                throw new InvalidOperationException($"无法配置 {propertyName}：目标组件为空。");
+
+            var serialized = new SerializedObject(target);
+            var property = serialized.FindProperty(propertyName);
+            if (property == null)
+                throw new InvalidOperationException($"{target.GetType().Name} 缺少序列化字段 {propertyName}。");
+            property.objectReferenceValue = value;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(target);
+        }
+
+        private static void AssignBool(UnityEngine.Object target, string propertyName, bool value)
+        {
+            if (target == null)
+                throw new InvalidOperationException($"无法配置 {propertyName}：目标组件为空。");
+
+            var serialized = new SerializedObject(target);
+            var property = serialized.FindProperty(propertyName);
+            if (property == null)
+                throw new InvalidOperationException($"{target.GetType().Name} 缺少序列化字段 {propertyName}。");
+            property.boolValue = value;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(target);
         }
 
         private static LocalPlayerContext FindSinglePlayer(Scene scene)
@@ -551,7 +748,10 @@ namespace DemonViglu.FirePlay.Editor
                 Enabled = true,
                 TerrainLayers = ~0,
                 MaximumRaycast = 12f,
-                Damping = 0.12f
+                // Collision correction must remain immediate to prevent clipping,
+                // but a slower release avoids the camera snapping back as soon as
+                // the terrain/ice obstruction clears.
+                Damping = 0.4f
             };
             // General Decollision remains disabled: exploration obstruction is
             // owned by PlayerCameraFollowTarget, while an activity camera may
@@ -630,9 +830,14 @@ namespace DemonViglu.FirePlay.Editor
             var handoff = GetOrAdd<StandalonePlayerNetworkHandoff>(root);
 
             var playerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(NetworkPrefabPath);
+            var worldStatePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(NetworkWorldStatePrefabPath);
             var prefabsList = AssetDatabase.LoadAssetAtPath<NetworkPrefabsList>(NetworkPrefabsListPath);
-            if (playerPrefab == null || prefabsList == null)
-                throw new InvalidOperationException("找不到 PlayerNetworkGameplay 或 DefaultNetworkPrefabs.asset。");
+            if (playerPrefab == null || worldStatePrefab == null || prefabsList == null
+                || !worldStatePrefab.TryGetComponent<NetworkObject>(out var worldStateNetworkObject))
+            {
+                throw new InvalidOperationException(
+                    "找不到 PlayerNetworkGameplay、NetworkWorldState 或 DefaultNetworkPrefabs.asset。");
+            }
 
             var config = networkManager.NetworkConfig;
             config.NetworkTransport = transport;
@@ -649,6 +854,7 @@ namespace DemonViglu.FirePlay.Editor
             var serialized = new SerializedObject(bootstrap);
             serialized.FindProperty("_networkManager").objectReferenceValue = networkManager;
             serialized.FindProperty("_transport").objectReferenceValue = transport;
+            serialized.FindProperty("_worldStatePrefab").objectReferenceValue = worldStateNetworkObject;
             serialized.FindProperty("_autoStart").enumValueIndex = 0; // Manual: keep single-player startup unchanged.
             serialized.FindProperty("_serverAddress").stringValue = "127.0.0.1";
             serialized.FindProperty("_listenAddress").stringValue = "0.0.0.0";
@@ -668,7 +874,7 @@ namespace DemonViglu.FirePlay.Editor
             EditorUtility.SetDirty(handoff);
             Debug.Log(
                 "[SnowValleySceneBindingBuilder] NetworkManager 已配置为 Manual + 127.0.0.1:7777；" +
-                "可通过 NetworkConnectionForms 或命令行启动。",
+                "NetworkWorldState Prefab 已显式接入；可通过 NetworkConnectionForms 或命令行启动。",
                 root);
         }
     }

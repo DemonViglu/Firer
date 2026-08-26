@@ -126,10 +126,56 @@ namespace DemonViglu.FirePlay.Network
                 (ActivityTargetKind)targetKind,
                 targetId,
                 eventId);
+            ReceiveActivityActionResultRpc(
+                result.Consumed,
+                result.Reason,
+                activityId,
+                actionId,
+                eventId,
+                RpcTarget.Single(OwnerClientId, RpcTargetUse.Temp));
             if (!result.Consumed)
             {
                 Debug.LogWarning(
                     $"[FirePlayNetworkPlayer] Host rejected activity action: player={PlayerId}, activity={activityId}, action={actionId}, reason={result.Reason}",
+                    this);
+            }
+        }
+
+        [Rpc(
+            SendTo.NotServer,
+            Delivery = RpcDelivery.Reliable,
+            AllowTargetOverride = true)]
+        private void ReceiveActivityActionResultRpc(
+            bool accepted,
+            string reason,
+            string activityId,
+            string actionId,
+            string eventId,
+            RpcParams rpcParams = default)
+        {
+            if (IsServer
+                || !IsOwner
+                || !HasLocalGameplayControl
+                || !IsValidStableId(activityId)
+                || !IsValidStableId(actionId)
+                || !IsValidStableId(eventId)
+                || (reason?.Length ?? 0) > MaximumActivityPayloadLength)
+            {
+                return;
+            }
+
+            var result = new ActivityActionAuthorityResolved(
+                PlayerId,
+                activityId,
+                actionId,
+                eventId,
+                accepted,
+                reason);
+            GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus()).Publish(result);
+            if (!accepted)
+            {
+                Debug.LogWarning(
+                    $"[FirePlayNetworkPlayer] Host rejected activity action: activity={activityId}, action={actionId}, reason={reason}",
                     this);
             }
         }
@@ -295,6 +341,8 @@ namespace DemonViglu.FirePlay.Network
                 || !IsValidStableId(cueId)
                 || sequence == 0
                 || sequence <= _lastAcceptedExpressionSequence
+                || _modeController == null
+                || !_modeController.IsExploring
                 || !IsSupportedRemoteExpression(expressionId, cueId))
             {
                 return false;

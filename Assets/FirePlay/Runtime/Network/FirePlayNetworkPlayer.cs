@@ -42,7 +42,6 @@ namespace DemonViglu.FirePlay.Network
         [SerializeField, Min(1f)] private float _poseValidationSlack = 1.5f;
         [SerializeField, Min(1f)] private float _remotePoseLerpSpeed = 15f;
         [SerializeField, Min(0.1f)] private float _remotePoseSnapDistance = 6f;
-        [SerializeField, Min(0.1f)] private float _ownerCorrectionDistance = 2f;
 
         private IPlayerSceneServiceBindings _sceneBindings;
         private IActivityTargetDirectory _activityTargetDirectory;
@@ -347,9 +346,6 @@ namespace DemonViglu.FirePlay.Network
                 else
                 {
                     SubmitPoseRpc(transform.position, transform.rotation, revision);
-                    var correction = _poseSnapshot.Value;
-                    if (Vector3.Distance(transform.position, correction.Position) >= _ownerCorrectionDistance)
-                        ApplyPoseImmediately(correction);
                 }
                 return;
             }
@@ -456,11 +452,20 @@ namespace DemonViglu.FirePlay.Network
             var now = Time.unscaledTime;
             var elapsed = Mathf.Max(_poseSendInterval, now - _lastAcceptedPoseTime);
             var allowedDistance = _maximumAcceptedSpeed * elapsed * _poseValidationSlack + 0.25f;
-            if (Vector3.Distance(transform.position, position) > allowedDistance)
+            var requestedDistance = Vector3.Distance(transform.position, position);
+            if (requestedDistance > allowedDistance)
             {
-                // Advance the server snapshot revision even when rejecting so
-                // the owner receives an explicit correction fact.
+                // A reliable checkpoint is shared with observers/late-join,
+                // but only an actual authority rejection may correct the
+                // owning Client. The owner must never chase the ordinary
+                // 0.5-second checkpoint while moving normally.
                 PublishPoseSnapshot(transform.position, transform.rotation, forcePersistent: true);
+                SendOwnerPoseCorrection(_latestPoseSnapshot);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                Debug.LogWarning(
+                    $"[FirePlayNetworkPlayer] Host rejected owner pose: player={PlayerId}, requestedDistance={requestedDistance:0.00}, allowedDistance={allowedDistance:0.00}, ownerRevision={ownerRevision}, correctionRevision={_latestPoseSnapshot.Revision}.",
+                    this);
+#endif
                 return;
             }
 
@@ -511,6 +516,47 @@ namespace DemonViglu.FirePlay.Network
             }
 
             _latestPoseSnapshot = snapshot;
+        }
+
+        private void SendOwnerPoseCorrection(FirePlayNetworkPoseSnapshot snapshot)
+        {
+            if (!IsServer
+                || NetworkManager == null
+                || OwnerClientId == NetworkManager.ServerClientId
+                || snapshot.Revision == 0)
+            {
+                return;
+            }
+
+            ReceiveOwnerPoseCorrectionRpc(
+                snapshot,
+                RpcTarget.Single(OwnerClientId, RpcTargetUse.Temp));
+        }
+
+        [Rpc(
+            SendTo.NotServer,
+            Delivery = RpcDelivery.Reliable,
+            AllowTargetOverride = true)]
+        private void ReceiveOwnerPoseCorrectionRpc(
+            FirePlayNetworkPoseSnapshot snapshot,
+            RpcParams rpcParams = default)
+        {
+            if (IsServer
+                || !IsOwner
+                || !HasLocalGameplayControl
+                || snapshot.Revision == 0
+                || !IsFinite(snapshot.Position)
+                || !IsFinite(snapshot.Rotation))
+            {
+                return;
+            }
+
+            ApplyPoseImmediately(snapshot);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.LogWarning(
+                $"[FirePlayNetworkPlayer] Owner pose corrected by Host: player={PlayerId}, revision={snapshot.Revision}, position={snapshot.Position}.",
+                this);
+#endif
         }
 
         private void ApplyRemotePose(FirePlayNetworkPoseSnapshot snapshot)

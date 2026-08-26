@@ -54,6 +54,7 @@ namespace DemonViglu.FirePlay.Activity
         private uint _publishedStateSessionRevision;
         private uint _publishedLogicStateRevision;
         private uint _nextFactRevision;
+        private readonly string _eventRunId = Guid.NewGuid().ToString("N");
         private readonly HashSet<string> _consumedEventIds = new(StringComparer.Ordinal);
         private readonly HashSet<string> _appliedFactEventIds = new(StringComparer.Ordinal);
         private readonly HashSet<string> _receivedGiftEventIds = new(StringComparer.Ordinal);
@@ -857,9 +858,10 @@ namespace DemonViglu.FirePlay.Activity
                 return false;
             }
 
+            if (IsOutOfSessionPresentation(request))
+                return _presentation.RequestPlayer(request);
             if (_mirroredDefinition == null)
-                return IsOutOfSessionPresentation(request)
-                    && _presentation.RequestPlayer(request);
+                return false;
             if (request.ActivityId != _mirroredDefinition.ActivityId
                 || request.SessionRevision != _mirroredRevision)
                 return false;
@@ -876,8 +878,10 @@ namespace DemonViglu.FirePlay.Activity
                 return false;
             }
 
+            if (IsOutOfSessionPresentation(request))
+                return observer.ExecuteObserver(request);
             if (_mirroredDefinition == null)
-                return IsOutOfSessionPresentation(request) && observer.ExecuteObserver(request);
+                return false;
             if (request.ActivityId != _mirroredDefinition.ActivityId
                 || request.SessionRevision != _mirroredRevision)
                 return false;
@@ -886,8 +890,15 @@ namespace DemonViglu.FirePlay.Activity
         }
 
         private static bool IsOutOfSessionPresentation(ActivityPlayerRequest request) =>
-            request.Kind == ActivityPlayerRequestKind.AnimationCue
-                || request.Kind == ActivityPlayerRequestKind.VfxCue;
+            (request.ActivityId == EmoteActivityLogic.ActivityId
+                && request.Kind == ActivityPlayerRequestKind.AnimationCue
+                && (request.CueId == PlayerAnimationCueIds.EmoteWave
+                    || request.CueId == PlayerAnimationCueIds.EmoteThanks))
+            || (request.ActivityId == MarshmallowActivityLogic.ActivityId
+                && ((request.Kind == ActivityPlayerRequestKind.AnimationCue
+                        && request.CueId == PlayerAnimationCueIds.MarshmallowReceive)
+                    || (request.Kind == ActivityPlayerRequestKind.VfxCue
+                        && request.CueId == MarshmallowActivityLogic.ReceiveVfxCueId)));
 
         public bool End(ActivityEndReason reason = ActivityEndReason.Requested)
         {
@@ -1407,7 +1418,7 @@ namespace DemonViglu.FirePlay.Activity
             var revision = ++_nextFactRevision;
             if (revision == 0)
                 revision = ++_nextFactRevision;
-            return $"{_playerId}:action:{revision}";
+            return $"activity.action:{_eventRunId}:{revision}";
         }
 
         private bool ValidateActionTarget(

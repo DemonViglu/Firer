@@ -22,8 +22,17 @@ namespace DemonViglu.FirePlay.UI
 
         private void Update()
         {
-            _localPlayer ??= LocalPlayerContext.Current;
-            _interaction ??= _localPlayer != null ? _localPlayer.Interaction : null;
+            var currentPlayer = LocalPlayerContext.Current;
+            if (_localPlayer != currentPlayer)
+            {
+                _localPlayer = currentPlayer;
+                _interaction = currentPlayer != null ? currentPlayer.Interaction : null;
+            }
+            else
+            {
+                _interaction ??= _localPlayer != null ? _localPlayer.Interaction : null;
+            }
+
             var hasFlameSource = _interaction != null && _interaction.NearestFlameSource != null && _interaction.NearestFlameSource.IsAvailable;
             var hasCampfire = _interaction != null && _interaction.NearestCampfire != null;
             var hasSmallFire = _interaction != null && _interaction.NearestSmallFire != null;

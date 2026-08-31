@@ -91,7 +91,7 @@ namespace DemonViglu.FirePlay.Activity
                 reason = "Marshmallow gift EventId is too long to derive a receive fact";
                 return false;
             }
-            if (!_receivedGiftEventIds.Add(gift.EventId))
+            if (_receivedGiftEventIds.Contains(gift.EventId))
             {
                 reason = "Marshmallow gift EventId was already received";
                 return false;
@@ -107,6 +107,13 @@ namespace DemonViglu.FirePlay.Activity
                 reason = "Target Player cannot receive the marshmallow value";
                 return false;
             }
+
+            // Do not record a rejected delivery as successfully received.
+            // Action-level idempotency remains upstream; after the caller gets
+            // a capacity/resource rejection it can create a new action EventId.
+            // Host gameplay is single-threaded here, so no delivery interleaves
+            // between the Contains check and this receiver commit point.
+            _receivedGiftEventIds.Add(gift.EventId);
 
             // Receiving a gift is a standalone social fact. The receiver does
             // not need to be inside a marshmallow Session, and this fact is

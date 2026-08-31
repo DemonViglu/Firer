@@ -20,13 +20,16 @@ namespace DemonViglu.FirePlay.Player
     /// </summary>
     public sealed class PlayerInteraction : MonoBehaviour
     {
-        private const int MaxDetectedColliders = 8;
+        // SnowValley has dense terrain/ice/vegetation colliders. Eight entries
+        // could fill before the authored interaction volume was returned.
+        private const int InitialDetectedColliderCapacity = 32;
+        private const int MaximumDetectedColliderCapacity = 256;
 
         [SerializeField] private PlayerFlameController _flameController;
         [SerializeField] private LayerMask _interactionLayers = ~0;
         [SerializeField] private PlayerModeController _modeController;
 
-        private readonly Collider[] _overlapResults = new Collider[MaxDetectedColliders];
+        private Collider[] _overlapResults = new Collider[InitialDetectedColliderCapacity];
         private FlameModule _flameModule;
 
         public FlameSource NearestFlameSource { get; private set; }
@@ -110,12 +113,7 @@ namespace DemonViglu.FirePlay.Player
                 return;
             }
 
-            var count = Physics.OverlapSphereNonAlloc(
-                transform.position,
-                activeFlame.InteractionRadius,
-                _overlapResults,
-                _interactionLayers,
-                QueryTriggerInteraction.Collide);
+            var count = ScanNearbyColliders(activeFlame.InteractionRadius);
 
             FlameSource nearestFlameSource = null;
             var nearestFlameSourceDistance = float.PositiveInfinity;
@@ -167,6 +165,36 @@ namespace DemonViglu.FirePlay.Player
             NearestRestSpot = nearestRestSpot;
             SelectCurrentInteractTarget(nearestSmallFire, nearestSmallFireDistance, nearestFlameSource, nearestFlameSourceDistance, nearestWorldTree, nearestWorldTreeDistance, nearestRestSpot);
 
+        }
+
+        private int ScanNearbyColliders(float radius)
+        {
+            var count = Physics.OverlapSphereNonAlloc(
+                transform.position,
+                radius,
+                _overlapResults,
+                _interactionLayers,
+                QueryTriggerInteraction.Collide);
+
+            // A full NonAlloc buffer is ambiguous: Unity may have omitted the
+            // actual gameplay collider. Grow the reusable buffer only when the
+            // scene density requires it, then keep it for subsequent frames.
+            while (count >= _overlapResults.Length
+                   && _overlapResults.Length < MaximumDetectedColliderCapacity)
+            {
+                var nextCapacity = Mathf.Min(
+                    _overlapResults.Length * 2,
+                    MaximumDetectedColliderCapacity);
+                System.Array.Resize(ref _overlapResults, nextCapacity);
+                count = Physics.OverlapSphereNonAlloc(
+                    transform.position,
+                    radius,
+                    _overlapResults,
+                    _interactionLayers,
+                    QueryTriggerInteraction.Collide);
+            }
+
+            return count;
         }
 
         private void SelectCurrentInteractTarget(

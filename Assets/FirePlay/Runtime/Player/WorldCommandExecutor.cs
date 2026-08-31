@@ -120,12 +120,24 @@ namespace DemonViglu.FirePlay.Player
                 PlayerIntentKind.StartPublicFire => TryResolveCurrent(intent, out SmallFire startFire) && CanStartPublicFire(resource) && _campfireUpgrade.TryTendSmallFire(startFire),
                 PlayerIntentKind.DrawFire => TryResolveCurrent(intent, out Campfire drawFire) && drawFire.TryWithdrawEmergencyFuel(resource),
                 PlayerIntentKind.ReclaimSmallFire => TryResolveCurrent(intent, out SmallFire reclaimFire) && reclaimFire.TryReclaim(resource),
-                PlayerIntentKind.ContributeWorldTree => TryResolveCurrent(intent, out WorldTreeContribution tree) && CanAfford(resource, tree.ContributionCost) && tree.TryContribute(intent.PlayerId, resource, activeFlame),
+                PlayerIntentKind.ContributeWorldTree => TryResolveCurrent(intent, out WorldTreeContribution tree) && tree.TryContribute(intent.PlayerId, resource, activeFlame),
                 PlayerIntentKind.LegacyWithdrawOrReclaim => ExecuteLegacyWithdrawOrReclaim(intent, resource),
                 _ => false
             };
             if (accepted)
                 _rateLimiter.RecordAccepted(intent.PlayerId, intent.Kind, intent.TargetId, now);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            else if (intent.TargetKind == PlayerInteractTargetKind.WorldTree)
+            {
+                var reason = _registry != null && _registry.TryResolve(intent.TargetId, out WorldTreeContribution rejectedTree)
+                    ? rejectedTree.LastContributionStatus
+                    : "WorldTree target was not resolved as the current nearby target";
+                Debug.LogWarning(
+                    $"[WorldCommandExecutor] 世界树贡献未执行：target={intent.TargetId}, " +
+                    $"fuel={(resource?.CurrentFuel ?? 0f):0.00}, reason={reason}",
+                    this);
+            }
+#endif
             return accepted;
         }
 
@@ -141,7 +153,7 @@ namespace DemonViglu.FirePlay.Player
         {
             return intent.TargetKind switch
             {
-                PlayerInteractTargetKind.WorldTree => TryResolveCurrent(intent, out WorldTreeContribution tree) && CanAfford(resource, tree.ContributionCost) && tree.TryContribute(intent.PlayerId, resource, flame),
+                PlayerInteractTargetKind.WorldTree => TryResolveCurrent(intent, out WorldTreeContribution tree) && tree.TryContribute(intent.PlayerId, resource, flame),
                 PlayerInteractTargetKind.FlameSource => TryResolveCurrent(intent, out FlameSource source) && source.TryRestore(resource),
                 PlayerInteractTargetKind.Campfire => TryResolveCurrent(intent, out Campfire campfire) && CanAfford(resource, campfire.TendFuelCost) && campfire.TryTend(resource),
                 PlayerInteractTargetKind.SmallFire => TryResolveCurrent(intent, out SmallFire fire) && CanStartPublicFire(resource) && _campfireUpgrade.TryTendSmallFire(fire),

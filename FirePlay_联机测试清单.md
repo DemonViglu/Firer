@@ -2,6 +2,8 @@
 
 > 本文只描述当前 NGO + UTP 直连测试入口和最终验收顺序。开发完成情况以 `FirePlay_开发状态.md` 为准。
 
+> 当前判断：协议 7 的 PC Host/Client 基础移动、SmallFire 双端生成、正式网络模型、Q 表情、最小 late-join 与断线清理已经通过。不要因为下方仍保留完整回归清单而误判为“所有项目均未接入”；未完成重点是 Android/公网、完整互喂拒绝矩阵和产品化连接流程。
+
 ## 1. 唯一启动入口
 
 正式联机入口是 `SnowValley_Playable` 中的 `Gameplay_NetworkBootstrap`。`DemoScene` 只保留为历史配置参考，不进入当前 Player Build：
@@ -41,7 +43,7 @@ FirePlayNetworkBootstrap.StartClient()
 - 协议不匹配、缺少握手或房间已满时，Host 不生成 Player，并把明确原因返回连接窗体；
 - 修改活动、UI 或美术不需要递增协议版本；只有破坏网络 DTO / Prefab / 状态语义兼容性时才递增。
 
-## 3. SnowValley 联机前置配置（已写入场景，待 Unity 验收）
+## 3. SnowValley 联机前置配置（已写入并通过 PC 基线；修改后按此复查）
 
 只在 `Assets/Scenes/SnowValley_Playable.unity` 操作，不修改 `DemoScene`、`ArtScene` 或美术会话资产。当前场景已经写入以下配置；打开 Unity 后先逐项核对引用是否有效：
 
@@ -67,7 +69,7 @@ FirePlayNetworkBootstrap.StartClient()
 4. **余火源**：任一方拾取后双方同时隐藏；另一方不能重复领取；Host 刷新后双方同时恢复；晚加入 Client 直接得到当前显隐状态。
 5. **SmallFire**：Client 只能提交候选点；Host 校验地面、距离、坡度、上限和余火；成功后双方生成同一火种，回收/熄灭由 Host despawn。
 6. **公共篝火**：添火、取火、SmallFire 升级只执行一次；Level、贡献、Warmth 与稳定 ID 一致；晚加入 Client 得到当前状态。
-7. **世界树**：每个 Player 只能贡献一次；颜色、总贡献和个人光列表一致；重复、越界、余火不足与旧 revision 不产生部分写入。
+7. **世界树**：每个 Player 只能贡献一次；颜色、总贡献和个人光列表一致；重复、越界、余火不足与旧 revision 不产生部分写入。实时贡献时 Host 与已连接 Client 各播放一次同色贡献粒子；随后加入的 Client 只恢复累计值/个人光点，不补播历史粒子。
 8. **活动 Owner**：Marshmallow、Fishing、Guitar、Stargazing 的 Owner 只打开自己的 UI/Camera，移动锁和退出恢复对称。
 9. **活动 Observer**：对方能看到道具、持续动画状态与动作/VFX 事实，但不得打开对方 UI、切换本机 Camera 或锁住本机移动。
 10. **共享与目标契约**：SharedGroup 只合并同 Anchor + 同 Activity；Targeted 只接受明确且在线的 TargetId；目标离线会结束对应 Session。
@@ -82,6 +84,6 @@ FirePlayNetworkBootstrap.StartClient()
 - Lobby、Relay、匹配和断线重连产品流程；
 - 正式 Animator、活动美术、VFX、吉他音频及最终活动轮盘；
 - 旧 `ColorSource / RestorableNode` 实验视觉的共享状态。
-- 实时/异步共用互动事实协议、互喂棉花糖和远端表情的代码链路已完成；仍需按第 3 节在 Unity Play Mode/构建中逐项验收，未验收前不得宣称社交闭环完成。
+- 实时/异步共用互动事实协议、互喂棉花糖和远端表情的代码链路已经完成；PC 基础社交、Q 表情和 late-join 门槛已通过。尚未签字的是完整互喂拒绝矩阵、Android/公网和产品化连接流程，不能据此回退或重写已经稳定的网络基础。
 
 这些项目不应混入 Host 权威 Gameplay 代码；连接界面走 Bootstrap，表现资源走现有 Activity Presentation / Visuals 边界。

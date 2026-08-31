@@ -160,7 +160,14 @@ namespace DemonViglu.FirePlay.UI
 
         private void ResolvePlayerInput()
         {
-            _localPlayer ??= LocalPlayerContext.Current;
+            var currentPlayer = LocalPlayerContext.Current;
+            if (_localPlayer != currentPlayer)
+            {
+                _localPlayer = currentPlayer;
+                _playerInput = currentPlayer != null ? currentPlayer.Input : null;
+                _rest = currentPlayer != null ? currentPlayer.RestInteraction : null;
+            }
+
             if (_localPlayer == null) return;
             _events ??= GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
             _playerInput ??= _localPlayer.Input;

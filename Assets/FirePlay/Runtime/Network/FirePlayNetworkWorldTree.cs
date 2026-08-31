@@ -75,6 +75,7 @@ namespace DemonViglu.FirePlay.Network
     public sealed class FirePlayNetworkWorldTree : NetworkBehaviour
     {
         [SerializeField] private WorldTreeContribution _tree;
+        [SerializeField] private WorldTreeProgressVisuals _visuals;
         [SerializeField, Min(0.1f)] private float _fallbackPollInterval = 0.5f;
 
         private float _nextPollTime;
@@ -90,6 +91,7 @@ namespace DemonViglu.FirePlay.Network
         private void Awake()
         {
             _tree ??= GetComponent<WorldTreeContribution>();
+            _visuals ??= GetComponent<WorldTreeProgressVisuals>();
         }
 
         public override void OnNetworkSpawn()
@@ -145,6 +147,26 @@ namespace DemonViglu.FirePlay.Network
         private void OnAuthorityContributed(WorldTreeContribution tree, Color color)
         {
             PublishAuthorityStateNow();
+            ReceiveContributionFeedbackRpc(color.r, color.g, color.b, color.a);
+        }
+
+        [Rpc(SendTo.NotServer, Delivery = RpcDelivery.Reliable)]
+        private void ReceiveContributionFeedbackRpc(float red, float green, float blue, float alpha)
+        {
+            if (IsServer
+                || !IsFinite(red)
+                || !IsFinite(green)
+                || !IsFinite(blue)
+                || !IsFinite(alpha))
+            {
+                return;
+            }
+
+            _visuals?.PlayContributionFeedback(new Color(
+                Mathf.Clamp01(red),
+                Mathf.Clamp01(green),
+                Mathf.Clamp01(blue),
+                Mathf.Clamp01(alpha)));
         }
 
         private void OnSummaryChanged(FirePlayWorldTreeSummary previous, FirePlayWorldTreeSummary current)
@@ -181,5 +203,8 @@ namespace DemonViglu.FirePlay.Network
                 records,
                 summary.CommandVersion);
         }
+
+        private static bool IsFinite(float value) =>
+            !float.IsNaN(value) && !float.IsInfinity(value);
     }
 }

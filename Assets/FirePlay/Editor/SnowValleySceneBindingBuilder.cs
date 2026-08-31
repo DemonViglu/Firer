@@ -40,8 +40,6 @@ namespace DemonViglu.FirePlay.Editor
             "Assets/FirePlay/Art/Character/Generated/Controllers/SnowTraveler_Female_Locomotion.controller";
         private const string FlameSourcePrefabPath =
             "Assets/FirePlay/Runtime/Prefab/FlameSource.prefab";
-        private const string WorldTreePrefabPath =
-            "Assets/FirePlay/Runtime/Prefab/Tree.prefab";
         private const string ActivityCatalogPath =
             "Assets/FirePlay/Content/Activities/ActivityCatalog.asset";
         private const string ActivityVisualModulePath =
@@ -194,9 +192,8 @@ namespace DemonViglu.FirePlay.Editor
         {
             var root = FindOrCreateRoot(scene, "Gameplay_WorldContent");
             var flameSourcePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(FlameSourcePrefabPath);
-            var worldTreePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(WorldTreePrefabPath);
-            if (flameSourcePrefab == null || worldTreePrefab == null)
-                throw new InvalidOperationException("找不到 FlameSource 或 WorldTree Prefab。");
+            if (flameSourcePrefab == null)
+                throw new InvalidOperationException("找不到 FlameSource Prefab。");
 
             ConfigureWorldPrefab(
                 root.transform,
@@ -216,14 +213,58 @@ namespace DemonViglu.FirePlay.Editor
                 "FlameSource_LakeRoute",
                 "snow.flame-source.lake-route",
                 new Vector3(16f, 0.48f, 11.5f));
-            ConfigureWorldPrefab(
-                root.transform,
-                worldTreePrefab,
-                "WorldTree_Main",
-                "snow.world-tree.main",
-                new Vector3(-4f, 0.36f, 3f));
+            RequireAuthoredSnowGroveWorldTree(scene);
 
             EditorUtility.SetDirty(root);
+        }
+
+        private static void RequireAuthoredSnowGroveWorldTree(Scene scene)
+        {
+            var worldTrees = UnityEngine.Object
+                .FindObjectsByType<WorldTreeContribution>(FindObjectsInactive.Include)
+                .Where(candidate => candidate.gameObject.scene == scene)
+                .ToArray();
+            if (worldTrees.Length != 1)
+            {
+                throw new InvalidOperationException(
+                    $"SnowValley 必须且只能有一棵已显式装配的 SnowGrove 世界树，当前数量={worldTrees.Length}。" +
+                    "请恢复正式场景中的 SnowGrove_WorldTree 显式节点；不会再回退实例化旧 Tree.prefab。");
+            }
+
+            var identity = worldTrees[0].GetComponent<StableSceneId>();
+            if (identity == null || identity.Value != "snow.world-tree.main")
+            {
+                throw new InvalidOperationException(
+                    "SnowValley 世界树必须显式配置 StableSceneId=snow.world-tree.main。");
+            }
+
+            if (worldTrees[0].GetComponent<RestorableNode>() != null)
+            {
+                throw new InvalidOperationException(
+                    "SnowValley 世界树仍挂有已弃用的 RestorableNode；贡献树不得接回颜色复苏实验链。");
+            }
+
+            var tree = worldTrees[0];
+            var progressVisuals = tree.GetComponent<WorldTreeProgressVisuals>();
+            var networkAdapter = tree.GetComponent<FirePlayNetworkWorldTree>();
+            if (tree.GetComponent<Collider>() == null
+                || tree.GetComponent<NetworkObject>() == null
+                || progressVisuals == null
+                || networkAdapter == null)
+            {
+                throw new InvalidOperationException(
+                    "SnowValley 世界树必须显式装配 Collider、NetworkObject、" +
+                    "WorldTreeProgressVisuals 与 FirePlayNetworkWorldTree。");
+            }
+
+            var networkAdapterObject = new SerializedObject(networkAdapter);
+            if (networkAdapterObject.FindProperty("_tree")?.objectReferenceValue != tree
+                || networkAdapterObject.FindProperty("_visuals")?.objectReferenceValue != progressVisuals)
+            {
+                throw new InvalidOperationException(
+                    "SnowValley 世界树网络适配器必须显式绑定同对象的 WorldTreeContribution " +
+                    "与 WorldTreeProgressVisuals；不会在运行时按名称修复。");
+            }
         }
 
         private static GameObject ConfigureWorldPrefab(
@@ -524,7 +565,10 @@ namespace DemonViglu.FirePlay.Editor
             activityModuleSerialized.FindProperty("_presentationHost").objectReferenceValue = presentation;
             activityModuleSerialized.ApplyModifiedPropertiesWithoutUndo();
 
-            if (activityRoot.transform.Find("ActivityVisuals") == null)
+            // The visual prefab root is intentionally free to be renamed. Use
+            // its typed boundary instead of a child name; the old name check
+            // instantiated another full module on every Builder run.
+            if (activityRoot.GetComponentInChildren<MarshmallowVisuals>(true) == null)
             {
                 var visualPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ActivityVisualModulePath);
                 if (visualPrefab == null)

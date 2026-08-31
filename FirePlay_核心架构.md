@@ -1,5 +1,7 @@
 # FirePlay 核心架构
 
+> 当前实现结论：本文描述的 Player、Activity、Flame、Camera 与 Network 边界已经在 `SnowValley_Playable` 落地，PC 开发期基线可运行。后续会话应把它视为稳定约束，不应在没有可复现问题或新玩法需求时再次发起架构重写。最新完成度与优先级只看 `FirePlay_开发状态.md`。
+
 > 本文只记录长期稳定的职责边界、运行链路和组装方法，不记录迁移历史。当前进度与待验收项见 `FirePlay_开发状态.md`。
 
 ## 1. 核心系统
@@ -98,6 +100,7 @@ Requested
 - 默认每名玩家拥有独立 Session；只有定义为 `SharedGroup` 或 `TargetedInteraction` 时才共享局部状态；
 - Session 结束事件只发布一次，并对称关闭 UI、退出活动相机、释放移动/朝向请求和结束持续表现；
 - Owner 可以获得本地 UI、Camera 与输入锁；Observer 只能收到远端道具、动画、音效和 VFX 事实。
+- 目标接收端只在资源与接收状态全部提交成功后记录 Gift EventId；容量不足、目标暂不可接收等拒绝不能被误记为“已接收”。动作入口仍会幂等拒绝重复 EventId，条件恢复后的新尝试必须生成新的动作 EventId。
 
 活动只发语义请求：
 
@@ -128,6 +131,8 @@ Player / Campfire / Activity command
   -> Visuals / HUD / Save / Network Snapshot
 ```
 
+世界树等世界对象的持续结果通过稳定 ID 与状态快照恢复；贡献粒子等一次性 Cue 只在实时权威提交时广播，不写入快照，因此 late-join 不会补播历史动作。
+
 活动只能通过 `IActivityFlameResource.TryConsume/Restore` 消耗或返还余火。余火不足不得部分扣除。篝火成长、小火种上限、世界树贡献与存档属于火焰/世界系统，不属于具体活动。
 
 ## 7. 新活动的最小接入
@@ -149,7 +154,8 @@ Player / Campfire / Activity command
 3. 放入主相机和场景级 `ActivityCameraRigExecutor`，把 Camera Profiles/TargetGroup 绑定在场景执行器，不塞回 Player；
 4. 世界持久化或同步对象配置 `StableSceneId`；活动地点配置 `ActivityAnchorNode` 与活动定义引用；
 5. 篝火、余火源、小火种和世界树继续使用各自独立的状态组件，不复制状态到活动；联机场景在 `FirePlayNetworkBootstrap` 显式绑定 `NetworkWorldState.prefab`，由 Host/Server 启动后生成并统一运输预放置世界对象快照；
-6. 先验收移动、余火、活动打开/退出与相机恢复，再添加美术、动画和网络表现。
+6. SnowValley 世界树使用场景显式节点 `Gameplay_WorldContent/SnowGrove_WorldTree`：`SnowGrove_Tree` 只承担美术模型，父节点承担 `StableSceneId + WorldTreeContribution + WorldTreeProgressVisuals + FirePlayNetworkWorldTree`。旧 `Tree.prefab` 的 `RestorableNode/WorldBloom` 颜色复苏实验链不再进入正式场景；稳定身份固定为 `snow.world-tree.main`，不依赖模型名称或层级路径。
+7. 先验收移动、余火、活动打开/退出与相机恢复，再添加美术、动画和网络表现。
 
 `PlayerSceneServiceBindings` 的活动执行器、相机执行器、玩家火苗工厂和网络出生点是彼此独立的可选场景服务。实验场景可以只配置当前模块需要的字段；例如只接 Flame 时，只需显式配置玩家火苗 Prefab，不得为了满足统一 `IsReady` 把 Activity 或 Network 占位对象一起带入。
 

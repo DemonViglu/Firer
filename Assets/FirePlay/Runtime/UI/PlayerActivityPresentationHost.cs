@@ -47,9 +47,10 @@ namespace DemonViglu.FirePlay.UI
             }
 
             _cameraExecutorBehaviour = cameraExecutorBehaviour;
-            _vfxExecutorBehaviour = vfxExecutorBehaviour;
             _cameraExecutor = (IActivityCameraRequestExecutor)cameraExecutorBehaviour;
-            _vfxExecutor = vfxExecutorBehaviour as IActivityVfxRequestExecutor;
+            if (vfxExecutorBehaviour != null)
+                _vfxExecutorBehaviour = vfxExecutorBehaviour;
+            _vfxExecutor = _vfxExecutorBehaviour as IActivityVfxRequestExecutor;
             return true;
         }
 

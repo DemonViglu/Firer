@@ -14,11 +14,14 @@ namespace DemonViglu.FirePlay.World
         [SerializeField] private float[] _stageContributionThresholds = { 10f, 30f, 60f };
         [Tooltip("Visual roots for stages 0..N. Each root can hold any authored environment feedback.")]
         [SerializeField] private GameObject[] _stageRoots;
+        [Tooltip("Optional one-shot feedback played for a live committed contribution. Network snapshots and loads do not replay it.")]
+        [SerializeField] private ParticleSystem _contributionVfx;
 
         private int _appliedStage = -1;
 
         public int CurrentStage => ResolveStage(_sourceTree != null ? _sourceTree.TotalContribution : 0f);
-        public bool HasValidSetup => _sourceTree != null && _stageRoots != null && _stageRoots.Length > 0;
+        public bool HasValidSetup => _sourceTree != null &&
+                                     ((_stageRoots != null && _stageRoots.Length > 0) || _contributionVfx != null);
 
         private void Awake()
         {
@@ -62,6 +65,25 @@ namespace DemonViglu.FirePlay.World
         private void HandleContributed(WorldTreeContribution tree, Color color)
         {
             ApplyCurrentStage();
+            PlayContributionFeedback(color);
+        }
+
+        /// <summary>
+        /// Plays the transient contribution cue without mutating tree state.
+        /// The network adapter uses this only for a live authority event;
+        /// snapshots and late join never call it.
+        /// </summary>
+        public void PlayContributionFeedback(Color color)
+        {
+            if (_contributionVfx == null)
+            {
+                return;
+            }
+
+            var main = _contributionVfx.main;
+            main.startColor = color;
+            _contributionVfx.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            _contributionVfx.Play(true);
         }
 
         private int ResolveStage(float totalContribution)

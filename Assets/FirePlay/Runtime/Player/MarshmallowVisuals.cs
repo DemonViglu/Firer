@@ -8,7 +8,7 @@ namespace DemonViglu.FirePlay.Player
     /// typed Logic directly; a network Client reads the same activity-owned
     /// snapshot mirrored by PlayerActivityHost.
     /// </summary>
-    public sealed class MarshmallowVisuals : MonoBehaviour
+    public sealed class MarshmallowVisuals : MonoBehaviour, IActivityVfxRequestExecutor
     {
         [SerializeField] private PlayerActivityHost _activityHost;
         [SerializeField] private PlayerAnimationController _animationController;
@@ -29,6 +29,9 @@ namespace DemonViglu.FirePlay.Player
         [SerializeField] private AudioClip _scorchedClip;
         [SerializeField] private AudioClip _eatClip;
         [SerializeField] private AudioClip _cancelClip;
+        [Header("Optional VFX")]
+        [Tooltip("棉花糖拟造、翻面、完成和收到赠礼共用的一次性表现。玩法状态不保存在粒子里。")]
+        [SerializeField] private ParticleSystem _feedbackVfx;
 
         private MaterialPropertyBlock _propertyBlock;
         private Quaternion _authoredLocalRotation;
@@ -90,24 +93,33 @@ namespace DemonViglu.FirePlay.Player
                 return;
             }
 
+            var firstState = !_hasActivityState;
             _hasActivityState = true;
-            if (!_wasMaterialized && state.HasMaterialized)
+            if (!firstState && !_wasMaterialized && state.HasMaterialized)
             {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 Debug.Log($"[MarshmallowVisuals] 显示棉花糖：prop={_marshmallowProp.name}，renderers={_renderers.Length}", this);
 #endif
                 _animationController?.Play(PlayerAnimationCueIds.MarshmallowMaterialize);
                 PlayOneShot(_materializeClip);
+                PlayFeedback(_rawColor);
             }
 
-            if (state.CompletedTurns > _completedTurns)
+            if (state.CompletedTurns != _completedTurns)
             {
-                _animationController?.Play(PlayerAnimationCueIds.MarshmallowTurn);
-                _marshmallowProp.Rotate(
-                    0f,
-                    0f,
-                    90f * (state.CompletedTurns - _completedTurns),
-                    Space.Self);
+                if (!firstState && state.CompletedTurns > _completedTurns)
+                {
+                    _animationController?.Play(PlayerAnimationCueIds.MarshmallowTurn);
+                    PlayFeedback(_roastingColor);
+                }
+
+                // Rotation is persistent state. Apply its absolute pose so a
+                // late join can restore it without replaying the turn cue.
+                _marshmallowProp.localRotation = _authoredLocalRotation
+                                                   * Quaternion.Euler(
+                                                       0f,
+                                                       0f,
+                                                       90f * state.CompletedTurns);
             }
 
             if (!_hasResult && state.HasResult)
@@ -119,12 +131,16 @@ namespace DemonViglu.FirePlay.Player
                     _ => _scorchedColor
                 };
                 ApplyColor(resultColor);
-                PlayOneShot(state.Quality switch
+                if (!firstState)
                 {
-                    MarshmallowRoastQuality.Perfect => _perfectClip,
-                    MarshmallowRoastQuality.Toasted => _toastedClip,
-                    _ => _scorchedClip
-                });
+                    PlayOneShot(state.Quality switch
+                    {
+                        MarshmallowRoastQuality.Perfect => _perfectClip,
+                        MarshmallowRoastQuality.Toasted => _toastedClip,
+                        _ => _scorchedClip
+                    });
+                    PlayFeedback(resultColor);
+                }
                 _hasResult = true;
             }
 
@@ -137,6 +153,19 @@ namespace DemonViglu.FirePlay.Player
             _wasMaterialized = state.HasMaterialized;
             _wasReadyToEat = state.IsReadyToEat;
             _completedTurns = state.CompletedTurns;
+        }
+
+        public bool Execute(ActivityPlayerRequest request)
+        {
+            if (request.Kind != ActivityPlayerRequestKind.VfxCue
+                || request.ActivityId != MarshmallowActivityLogic.ActivityId
+                || request.CueId != MarshmallowActivityLogic.ReceiveVfxCueId)
+            {
+                return false;
+            }
+
+            PlayFeedback(_perfectColor);
+            return _feedbackVfx != null;
         }
 
         private bool TryReadState(out MarshmallowActivityStateSnapshot state)
@@ -193,6 +222,17 @@ namespace DemonViglu.FirePlay.Player
         {
             if (_audioSource != null && clip != null)
                 _audioSource.PlayOneShot(clip);
+        }
+
+        private void PlayFeedback(Color color)
+        {
+            if (_feedbackVfx == null)
+                return;
+
+            var main = _feedbackVfx.main;
+            main.startColor = color;
+            _feedbackVfx.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            _feedbackVfx.Play(true);
         }
 
         private void ApplyColor(Color color)

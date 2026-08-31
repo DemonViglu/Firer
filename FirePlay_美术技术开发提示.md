@@ -5,20 +5,20 @@
 ## 可直接复制到新任务的提示
 
 ```text
-请接手 E:\Unity\UnityProject\Firer 的美术技术与场景重建工作。
+请接手 E:\Unity\UnityProject\Firer 的美术技术与 SnowValley 场景深化工作。
 
 开始前必须依次完整阅读：
 1. FirePlay_开发状态.md
 2. FirePlay_美术技术开发提示.md
 3. FirePlay_核心架构.md（只用于理解不可破坏的玩法/表现边界和场景组装）
 
-当前玩法、火焰、活动、Player 与网络适配的核心架构已经冻结。不要继续为了整洁重构 Activity、Player、EventBus、GameInstanceSubsystem 或网络层；美术表现只读取状态、事件和只读快照。不要改变已经验收的玩法规则。
+当前玩法、火焰、活动、Player 与网络适配的核心架构已经冻结。PC 联机开发基线已经验收。不要继续为了整洁重构 Activity、Player、EventBus、GameInstanceSubsystem 或网络层；美术表现只读取状态、事件和只读快照。不要改变已经验收的玩法规则。
 
 产品视觉方向是温暖、安静、简约、有呼吸感的低压力小箱庭。可参考 Mountain、Sky 等作品的留白、色彩节奏和情绪，但不要复制具体资产、构图或 UI。UI 不使用厚重背景贴图，倾向透明、清晰、低干扰，并适配 Android。
 
-请先审核 Assets/Scenes/ArtScene.unity、DemoScene 的 URP/Volume/灯光/地形/材质/植被和现有 Rendering 代码，给出当前视觉问题、技术风险、Android 性能风险与第一阶段 LookDev 计划。然后只实现一个可在 Unity 中明确验收的小切片，优先建立：视觉基准场景 + 光照/雾/色彩基线 + 一小块可复用地表和植被样板。不要一开始整体重做 DemoScene。
+当前唯一正式场景是 Assets/Scenes/SnowValley_Playable.unity。它已经具有可玩的雪谷、受篝火影响的雪地/植被、可交互冰面、角色模型和 Gameplay/Camera/Network 接线。请直接审核并渐进改善该场景的 URP/Volume/灯光/地形/材质/植被和现有 Rendering 代码；ArtScene 与 DemoScene 只作为历史参考，不再作为交付入口。先给出当前视觉问题、技术风险和 Android 性能风险，再只实现一个可明确验收的小切片。不要复制场景后另起一套正式 Gameplay 接线，也不要整体重建已经可玩的 SnowValley。
 
-每个阶段都必须给出 Unity Inspector/场景配置说明、验收清单，并更新 FirePlay_开发状态.md。正式替换 DemoScene 前保留可回退的对照场景或 Git 提交。
+每个阶段都必须给出 Unity Inspector/场景配置说明、验收清单，并更新 FirePlay_开发状态.md。大范围修改 SnowValley 前保留同机位对照和可回退的 Git 提交。
 ```
 
 ## 1. 已冻结的技术边界
@@ -42,9 +42,9 @@
 - `TreePersonalLightVisuals`：世界树个人光点；
 - `ActivityCameraRigExecutor`：活动镜头 Profile。
 
-这些只是桥梁，不是完整美术系统。当前缺口包括：
+SnowValley 已有雪景地表、篝火热场、局部植被、交互冰面、基础光照和带 Locomotion 的角色模型。这些已经是正式可玩基线，不应再被描述为“尚未搭建场景”。当前缺口包括：
 
-- Terrain 与路径缺乏构图、层次和视线引导；
+- Terrain 与路径仍需要进一步强化构图、层次和视线引导；
 - 植被种类、密度节奏、风摆和交互反馈不足；
 - URP 主光、阴影、环境光、雾、Volume 与色彩没有统一基线；
 - 余火、篝火成长和世界树阶段缺少环境级颜色、植被和氛围响应；
@@ -52,15 +52,22 @@
 - 尚未建立 Blender 到 Unity 的正式尺度、Pivot、材质、LOD 和碰撞规范；
 - 尚未为 Android 建立可测量的渲染预算。
 
+当前已有 `EnvironmentWarmthDirector + WarmthSnowReceiver + WarmthGrowthReceiver + WarmthIceReceiver + WarmthAtmosphereReceiver` 的环境热场读取链，不要再建立第二套热场管理器。第一批表现作者任务应直接补现有挂点：
+
+- `FlameSource.prefab`：为 `_restoreVfx` 绑定一次性、非循环、`Play On Awake=false` 的余烬反馈；没有合适短音效时保持 `_restoreAudio` 为空；
+- `SmallFire.prefab`：显式绑定现有 Point Light 到 `_fireLight`，为 `_fireVfx` 绑定低粒子数、`Play On Awake=false` 的循环火焰，由 `SmallFire.Initialize` 启动，避免预览阶段误播放；
+- SnowValley 公共篝火：使用已有 `CampfireVisuals` 挂点组织灯光、粒子和成长阶段，不把成长状态写进表现脚本；
+- 世界树：在现有贡献/成长事实上增加阶段模型和一次性 Cue，不复制贡献逻辑。
+
 ## 3. 推荐实施顺序
 
-### 阶段 A：LookDev 基线
+### 阶段 A：SnowValley 视觉审计与基线固化
 
-1. 检查 `ArtScene`，保留现状或复制为独立 LookDev 场景；
+1. 检查 `SnowValley_Playable` 当前画面并保留同机位前后对照；高风险 Shader/渲染实验才使用独立 LookDev，不复制正式 Gameplay 层级；
 2. 收集 3–5 张只表达色彩、材质、雾和构图的参考，不照搬资产；
-3. 固定一个代表性机位：玩家、篝火、中景植被、远景轮廓和天空同时可见；
+3. 在 SnowValley 固定一个代表性机位：玩家、篝火、中景植被、远景轮廓和天空同时可见；
 4. 建立主光、环境光、阴影、雾和 Volume 的低/中/高质量对照；
-5. 用灰盒和少量正式材质先验证视觉层次。
+5. 在现有雪谷资产上小范围迭代，避免用新灰盒覆盖已经验收的可玩区域。
 
 验收重点：即使关闭玩法 UI，截图也能清楚看出焦点、行进方向、温暖区域和远景层次。
 
@@ -105,6 +112,10 @@
 - VFX：按语义 Cue 播放，不把一次性粒子状态写回活动 Logic；
 - Audio：环境底层、温暖层、Rest/活动层和 UI Feedback 分层，避免所有声音集中在 Player 单一 AudioSource。
 
+当前可直接接入的动画参数无需再改玩法代码：持续 Bool 为 `IsResting`、`IsMarshmallowRoasting`、`IsGuitarPlaying`、`IsFishing`；一次性 Trigger 为 `MarshmallowMaterialize/Turn/Eat/Cancel/Receive`、`GuitarBegin/Play`、`FishingCast/Reel`、`EmoteWave/Thanks`。当前 Controller 中持续状态已有入口，但大多数 Trigger 仍只有参数、没有正式状态跳转。动画会话只需补 Animator State/Transition 或替换 Clip；不要让 Animation Event 反向结算玩法。
+
+`MarshmallowVisuals` 已暴露棉花糖道具、Renderer、六个可选短音 Clip 和一次性 VFX；`FishingActivityVisuals`、`GuitarActivityVisuals` 也已有各自表现出口。正式音频应各自绑定专用或明确分层的 AudioSource，不把所有活动声音继续合并到 Player 根节点。远端 Observer 只执行 Animation/VFX Cue，不得借动画接线打开 UI、切相机或锁本机移动。
+
 ## 4. Android 性能门禁
 
 第一阶段不要凭经验写死预算；应先选定最低测试设备和目标帧率，再记录基线。每个 LookDev 版本至少检查：
@@ -125,10 +136,10 @@
 
 1. 当前视觉与性能审计；
 2. 一组明确参考和颜色/光照目标；
-3. 一个独立 LookDev 场景或 `ArtScene` 的安全小切片；
+3. `SnowValley_Playable` 中一个可回退、可截图对比的安全小切片；
 4. 一小块地表、3–5 类植被、篝火近景和远景轮廓；
 5. PC 与 Android 两档 URP/Volume/阴影配置建议；
 6. Unity Play Mode 截图和可重复的验收步骤；
 7. 对 `FirePlay_开发状态.md` 的事实更新。
 
-在这批通过前，不批量替换 DemoScene、不批量生成模型、不重写玩法架构。
+在这批通过前，不大范围改写 SnowValley、不批量生成模型、不重写玩法架构或复制正式 Gameplay 接线。

@@ -34,7 +34,7 @@ Player 的可选能力放在可见子层级：
 
 具体的棉花糖、钓鱼、吉他等玩法 Logic 不挂在 Player 上。核心服务缺失时应明确报配置错误，不允许运行时用 `AddComponent` 隐式补齐。
 
-`PlayerCameraTargetSet` 只暴露跟随、观察等语义目标，不引用 Cinemachine。`SnowValley_Playable` 的地形防穿透由 Explore/Activity Cinemachine Camera 上的 `CinemachineDecollider.TerrainResolution` 负责，FollowTarget 不需要挂防穿透组件。`PlayerCameraObstruction` 只保留给 `PlayerCoreOnly` 自带 Camera 的非 Cinemachine 独立测试路径。场景中的 `ActivityCameraRigExecutor` 拥有具体 Cinemachine Profile、TargetGroup 和活动机位；`PlayerActivityPresentationHost` 负责把活动请求转给它。
+`PlayerCameraTargetSet` 只暴露跟随、观察等语义目标，不引用 Cinemachine。`SnowValley_Playable` 的地形防穿透由 Explore/Activity Cinemachine Camera 上的 `CinemachineDecollider.TerrainResolution` 负责，FollowTarget 不需要挂防穿透组件。`PlayerCameraObstruction` 只保留给 `PlayerCoreOnly` 自带 Camera 的非 Cinemachine 独立测试路径。场景中的 `ActivityCameraRigExecutor` 拥有具体 Cinemachine Profile、TargetGroup 和活动机位；`PlayerActivityPresentationHost` 负责把活动请求转给它。`PlayerCameraFrameTarget` 是构图语义目标，不是相机应占据的位置；SnowValley 的共享 `ActivityCamera` 使用带距离和阻尼的 `CinemachineFollow`，不得改回把镜头硬锁到 Player Target 内部的 `CinemachineHardLockToTarget`。
 
 ## 3. 活动模型
 

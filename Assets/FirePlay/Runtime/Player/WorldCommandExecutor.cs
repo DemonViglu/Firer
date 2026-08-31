@@ -32,8 +32,16 @@ namespace DemonViglu.FirePlay.Player
             _context = context;
             if (!_localExecutionEnabled || (_context != null && !_context.IsLocalPlayer)) return;
 
-            _flame ??= GetComponentInChildren<PlayerFlameController>(true);
-            _campfireUpgrade ??= GetComponentInChildren<CampfireUpgradeController>(true);
+            // InteractionModule and FlameModule are siblings under the Player root.
+            // Searching only this component's child tree silently misses the active
+            // Flame, which makes otherwise valid world commands fail as "Missing setup".
+            // Resolve optional gameplay capabilities through the explicit Player context.
+            var flameModule = _context.FlameModule
+                ?? _context.GetComponentInChildren<FlameModule>(true);
+            _flame ??= flameModule?.PlayerFlameController
+                ?? _context.GetComponentInChildren<PlayerFlameController>(true);
+            _campfireUpgrade ??= flameModule?.CampfireUpgrade
+                ?? _context.GetComponentInChildren<CampfireUpgradeController>(true);
             _events ??= GameInstanceSubsystem.GetOrCreate<IEventPublisher>(() => new GameEventBus());
             _registry ??= GameInstanceSubsystem.GetOrCreate<IWorldObjectRegistry>(() => new StableIdWorldObjectRegistry());
 

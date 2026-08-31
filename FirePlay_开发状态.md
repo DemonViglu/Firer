@@ -100,10 +100,8 @@ Gameplay_UI
 
 ### P0：现在做
 
-1. 验收 SnowGrove 世界树贡献反馈：靠近约 `(7, 0.35, 16)` 的高大雪松，贡献成功应扣除 10 余火、播放一次彩色粒子并增加个人光点；重复贡献拒绝且不再次播放，late-join 不补播粒子。
-2. 验收 Marshmallow 拟造、翻面、完成和收到赠礼 VFX；之后再以具体活动为单位补正式角色动画、短音效和最终透明 UI，不改 Activity 核心边界。
-3. 验收 SnowValley 热场灯、融雪雾和环境音的平滑响应。热场辅助灯已显式关闭实时阴影，不新增灯和粒子数量；后续构图、植被密度和整体色彩仍交由美术内容阶段推进。
-4. 新增伙伴玩法时，复用现有 Host 权威动作/事实模型，先做单机 Logic，再增加网络目标与表现。
+1. 新增伙伴玩法时，复用现有 Host 权威动作/事实模型，先做单机 Logic，再增加网络目标与表现。
+2. 以具体活动为单位补正式角色动画、短音效和最终透明 UI；现有 Marshmallow/Fishing/Guitar 的 Logic、Session 和表现请求边界不需要重构。
 
 ### P1：随具体内容验证
 
@@ -128,15 +126,20 @@ Gameplay_UI
 ## 8. 当前交付状态
 
 - Runtime/Editor 静态编译：`0` 错误、`0` 警告。
+- Unity Pipeline `0.5.0-exp.1` 已安装并连接当前编辑器；后续可直接执行编译、Play Mode、Console、场景与组件检查，不再依赖用户手动刷新引擎。
 - FlameSource/SmallFire 表现 Prefab 已由 Unity 正常保存并重新导入；SmallFire `GlobalObjectIdHash=1156549450` 保持不变，未修改 NGO 注册身份。
 - FlameSource 拾取余烬与 SmallFire 正式放置火焰已由用户完成 Play Mode 验收；预览阶段未误播放粒子。
 - SnowValley 公共篝火的 WarmFill 与 RisingEmbers 已随热量/等级正确变化并由用户验收。
 - Unity 已成功编译并写入本轮 P0 表现资产：SnowValley 场景 `SnowGrove_WorldTree` 的贡献粒子/个人光点、单机/网络 Player 的 Marshmallow VFX，以及 SnowValley 的 VFX Executor 引用；一次性 Editor 作者脚本已删除。
 - SnowValley `ActivityModule` 下历史残留的 5 份 `PlayerActivityVisualModule` 已清理为 1 份；`SnowValleySceneBindingBuilder` 已改用组件边界判断，重复运行不再继续生成模块。
-- SnowGrove 世界树继续使用稳定 ID `snow.world-tree.main`，新的场景内 `NetworkObject GlobalObjectIdHash=4068931262`；旧 `Tree.prefab/WorldTree_Main` 不再被 SnowValley 或场景构建器引用。SmallFire `GlobalObjectIdHash=1156549450` 保持不变。本轮世界树、Marshmallow VFX 和冷热平滑仍标记为“待用户 Play Mode 验收”。
+- SnowGrove 世界树继续使用稳定 ID `snow.world-tree.main`，新的场景内 `NetworkObject GlobalObjectIdHash=4068931262`；旧 `Tree.prefab/WorldTree_Main` 不再被 SnowValley 或场景构建器引用。SmallFire `GlobalObjectIdHash=1156549450` 保持不变。世界树、Marshmallow VFX 与环境冷热平滑均已通过 Unity 自动 Play Mode 验证。
 - 世界树首次验收暴露了两个输入边界：Canvas 可能在单机/网络 Player 交接后继续缓存旧 `LocalPlayerContext`，密集雪景也可能填满原先 8 个 Collider 的扫描缓存。`FirePlayMobileInputRouter` 与 `FirePlayContextActionsPanel` 现会随 `LocalPlayerContext.Current` 重绑，扫描容量提升为 32；单机世界树拒绝会输出余火与 `LastContributionStatus`。修复已静态编译通过，Play Mode 结果待用户复验。
 - 世界树扫描不再依赖固定容量侥幸命中：`PlayerInteraction` 从 32 个 Collider 起步，只有缓冲区确实填满时才按需扩容，最多复用 256 个条目，避免 SnowValley 密集植被/冰面 Collider 抢占结果后让真实交互体静默丢失。该修复不改变交互距离、优先级或权威命令；Play Mode 仍待用户复验。
 - 世界树一次性贡献反馈现已补齐实时旁观链路：Host 仍由本地 `Contributed` 事件播放，纯 Client 通过 `FirePlayNetworkWorldTree` 的可靠一次性 Cue 播放同色粒子；状态快照、存档加载和 late-join 仍只恢复累计值/个人光点，不补播历史粒子。正式 SnowValley 节点显式绑定 `WorldTreeProgressVisuals`，运行时不查名称、不补组件；已弃用的旧 Tree Prefab 不作为正式配置来源。
+- 世界树单机贡献失败已定位并修复：`WorldCommandExecutor` 位于 `InteractionModule`，原先只搜索自身子节点，无法解析兄弟 `FlameModule`，导致有效目标被错误拒绝为 `Missing setup`。现在通过显式 `LocalPlayerContext`/模块引用解析火焰能力，不新增动态组件。Unity 自动 Play Mode 已走真实 HUD 动作链验证：首次贡献扣除 10 余火、累计值/次数/revision 更新、一次性粒子播放并生成 1 个个人光点；重复贡献保持累计值/次数/revision 不变且不重播粒子。late-join 规则仍由快照不携带一次性 Cue 保证，双端视觉验收留在联机内容矩阵。
+- Marshmallow 已通过 Unity 自动 Play Mode 的真实 Session/Action 链验证：拟造扣除 3 余火并显示道具；两次翻面得到 Z=90°/180° 的持久姿态并分别触发反馈；完成态、收到赠礼 VFX Cue 和吃掉后的 Session/道具/移动锁/Look 锁恢复均正确。正式动画和正式音频资源仍属于内容制作，不阻塞玩法。
+- SnowValley 环境热场已通过 Unity 自动 Play Mode 验证：当前篝火事实驱动 16 个雪面 Renderer、4 组灯/融雪雾/空间音频和 12 个植被 Receiver；空场采样与真实采样之间按 `_responseSpeed` 平滑过渡，辅助灯阴影保持关闭，雪面 MPB 收到同一热源，6 处植被目标正在响应。该链路只读取权威火焰状态，不写回 Gameplay。
+- 活动镜头过近/钓鱼异常拉远的根因已修复：SnowValley 唯一 `ActivityCamera` 原使用 `CinemachineHardLockToTarget`，会把镜头放到 `PlayerCameraFrameTarget` 内部，再由地形避障强行推离。现在场景显式使用 `CinemachineFollow`（WorldSpace、offset `(0, 2, -5.5)`、位置阻尼 `(0.25, 0.3, 0.45)`），保留原 TargetGroup/LookAt/Profile/恢复链。Marshmallow 与 Fishing 实测输出距离稳定约 5.85 米，退出后 Explore/Activity 优先级恢复为 10/0，移动与 Look 锁无残留。
 - 互喂棉花糖补齐失败可重试语义：接收方只在容量检查与余火恢复全部成功后提交 Gift EventId 幂等标记；容量不足或资源写入失败不会被错误记录成“已接收”，调用方可用新的动作 EventId 重试。重复动作 EventId 仍由上游权威入口幂等拒绝；成功链路、事实 DTO 与 late-join 策略未改变。
 - 角色 Animator Controller 已静态盘点：`IsResting / IsMarshmallowRoasting / IsGuitarPlaying / IsFishing` 持续状态已有状态机入口；大部分 Marshmallow、Guitar、Fishing 与 Emote Trigger 目前只有参数占位，尚无正式动作跳转。代码侧 `PlayerAnimationController` 语义 Cue 已就绪，后续应由美术/动画资源接入现有参数，不修改 Activity Logic。
 - Windows Development Build：成功。

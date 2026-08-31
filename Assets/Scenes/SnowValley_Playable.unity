@@ -80563,9 +80563,9 @@ GameObject:
   m_Component:
   - component: {fileID: 900000000000310032}
   - component: {fileID: 900000000000310033}
-  - component: {fileID: 900000000000310034}
   - component: {fileID: 900000000000310035}
   - component: {fileID: 900000000000310036}
+  - component: {fileID: 900000000000310037}
   m_Layer: 0
   m_Name: ActivityCamera
   m_TagString: Untagged
@@ -80631,19 +80631,6 @@ MonoBehaviour:
       BarrelClipping: 0.25
       Anamorphism: 0
   BlendHint: 0
---- !u!114 &900000000000310034
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900000000000310031}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 36d1163fa822e8b418a0a603ec078d5c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineHardLockToTarget
-  Damping: 0.15
 --- !u!114 &900000000000310035
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -80703,6 +80690,25 @@ MonoBehaviour:
       m_Bits: 4294967295
     MaximumRaycast: 12
     Damping: 0.4
+--- !u!114 &900000000000310037
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900000000000310031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b617507da6d07e749b7efdb34e1173e1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineFollow
+  TrackerSettings:
+    BindingMode: 4
+    PositionDamping: {x: 0.25, y: 0.3, z: 0.45}
+    AngularDampingMode: 0
+    RotationDamping: {x: 1, y: 1, z: 1}
+    QuaternionDamping: 1
+  FollowOffset: {x: 0, y: 2, z: -5.5}
 --- !u!1 &900000000000320001
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,59 +1,58 @@
-using SUIFW;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.UI;
 
 namespace DemonViglu.FirePlay.UI
 {
     /// <summary>
-    /// 启动 SUIFW 的 Resources Canvas。将本组件放在每个可游玩的场景的任意常驻对象上；
-    /// UIManager 会保留 Canvas，因此后续场景重复调用不会生成第二套根节点。
+    /// Registers the scene-authored UI root as the only FirePlay UI service.
     /// </summary>
     public sealed class FirePlayUiBootstrap : MonoBehaviour
     {
+        [SerializeField] private FirePlayUiRoot _root;
+        [SerializeField] private FirePlayUiCatalog _catalog;
         [SerializeField] private bool _showNetworkConnectionOnStart;
 
         private void Awake()
         {
-            UIManager.GetInstance();
-            ConfigureUiInput();
+            if (GameInstanceSubsystem.TryGet<IFirePlayUiService>() != null)
+            {
+                Debug.LogError("[FirePlayUiBootstrap] 场景已有 UI Service，请删除重复 Bootstrap。", this);
+                enabled = false;
+                return;
+            }
+            if (_root == null || _catalog == null)
+            {
+                Debug.LogError("[FirePlayUiBootstrap] 必须显式绑定 FirePlayUiRoot 与 Ui Catalog。", this);
+                enabled = false;
+                return;
+            }
+
+            if (!_root.Initialize(_catalog))
+            {
+                enabled = false;
+                return;
+            }
+
+            GameInstanceSubsystem.Register<IFirePlayUiService>(_root);
         }
 
         private void Start()
         {
+            if (!enabled) return;
+
+            _root.Show(FirePlayUiIds.Hud);
             if (_showNetworkConnectionOnStart)
                 ShowNetworkConnection();
         }
 
         public void ShowNetworkConnection()
         {
-            UIManager.GetInstance().ShowUIForms("NetworkConnectionForms");
+            GameInstanceSubsystem.TryGet<IFirePlayUiService>()?.Show(FirePlayUiIds.NetworkConnection);
         }
 
-        private static void ConfigureUiInput()
+        private void OnDestroy()
         {
-            var eventSystem = UnityEngine.Object.FindAnyObjectByType<EventSystem>();
-            if (eventSystem == null)
-            {
-                Debug.LogWarning("[FirePlayUiBootstrap] SUIFW Canvas did not provide an EventSystem; mobile UI will be display-only.");
-                return;
-            }
-
-            var inputModule = eventSystem.GetComponent<InputSystemUIInputModule>();
-            if (inputModule == null)
-            {
-                Debug.LogError(
-                    "[FirePlayUiBootstrap] SUIFW Canvas 的 EventSystem 缺少显式 InputSystemUIInputModule；不会在运行时动态补组件。",
-                    eventSystem);
-                return;
-            }
-
-            if (inputModule.actionsAsset == null)
-            {
-                Debug.LogError(
-                    "[FirePlayUiBootstrap] InputSystemUIInputModule 缺少 UI Actions Asset；请在 Canvas Prefab 中显式绑定。",
-                    inputModule);
-            }
+            if (ReferenceEquals(GameInstanceSubsystem.TryGet<IFirePlayUiService>(), _root))
+                GameInstanceSubsystem.Unregister<IFirePlayUiService>();
         }
     }
 }

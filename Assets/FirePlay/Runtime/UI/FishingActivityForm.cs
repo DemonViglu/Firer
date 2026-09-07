@@ -1,5 +1,4 @@
 using DemonViglu.FirePlay.Activity;
-using SUIFW;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -11,19 +10,26 @@ namespace DemonViglu.FirePlay.UI
     /// form layout; this component only binds controls and submits semantic
     /// actions to PlayerActivityHost.
     /// </summary>
-    public sealed class FishingActivityForm : BaseUIForms
+    public sealed class FishingActivityForm : FirePlayUiView
     {
+        protected override void OnBackRequested() => OnCloseClicked();
+        protected override void OnBlur()
+        {
+            if (_liftInputSent) _requester?.RequestAction("fishing.lift.stop");
+            _liftInputSent = false;
+        }
         [SerializeField] private Text _statusText;
         [SerializeField] private Button _primaryButton;
         [SerializeField] private Button _reelButton;
         [SerializeField] private Button _closeButton;
+        [SerializeField] private Text _primaryLabel;
+        [SerializeField] private Text _reelLabel;
+        [SerializeField] private Text _closeLabel;
         [SerializeField] private GameObject _fightPanel;
         [SerializeField] private Image _catchZone;
         [SerializeField] private RectTransform _fishMarker;
         [SerializeField] private Image _progressFill;
 
-        private Text _primaryLabel;
-        private Text _reelLabel;
         private IActivityActionRequester _requester;
         private bool _isFighting;
         private bool _liftInputSent;
@@ -31,13 +37,10 @@ namespace DemonViglu.FirePlay.UI
         private void Awake()
         {
             FirePlayMinimalUiTheme.Apply(gameObject);
-            ResolveControls();
         }
 
-        public override void Display()
+        protected override void OnShow()
         {
-            base.Display();
-            ResolveControls();
             ResolveRequester();
             BindButtons();
             Refresh();
@@ -46,12 +49,11 @@ namespace DemonViglu.FirePlay.UI
 #endif
         }
 
-        public override void Hiding()
+        protected override void OnHide()
         {
             _isFighting = false;
             _liftInputSent = false;
             UnbindButtons();
-            base.Hiding();
         }
 
         private void Update()
@@ -134,20 +136,9 @@ namespace DemonViglu.FirePlay.UI
                 _progressFill.fillAmount = state.CatchProgressPercent / 100f;
         }
 
-        private void ResolveControls()
+        private void OnValidate()
         {
-            _statusText ??= FindText("Status");
-            _primaryButton ??= FindButton("PrimaryButton");
-            _reelButton ??= FindButton("ReelButton");
-            _closeButton ??= FindButton("CloseButton");
-            _fightPanel ??= FindChild("FightPanel");
-            _catchZone ??= FindImage("CatchZone");
-            _fishMarker ??= FindRectTransform("FishMarker");
-            _progressFill ??= FindImage("ProgressFill");
-            _primaryLabel ??= FindButtonLabel(_primaryButton);
-            _reelLabel ??= FindButtonLabel(_reelButton);
-            var closeLabel = FindButtonLabel(_closeButton);
-            if (closeLabel != null) closeLabel.text = "关闭";
+            if (_closeLabel != null) _closeLabel.text = "关闭";
         }
 
         private void BindButtons()
@@ -184,6 +175,7 @@ namespace DemonViglu.FirePlay.UI
 
         private void UpdateLiftInput()
         {
+            if (!IsFocused) return;
             if (!_isFighting)
             {
                 _liftInputSent = false;
@@ -294,46 +286,6 @@ namespace DemonViglu.FirePlay.UI
         {
             if (_fightPanel != null && _fightPanel.activeSelf != visible)
                 _fightPanel.SetActive(visible);
-        }
-
-        private Text FindText(string childName)
-        {
-            foreach (var text in GetComponentsInChildren<Text>(true))
-                if (text.gameObject.name == childName) return text;
-            return null;
-        }
-
-        private Button FindButton(string childName)
-        {
-            foreach (var button in GetComponentsInChildren<Button>(true))
-                if (button.gameObject.name == childName) return button;
-            return null;
-        }
-
-        private GameObject FindChild(string childName)
-        {
-            foreach (var child in GetComponentsInChildren<Transform>(true))
-                if (child.gameObject.name == childName) return child.gameObject;
-            return null;
-        }
-
-        private Image FindImage(string childName)
-        {
-            foreach (var image in GetComponentsInChildren<Image>(true))
-                if (image.gameObject.name == childName) return image;
-            return null;
-        }
-
-        private RectTransform FindRectTransform(string childName)
-        {
-            foreach (var child in GetComponentsInChildren<RectTransform>(true))
-                if (child.gameObject.name == childName) return child;
-            return null;
-        }
-
-        private static Text FindButtonLabel(Button button)
-        {
-            return button != null ? button.GetComponentInChildren<Text>(true) : null;
         }
 
         private void OnDisable()

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using DemonViglu.FirePlay.Activity;
-using SUIFW;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -13,7 +12,7 @@ namespace DemonViglu.FirePlay.UI
     /// and publishes semantic selection requests; it contains no concrete
     /// activity branches.
     /// </summary>
-    public sealed class ActivitySelectionForms : BaseUIForms
+    public sealed class ActivitySelectionForms : FirePlayUiView
     {
         [SerializeField] private Text _titleText;
         [SerializeField] private Text _statusText;
@@ -41,29 +40,12 @@ namespace DemonViglu.FirePlay.UI
 
         private void Awake()
         {
-            // The persistent HUD lives under SUIFW's Fixed node.  The activity
-            // selector must be a real popup or those fixed controls remain above
-            // it and intercept pointer input.  Lucency keeps the mask visually
-            // transparent while still preventing clicks from leaking to the HUD.
-            CurrentUIType = new UIType
-            {
-                UIForms_Type = UIFormsType.PopUp,
-                UIForms_ShowMode = UIFormsShowMode.ReverseChange,
-                UIForms_LucencyType = UIFormsLucencyType.Lucency
-            };
-
             FirePlayMinimalUiTheme.Apply(gameObject);
             // Prefabs from the previous look-dev pass serialized opaque brown/blue
             // colours. Keep the runtime wheel in the shared neutral theme even when
             // those legacy serialized values have not been re-saved yet.
             _anchorButtonColor = FirePlayMinimalUiTheme.AnchorActivityButton;
             _anywhereButtonColor = FirePlayMinimalUiTheme.AnywhereActivityButton;
-            _titleText ??= FindText("Title");
-            _statusText ??= FindText("Status");
-            _buttonRoot ??= FindTransform("Buttons");
-            _buttonTemplate ??= FindButton("ActivityButtonTemplate");
-            _closeButton ??= FindButton("CloseButton");
-            _wheelGraphic ??= GetComponentInChildren<ActivityRadialWheelGraphic>(true);
             if (TryGetComponent<Image>(out var rootImage))
             {
                 rootImage.color = Color.clear;
@@ -72,9 +54,8 @@ namespace DemonViglu.FirePlay.UI
             _anchorDiscovery = new ActivityAnchorDiscovery(_anchorSearchDistance);
         }
 
-        public override void Display()
+        protected override void OnShow()
         {
-            base.Display();
             transform.SetAsLastSibling();
             ResolveRuntime();
             BindEvents();
@@ -95,17 +76,19 @@ namespace DemonViglu.FirePlay.UI
             if (hostChanged || anchorChanged)
                 RebuildEntries();
 
-            UpdateDirectionalHighlight();
-            ProcessRadialPointerSelection();
+            if (IsFocused)
+            {
+                UpdateDirectionalHighlight();
+                ProcessRadialPointerSelection();
+            }
         }
 
-        public override void Hiding()
+        protected override void OnHide()
         {
             HideButtons();
             _closeButton?.onClick.RemoveListener(CloseSelection);
             UnbindEvents();
             _pendingActivityId = string.Empty;
-            base.Hiding();
         }
 
         private bool ResolveRuntime()
@@ -386,7 +369,8 @@ namespace DemonViglu.FirePlay.UI
 
         private void CloseSelection()
         {
-            UIManager.TryGetInstance()?.CloseOrReturnUIForms("ActivitySelectionForms");
+            GameInstanceSubsystem.TryGet<IFirePlayUiService>()
+                ?.CloseOrReturn(FirePlayUiIds.ActivitySelection);
         }
 
         private void HideButtons()
@@ -447,27 +431,6 @@ namespace DemonViglu.FirePlay.UI
         private void OnDisable()
         {
             UnbindEvents();
-        }
-
-        private Text FindText(string childName)
-        {
-            foreach (var text in GetComponentsInChildren<Text>(true))
-                if (text.gameObject.name == childName) return text;
-            return null;
-        }
-
-        private Button FindButton(string childName)
-        {
-            foreach (var button in GetComponentsInChildren<Button>(true))
-                if (button.gameObject.name == childName) return button;
-            return null;
-        }
-
-        private Transform FindTransform(string childName)
-        {
-            foreach (var transform in GetComponentsInChildren<Transform>(true))
-                if (transform.gameObject.name == childName) return transform;
-            return null;
         }
 
         private readonly struct SelectionEntry

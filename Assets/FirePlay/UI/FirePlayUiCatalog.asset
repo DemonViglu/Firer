@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76f2f0acf4fbcd847b897a0b796281db, type: 3}
+  m_Name: FirePlayUiCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::DemonViglu.FirePlay.UI.FirePlayUiCatalog
+  _entries:
+  - _uiId: FirePlayHud
+    _prefab: {fileID: 5676196394304297106, guid: cc3dbe2ed8a357d468b395e60141d142, type: 3}
+    _layer: 0
+    _modal: 0
+    _blocksInput: 0
+    _stackPolicy: 0
+  - _uiId: ActivitySelectionForms
+    _prefab: {fileID: 1000000000000000, guid: 7a4e1c9d6b3f4820a5d8e1f2c7b90364, type: 3}
+    _layer: 2
+    _modal: 1
+    _blocksInput: 1
+    _stackPolicy: 1
+  - _uiId: MarshmallowActivityForms
+    _prefab: {fileID: 1000000000000000, guid: 2f6e7c8a9b1d4e5f0a3c6d7b8e9f1023, type: 3}
+    _layer: 1
+    _modal: 0
+    _blocksInput: 1
+    _stackPolicy: 1
+  - _uiId: FishingActivityForms
+    _prefab: {fileID: 1000000000000000, guid: d1e4b7c9a2f64853b0d6e8f1c7a93421, type: 3}
+    _layer: 1
+    _modal: 0
+    _blocksInput: 1
+    _stackPolicy: 1
+  - _uiId: GuitarActivityForms
+    _prefab: {fileID: 1000000000000000, guid: d6f2a8c4e1b9475ab3c0d9f7e6a2b8c1, type: 3}
+    _layer: 2
+    _modal: 1
+    _blocksInput: 1
+    _stackPolicy: 1
+  - _uiId: EmoteActivityForms
+    _prefab: {fileID: 877512935754562599, guid: 9bdfe6e2f642909488390426fba92cfc, type: 3}
+    _layer: 2
+    _modal: 1
+    _blocksInput: 1
+    _stackPolicy: 1
+  - _uiId: NetworkConnectionForms
+    _prefab: {fileID: 1000013836659520, guid: e8f0135b7d904c6ea2c4e6f8013a5b79, type: 3}
+    _layer: 2
+    _modal: 1
+    _blocksInput: 1
+    _stackPolicy: 2

@@ -1,5 +1,4 @@
 using DemonViglu.FirePlay.Network;
-using SUIFW;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,7 +8,7 @@ namespace DemonViglu.FirePlay.UI
     /// Minimal Android/desktop direct-connect form. It depends only on the
     /// session-control contract and never accesses NGO or Unity Transport.
     /// </summary>
-    public sealed class NetworkConnectionForms : BaseUIForms
+    public sealed class NetworkConnectionForms : FirePlayUiView
     {
         private const string AddressPreferenceKey = "fireplay.network.address";
         private const string PortPreferenceKey = "fireplay.network.port";
@@ -35,19 +34,17 @@ namespace DemonViglu.FirePlay.UI
             }
         }
 
-        public override void Display()
+        protected override void OnShow()
         {
-            base.Display();
             ResolveSession();
             PopulateEndpoint();
             Bind();
             RefreshStatus();
         }
 
-        public override void Hiding()
+        protected override void OnHide()
         {
             Unbind();
-            base.Hiding();
         }
 
         private void ResolveSession()

@@ -100,10 +100,38 @@ Gameplay_UI
 
 ### P0：现在做
 
-1. 新增伙伴玩法时，复用现有 Host 权威动作/事实模型，先做单机 Logic，再增加网络目标与表现。
-2. 以具体活动为单位补正式角色动画、短音效和最终透明 UI；现有 Marshmallow/Fishing/Guitar 的 Logic、Session 和表现请求边界不需要重构。
+1. **先完成 FirePlay UI 基础设施收口，再继续制作最终 UI 美术或新增大量窗体。** 当前 SUIFW 耦合集中在 UI 边界：7 个 FirePlay Form 继承 `BaseUIForms`，10 个 Runtime 脚本直接依赖 SUIFW，另有 Resources Canvas、JSON 字符串路由、遮罩/栈和旧示例窗体。此次迁移不得改写 Activity Logic、火焰状态或网络事实链。
+2. 新增伙伴玩法时，复用现有 Host 权威动作/事实模型，先做单机 Logic，再增加网络目标与表现。
+3. 以具体活动为单位补正式角色动画、短音效和最终透明 UI；现有 Marshmallow/Fishing/Guitar 的 Logic、Session 和表现请求边界不需要重构。
 
-### P1：随具体内容验证
+### P0 UI 里程碑：完全移除 SUIFW
+
+目标是建立一套人和 AI 都容易读懂、生成、检查和复用的轻量 FirePlay UI 框架，而不是再包一层 SUIFW 兼容接口。
+
+1. 使用现有 `GameInstanceSubsystem` 暴露唯一 UI Service；Gameplay 语义继续走 `GameEventBus`，UI Service 不成为第二套事件总线。
+2. 在 `SnowValley_Playable` 显式配置一个 `FirePlayUiRoot`，只提供 HUD、Screen、Modal 三层及唯一 EventSystem/InputSystem UI 输入；不得运行时 `AddComponent` 补依赖。
+3. 使用显式 Catalog 将稳定 `UiId` 映射到 Prefab、层级、Modal、输入阻挡和栈策略；删除 JSON/Resources 字符串路径推断、名称/层级查找和反射约定。
+4. View 使用最小生命周期契约（Show/Hide/Focus/Blur/Close）并保留当前确实需要的栈、返回与 HideOther 能力；活动仍只发 `ActivityUiRequest`，由 `PlayerActivityPresentationHost` 经 UI Service 执行。
+5. 迁移 ActivitySelection、Marshmallow、Fishing、Guitar、Emote、HUD、NetworkConnection 等现有窗体和调用者；Prefab 绑定保持显式，按钮不靠 GameObject 名称自动发现。
+6. 删除 `Assets/SUIFW`、`Assets/Resources/SUIFW`、旧示例窗体及相关配置；仓库搜索 `SUIFW`、`BaseUIForms`、旧 `UIManager` 和 `UIMaskMgr` 必须为零。
+7. 验收覆盖：单机 HUD、活动轮盘、五类活动窗体、返回/叠栈、键鼠与触摸输入、网络连接窗、Owner/Observer 隔离；Runtime/Editor 编译和 Windows Build 均通过。未实际运行的项目必须标记“待用户验收”。
+
+实现顺序为“新 Root/Service/Catalog -> 逐个迁移现有 Form -> 切换 SnowValley -> 删除旧框架 -> 全链路回归”。迁移分支中可以逐窗体编译验证，但最终代码库不保留长期双轨、适配层或静默回退。
+
+### P1：SnowValley 纵向切片完成
+
+SUIFW 移除只是本阶段的第一项基础设施工作。UI 迁移验收后，应继续完成以下目标，不再发起新的无目标架构重写：
+
+1. **活动内容表现闭环**：沿用现有 Marshmallow、Fishing、Guitar、Emote、Rest/Stargazing Logic 和语义请求，接入正式角色动画、短音效、轻量 VFX 与最终透明 UI；缺少美术资源时只记录明确接口和资源清单，不在 Gameplay 中制造占位状态机。
+2. **火焰世界循环整体验收**：验证“收集余火 -> 公共篝火/SmallFire -> 活动消耗与恢复 -> 世界树贡献 -> 场景热场”的完整单机与 Host 权威链；玩家沿路开花等新表现只读取现有热量/路径事实，不反向控制资源状态。
+3. **实时伙伴互动闭环**：完成互喂棉花糖的目标选择和完整拒绝矩阵、至少两个远端表情、共同休息/活动的 Owner 与 Observer 表现；一次性动作不进入 late-join 快照，远端表现不得打开本地 UI、Camera 或移动锁。
+4. **网络世界内容回归**：公共篝火、SmallFire、世界树和真正影响玩法的持续世界状态使用稳定 ID 与 Host 事实同步；冰纹、雪痕等纯短时美术效果默认本地表现，除非出现明确共同玩法需求，不为“画面完全一致”扩张网络协议。
+5. **PC/Android 直连验收**：完成 PC Host/PC Client、PC Host/Android Client 的基础连接、Owner 输入、活动、火焰、伙伴互动、late-join 和断线清理矩阵；Lobby、Relay、账号和公网产品化仍不作为纵向切片前置。
+6. **可持续内容接入交付**：为新活动、新 UI、新动画/VFX/音效和新的地点组合分别留下最小模板、Inspector 配置说明与一条可运行示例，使后续人或 AI 能在不修改 Player 大中枢的情况下添加内容。
+
+纵向切片完成的定义：新玩家可以在 `SnowValley_Playable` 中移动和收集余火，使用公共篝火与 SmallFire，进入并完成现有活动，与另一名玩家发表情或互喂棉花糖，共同看到关键世界结果；单机、PC 联机和 Android Client 均有明确验收记录。
+
+### P1 验收矩阵：随具体内容验证
 
 - 互喂棉花糖完整双端拒绝矩阵。
 - Activity Owner/Observer、目标离线和活动中断恢复。
@@ -111,7 +139,9 @@ Gameplay_UI
 
 ### P2：产品化阶段再做
 
-- 自动重连、Lobby、Relay、匹配、房间码、账号、后端同步和复杂弱网策略。
+- 使用现有 `IAsyncInteractionFactStore` 接入可替换后端，形成异步礼物/留言式事实收取与幂等回放；不复制实时 Gameplay 逻辑。
+- 自动重连、Lobby、Relay、匹配、房间码、账号、正式房间 UI、后端同步和复杂弱网策略。
+- 扩展新场景、正式内容规模、性能/内存/移动端画质分档和发布流程。
 
 ## 7. 新会话接续要求
 
@@ -145,3 +175,4 @@ Gameplay_UI
 - Windows Development Build：成功。
 - PC Host/Client 基础联机、SmallFire、网络模型、表情朝向、最小 late-join/断线：用户验收通过。
 - 当前改动已由用户提交；后续以 `52dc9a3` 为稳定联机基线。
+- SUIFW 移除已进入实施：`IFirePlayUiService + FirePlayUiRoot + FirePlayUiCatalog + FirePlayUiView`、现有 7 个 Form 的新生命周期以及调用者切换已完成，Unity Runtime/Editor 编译通过；内存回归已覆盖栈、指定返回、`HideOther`、Modal 遮罩和输入焦点。Prefab/Catalog/SnowValley 作者期迁移与旧目录删除尚未执行，正式场景仍保持原配置，因此本里程碑不能标记为完成或 Play Mode 通过。

@@ -1,5 +1,4 @@
 using DemonViglu.FirePlay.Activity;
-using SUIFW;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,8 +8,9 @@ namespace DemonViglu.FirePlay.UI
     /// Dedicated marshmallow UI form. It owns no roasting rules and no Flame
     /// reference; every button submits a semantic action to PlayerActivityHost.
     /// </summary>
-    public sealed class MarshmallowActivityForm : BaseUIForms
+    public sealed class MarshmallowActivityForm : FirePlayUiView
     {
+        protected override void OnBackRequested() => Submit("activity.exit");
         [SerializeField] private Text _statusText;
         [SerializeField] private Button _materializeButton;
         [SerializeField] private Button _turnButton;
@@ -35,41 +35,20 @@ namespace DemonViglu.FirePlay.UI
         private void Awake()
         {
             FirePlayMinimalUiTheme.Apply(gameObject);
-            ResolveControls();
         }
 
-        private void ResolveControls()
+        protected override void OnShow()
         {
-            _statusText ??= FindText("Status");
-            _materializeButton ??= FindButton("MaterializeButton");
-            _turnButton ??= FindButton("TurnButton");
-            _eatButton ??= FindButton("EatButton");
-            _giveButton ??= FindButton("GiveButton");
-            _targetDropdown ??= FindDropdown("TargetDropdown");
-            _targetButton ??= FindButton("TargetButton");
-            _targetLabel ??= FindText("TargetLabel");
-            _closeButton ??= FindButton("CloseButton");
-            _timingPanel ??= FindRect("TimingPanel")?.gameObject;
-            _timingTrack ??= FindRect("TimingTrack");
-            _targetZone ??= FindRect("PerfectZone");
-            _needle ??= FindRect("Needle");
-        }
-
-        public override void Display()
-        {
-            base.Display();
-            ResolveControls();
             ResolveRequester();
             AttachAuthorityResult();
             BindButtons();
             Refresh();
         }
 
-        public override void Hiding()
+        protected override void OnHide()
         {
             UnbindButtons();
             DetachAuthorityResult();
-            base.Hiding();
         }
 
         private void ResolveRequester()
@@ -366,50 +345,6 @@ namespace DemonViglu.FirePlay.UI
             MarshmallowRoastQuality.Toasted => "焦香",
             _ => "烤焦了"
         };
-
-        private Text FindText(string childName)
-        {
-            foreach (var text in GetComponentsInChildren<Text>(true))
-            {
-                if (text.gameObject.name == childName)
-                    return text;
-            }
-
-            return null;
-        }
-
-        private Button FindButton(string childName)
-        {
-            foreach (var button in GetComponentsInChildren<Button>(true))
-            {
-                if (button.gameObject.name == childName)
-                    return button;
-            }
-
-            return null;
-        }
-
-        private Dropdown FindDropdown(string childName)
-        {
-            foreach (var dropdown in GetComponentsInChildren<Dropdown>(true))
-            {
-                if (dropdown.gameObject.name == childName)
-                    return dropdown;
-            }
-
-            return null;
-        }
-
-        private RectTransform FindRect(string childName)
-        {
-            foreach (var rect in GetComponentsInChildren<RectTransform>(true))
-            {
-                if (rect.gameObject.name == childName)
-                    return rect;
-            }
-
-            return null;
-        }
 
         private void OnDisable()
         {

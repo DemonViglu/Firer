@@ -1,6 +1,5 @@
 using System;
 using DemonViglu.FirePlay.Activity;
-using SUIFW;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -11,8 +10,9 @@ namespace DemonViglu.FirePlay.UI
     /// Independent emote wheel. The prefab owns the available cue list and
     /// layout; the form only submits semantic emote actions to the local host.
     /// </summary>
-    public sealed class EmoteActivityForm : BaseUIForms
+    public sealed class EmoteActivityForm : FirePlayUiView
     {
+        protected override void OnBackRequested() => OnCloseClicked();
         [Serializable]
         private sealed class EmoteEntry
         {
@@ -23,7 +23,9 @@ namespace DemonViglu.FirePlay.UI
         [SerializeField] private Text _titleText;
         [SerializeField] private Text _statusText;
         [SerializeField] private Button _closeButton;
+        [SerializeField] private Text _closeButtonLabel;
         [SerializeField] private Button[] _emoteButtons;
+        [SerializeField] private Text[] _emoteLabels;
         [SerializeField] private EmoteEntry[] _entries;
 
         private UnityAction[] _emoteHandlers;
@@ -33,22 +35,18 @@ namespace DemonViglu.FirePlay.UI
         private void Awake()
         {
             FirePlayMinimalUiTheme.Apply(gameObject);
-            ResolveControls();
         }
 
-        public override void Display()
+        protected override void OnShow()
         {
-            base.Display();
-            ResolveControls();
             ResolveRequester();
             BindButtons();
             Refresh();
         }
 
-        public override void Hiding()
+        protected override void OnHide()
         {
             UnbindButtons();
-            base.Hiding();
         }
 
         private void Update()
@@ -62,39 +60,8 @@ namespace DemonViglu.FirePlay.UI
             _requester = PlayerActivityHost.Local;
         }
 
-        private void ResolveControls()
+        private void OnValidate()
         {
-            _titleText ??= FindText("Title");
-            _statusText ??= FindText("Status");
-            _closeButton ??= FindButton("CloseButton");
-
-            var expectedCount = _entries?.Length ?? 0;
-            if (expectedCount > 0
-                && (_emoteButtons == null || _emoteButtons.Length != expectedCount))
-            {
-                _emoteButtons = new Button[expectedCount];
-            }
-
-            foreach (var button in GetComponentsInChildren<Button>(true))
-            {
-                if (button.gameObject.name == "CloseButton")
-                {
-                    _closeButton ??= button;
-                    continue;
-                }
-
-                if (_emoteButtons == null
-                    || !button.gameObject.name.StartsWith("EmoteButton", StringComparison.Ordinal)
-                    || !int.TryParse(button.gameObject.name.Substring("EmoteButton".Length), out var index)
-                    || index < 1
-                    || index > _emoteButtons.Length)
-                {
-                    continue;
-                }
-
-                _emoteButtons[index - 1] = button;
-            }
-
             if (_titleText != null)
                 _titleText.text = "表情";
             SetButtonLabels();
@@ -107,14 +74,15 @@ namespace DemonViglu.FirePlay.UI
 
             for (var index = 0; index < _emoteButtons.Length && index < _entries.Length; index++)
             {
-                var label = _emoteButtons[index]?.GetComponentInChildren<Text>(true);
+                var label = _emoteLabels != null && index < _emoteLabels.Length
+                    ? _emoteLabels[index]
+                    : null;
                 if (label != null)
                     label.text = _entries[index]?.displayName ?? string.Empty;
             }
 
-            var closeLabel = _closeButton?.GetComponentInChildren<Text>(true);
-            if (closeLabel != null)
-                closeLabel.text = "关闭";
+            if (_closeButtonLabel != null)
+                _closeButtonLabel.text = "关闭";
         }
 
         private void BindButtons()
@@ -221,20 +189,6 @@ namespace DemonViglu.FirePlay.UI
         {
             if (_statusText != null)
                 _statusText.text = value ?? string.Empty;
-        }
-
-        private Text FindText(string childName)
-        {
-            foreach (var text in GetComponentsInChildren<Text>(true))
-                if (text.gameObject.name == childName) return text;
-            return null;
-        }
-
-        private Button FindButton(string childName)
-        {
-            foreach (var button in GetComponentsInChildren<Button>(true))
-                if (button.gameObject.name == childName) return button;
-            return null;
         }
 
         private void OnDisable()

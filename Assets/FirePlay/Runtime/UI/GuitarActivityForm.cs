@@ -1,6 +1,4 @@
-using System;
 using DemonViglu.FirePlay.Activity;
-using SUIFW;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
@@ -12,8 +10,9 @@ namespace DemonViglu.FirePlay.UI
     /// Dedicated 21-key guitar form. The prefab owns the layout; this form
     /// only binds static buttons and submits semantic guitar actions.
     /// </summary>
-    public sealed class GuitarActivityForm : BaseUIForms
+    public sealed class GuitarActivityForm : FirePlayUiView
     {
+        protected override void OnBackRequested() => OnCloseClicked();
         private static readonly Key[] KeyboardKeys =
         {
             Key.Q, Key.W, Key.E, Key.R, Key.T, Key.Y, Key.U,
@@ -23,7 +22,9 @@ namespace DemonViglu.FirePlay.UI
 
         [SerializeField] private Text _statusText;
         [SerializeField] private Button _closeButton;
+        [SerializeField] private Text _closeButtonLabel;
         [SerializeField] private Button[] _keyButtons;
+        [SerializeField] private Text[] _keyLabels;
 
         private UnityAction _closeHandler;
         private IActivityActionRequester _requester;
@@ -31,25 +32,12 @@ namespace DemonViglu.FirePlay.UI
 
         private void Awake()
         {
-            // Keep the instrument above the persistent Fixed HUD. Otherwise the
-            // keys are visible and keyboard input works, but HUD graphics win the
-            // pointer raycast before the piano-key Buttons receive OnClick.
-            CurrentUIType = new UIType
-            {
-                UIForms_Type = UIFormsType.PopUp,
-                UIForms_ShowMode = UIFormsShowMode.ReverseChange,
-                UIForms_LucencyType = UIFormsLucencyType.Lucency
-            };
-
             FirePlayMinimalUiTheme.Apply(gameObject);
-            ResolveControls();
         }
 
-        public override void Display()
+        protected override void OnShow()
         {
-            base.Display();
             transform.SetAsLastSibling();
-            ResolveControls();
             EnsurePointerTargets();
             ResolveRequester();
             BindButtons();
@@ -57,22 +45,19 @@ namespace DemonViglu.FirePlay.UI
             _acceptInput = true;
         }
 
-        public override void Hiding()
+        protected override void OnHide()
         {
             _acceptInput = false;
             UnbindButtons();
-            base.Hiding();
         }
 
-        public override void Freeze()
+        protected override void OnBlur()
         {
             _acceptInput = false;
-            base.Freeze();
         }
 
-        public override void Redisplay()
+        protected override void OnFocus()
         {
-            base.Redisplay();
             transform.SetAsLastSibling();
             EnsurePointerTargets();
             _acceptInput = true;
@@ -88,39 +73,19 @@ namespace DemonViglu.FirePlay.UI
             Refresh();
         }
 
-        private void ResolveControls()
+        private void OnValidate()
         {
-            _statusText ??= FindText("Status");
-            _closeButton ??= FindButton("CloseButton");
-
-            if (_keyButtons == null || _keyButtons.Length != GuitarActivityLogic.KeyCount)
-                _keyButtons = new Button[GuitarActivityLogic.KeyCount];
-
-            foreach (var button in GetComponentsInChildren<Button>(true))
+            if (_keyLabels != null)
             {
-                if (button.gameObject.name == "CloseButton")
+                for (var index = 0; index < _keyLabels.Length && index < GuitarActivityLogic.KeyCount; index++)
                 {
-                    _closeButton ??= button;
-                    continue;
+                    if (_keyLabels[index] != null)
+                        _keyLabels[index].text = $"{KeyboardKeys[index]}\n{GuitarActivityLogic.GetNoteLabel(index + 1)}";
                 }
-
-                if (!button.gameObject.name.StartsWith("KeyButton", StringComparison.Ordinal)
-                    || !int.TryParse(button.gameObject.name.Substring("KeyButton".Length), out var keyIndex)
-                    || keyIndex < 1
-                    || keyIndex > GuitarActivityLogic.KeyCount)
-                    continue;
-
-                _keyButtons[keyIndex - 1] = button;
-                var label = button.GetComponentInChildren<Text>(true);
-                if (label != null)
-                    label.text = $"{KeyboardKeys[keyIndex - 1]}\n{GuitarActivityLogic.GetNoteLabel(keyIndex)}";
             }
 
-            var closeLabel = _closeButton != null
-                ? _closeButton.GetComponentInChildren<Text>(true)
-                : null;
-            if (closeLabel != null)
-                closeLabel.text = "关闭";
+            if (_closeButtonLabel != null)
+                _closeButtonLabel.text = "关闭";
         }
 
         private void EnsurePointerTargets()
@@ -128,17 +93,23 @@ namespace DemonViglu.FirePlay.UI
             if (TryGetComponent<Image>(out var rootImage))
                 rootImage.raycastTarget = false;
 
-            foreach (var button in GetComponentsInChildren<Button>(true))
+            ConfigurePointerTarget(_closeButton);
+            if (_keyButtons == null) return;
+            foreach (var button in _keyButtons)
             {
-                if (button.targetGraphic != null)
-                    button.targetGraphic.raycastTarget = true;
-
-                foreach (var graphic in button.GetComponentsInChildren<Graphic>(true))
-                {
-                    if (graphic != button.targetGraphic)
-                        graphic.raycastTarget = false;
-                }
+                ConfigurePointerTarget(button);
             }
+        }
+
+        private static void ConfigurePointerTarget(Button button)
+        {
+            if (button == null) return;
+            if (button.targetGraphic != null)
+                button.targetGraphic.raycastTarget = true;
+
+            foreach (var graphic in button.GetComponentsInChildren<Graphic>(true))
+                if (graphic != button.targetGraphic)
+                    graphic.raycastTarget = false;
         }
 
         private void ResolveRequester()
@@ -263,20 +234,6 @@ namespace DemonViglu.FirePlay.UI
         {
             if (_statusText != null)
                 _statusText.text = value ?? string.Empty;
-        }
-
-        private Text FindText(string childName)
-        {
-            foreach (var text in GetComponentsInChildren<Text>(true))
-                if (text.gameObject.name == childName) return text;
-            return null;
-        }
-
-        private Button FindButton(string childName)
-        {
-            foreach (var button in GetComponentsInChildren<Button>(true))
-                if (button.gameObject.name == childName) return button;
-            return null;
         }
 
         private void OnDisable()

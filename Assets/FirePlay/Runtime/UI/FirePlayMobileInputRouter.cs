@@ -1,6 +1,5 @@
 using DemonViglu.FirePlay.Activity;
 using DemonViglu.FirePlay.Player;
-using SUIFW;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.UI
@@ -146,7 +145,9 @@ namespace DemonViglu.FirePlay.UI
         /// <summary>Opens the generic activity selection surface.</summary>
         public void OpenActivitySelection()
         {
-            UIManager.GetInstance().ShowUIForms("ActivitySelectionForms");
+            var ui = GameInstanceSubsystem.TryGet<IFirePlayUiService>();
+            if (ui == null || !ui.Show(FirePlayUiIds.ActivitySelection))
+                Debug.LogError("[FirePlayMobileInputRouter] FirePlay UI Service 未就绪或活动轮盘未注册。", this);
         }
 
         private void Request(System.Action<FirePlayPlayerInput> request)

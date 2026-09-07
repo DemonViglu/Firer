@@ -1,14 +1,13 @@
 using DemonViglu.FirePlay.Activity;
 using DemonViglu.FirePlay.Player;
 using DemonViglu.FirePlay.World;
-using SUIFW;
 using UnityEngine;
 
 namespace DemonViglu.FirePlay.UI
 {
     /// <summary>
     /// Player-side execution boundary for Activity UI/Camera/Player requests.
-    /// ActivityLogic never touches UIManager, buttons or camera components;
+    /// ActivityLogic never touches the UI service, buttons or camera components;
     /// this host is the only adapter that is allowed to do so.
     /// </summary>
     [DisallowMultipleComponent]
@@ -191,14 +190,18 @@ namespace DemonViglu.FirePlay.UI
             if (string.IsNullOrWhiteSpace(request.UiPrefabKey))
                 return true;
 
-            var uiManager = UIManager.GetInstance();
-            if (uiManager == null)
+            var ui = GameInstanceSubsystem.TryGet<IFirePlayUiService>();
+            if (ui == null)
+            {
+                Debug.LogError("[PlayerActivityPresentationHost] FirePlay UI Service 未注册。", this);
                 return false;
+            }
 
             if (!string.IsNullOrWhiteSpace(_shownUiKey) && _shownUiKey != request.UiPrefabKey)
-                uiManager.CloseOrReturnUIForms(_shownUiKey);
+                ui.CloseOrReturn(_shownUiKey);
 
-            uiManager.ShowUIForms(request.UiPrefabKey);
+            if (!ui.Show(request.UiPrefabKey))
+                return false;
             _shownActivityId = request.ActivityId;
             _shownUiKey = request.UiPrefabKey;
             _shownRevision = request.SessionRevision;
@@ -234,8 +237,9 @@ namespace DemonViglu.FirePlay.UI
                 return false;
             }
 
-            var uiManager = UIManager.TryGetInstance();
-            uiManager?.CloseOrReturnUIForms(_shownUiKey);
+            var ui = GameInstanceSubsystem.TryGet<IFirePlayUiService>();
+            if (ui == null || !ui.CloseOrReturn(_shownUiKey))
+                return false;
             _shownActivityId = string.Empty;
             _shownUiKey = string.Empty;
             _shownRevision = 0;

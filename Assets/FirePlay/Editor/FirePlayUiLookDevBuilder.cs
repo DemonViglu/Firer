@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace DemonViglu.FirePlay.Editor
 {
     /// <summary>
-    /// Applies the snow-valley UI art direction to existing SUIFW assets.
+    /// Applies the snow-valley UI art direction to explicit FirePlay UI prefabs.
     /// It only changes serialized presentation components; all form scripts,
     /// button callbacks and activity state ownership stay untouched.
     /// </summary>
@@ -16,15 +16,16 @@ namespace DemonViglu.FirePlay.Editor
         private const string UiArtDirectory = "Assets/FirePlay/LookDev/UI";
         private const string RoundedSpritePath = UiArtDirectory + "/SnowUi_RoundedPanel.png";
         private const string CircleSpritePath = UiArtDirectory + "/SnowUi_SoftCircle.png";
-        private const string CanvasPath = "Assets/Resources/SUIFW/Canvas.prefab";
+        private const string HudPath = "Assets/FirePlay/UI/Prefabs/FirePlayHud.prefab";
 
         private static readonly string[] ActivityFormPaths =
         {
-            "Assets/Resources/SUIFW/UIPrefabs/ActivitySelectionForms.prefab",
-            "Assets/Resources/SUIFW/UIPrefabs/MarshmallowActivityForms.prefab",
-            "Assets/Resources/SUIFW/UIPrefabs/FishingActivityForms.prefab",
-            "Assets/Resources/SUIFW/UIPrefabs/GuitarActivityForms.prefab",
-            "Assets/Resources/SUIFW/UIPrefabs/EmoteActivityForms.prefab"
+            "Assets/FirePlay/UI/Prefabs/ActivitySelectionForms.prefab",
+            "Assets/FirePlay/UI/Prefabs/MarshmallowActivityForms.prefab",
+            "Assets/FirePlay/UI/Prefabs/FishingActivityForms.prefab",
+            "Assets/FirePlay/UI/Prefabs/GuitarActivityForms.prefab",
+            "Assets/FirePlay/UI/Prefabs/EmoteActivityForms.prefab",
+            "Assets/FirePlay/UI/Prefabs/NetworkConnectionForms.prefab"
         };
 
         // Keep the interface almost colourless. Snow light and a dark text outline
@@ -45,7 +46,7 @@ namespace DemonViglu.FirePlay.Editor
             // with the existing authoring routine, but do not generate assets.
             Sprite roundedSprite = null;
             Sprite circleSprite = null;
-            StylePrefab(CanvasPath, roundedSprite, circleSprite, isHud: true);
+            StylePrefab(HudPath, roundedSprite, circleSprite, isHud: true);
             foreach (var formPath in ActivityFormPaths)
             {
                 StylePrefab(formPath, roundedSprite, circleSprite, isHud: false);

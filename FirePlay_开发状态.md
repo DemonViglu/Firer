@@ -4,7 +4,7 @@
 
 ## 1. 当前结论
 
-- 当前稳定基线提交：`52dc9a3 联机机制补充`。
+- 当前工作树基线提交：`f3463de 移除SUIFW框架，整理代码`；既有 PC 联机验收基线为 `52dc9a3`。
 - 唯一正式接入场景：`Assets/Scenes/SnowValley_Playable.unity`。
 - SnowValley 的单机玩法、PC 直连联机、Host 权威 SmallFire、网络角色表现、最小 late-join 与断线清理门槛已经可运行并由用户验收。
 - 当前架构已经足够继续做内容、美术、动画和具体伙伴互动；**不要再主动发起 Player、Activity、Camera 或 Network 的无目标重构**。
@@ -175,4 +175,17 @@ SUIFW 移除只是本阶段的第一项基础设施工作。UI 迁移验收后�
 - Windows Development Build：成功。
 - PC Host/Client 基础联机、SmallFire、网络模型、表情朝向、最小 late-join/断线：用户验收通过。
 - 当前改动已由用户提交；后续以 `52dc9a3` 为稳定联机基线。
-- SUIFW 移除已进入实施：`IFirePlayUiService + FirePlayUiRoot + FirePlayUiCatalog + FirePlayUiView`、现有 7 个 Form 的新生命周期以及调用者切换已完成，Unity Runtime/Editor 编译通过；内存回归已覆盖栈、指定返回、`HideOther`、Modal 遮罩和输入焦点。Prefab/Catalog/SnowValley 作者期迁移与旧目录删除尚未执行，正式场景仍保持原配置，因此本里程碑不能标记为完成或 Play Mode 通过。
+- UI 迁移已落盘并提交至 `f3463de`：七个 View 位于 `Assets/FirePlay/UI/Prefabs`，Catalog 显式引用 Prefab，SnowValley 已绑定 Root/Catalog；旧框架、Resources 路由和旧示例已删除。2026-09-07 Unity Play Mode 实测四类活动的 Session、绑定按钮、网络窗 HideOther 恢复、Back 退出和移动/Look 锁恢复通过，CanvasGroup 序列化缺失已修复。Rest/Stargazing、真实键鼠/触摸、双端 Owner/Observer 和本次 Windows Build 尚需补验；不能将旧 Build 成功记录当成本次迁移验收。
+
+## 9. 用户已授权的后续美术重建（2026-09-09）
+
+> 最新方向（2026-09-17）：用户否决 TravelerRebuild 角色造型，停止新角色制作，继续使用原先角色。未把新角色接入 Player 或正式场景。当前直接推进雪谷环境重建，按用户要求不运行玩法验收。
+
+- 2026-09-17 环境重建第一轮已实施：SnowValley 新增 `SnowValley_RebuiltEnvironment`，约 1024m 连续地形、山脊、北向雪路、雪松群和岩石坡地；新材质/网格存于 `Assets/FirePlay/Art/SnowValleyRebuild`。旧阶梯山体等分组保留并停用，原角色不变。主湖保留，高台湖停用；新地形绑定原热场雪面接收器，并显式配置碰撞与火种可放置表面。作者入口为 `SnowValleyEnvironmentRebuild.Build`，备份及总览位于 `Authoring/EnvironmentRebuild`。当前为环境构形初版，营地近景、自然湖岸和细节继续深化；通行、交互、移动端性能及联机均待用户验收，不宣称最终发布质量。
+
+- 先收尾当前纵向切片，再重建更有大世界感的雪谷；用户允许完整重建地形、布局、远景和探索路线，不限于改造现有环境。正式接入仍使用 SnowValley_Playable，玩法与联机边界保持现有实现。
+- 用户授权重新制作可合理分离身体、头发、衣装与配饰的人物，重建适合绑定的人体拓扑、统一骨架、蒙皮权重及骨骼动画，重点解决僵硬和非目标部位被牵拉的问题。
+- 新资产采用独立目录保留旧版以便回退；先完成代表性角色动作与场景片区的视觉/变形验证，再扩展完整场景。重建授权不表示既有验收或最终质量已完成。
+- 用户随后要求停止继续测试、直接进入制作，并再次明确角色从零重建。后续不得反复运行验收阻塞美术制作；未运行的验收记录为“待用户验收”。
+- 2026-09-09 已新建 `Authoring/TravelerRebuild/Traveler_Modular.blend` 与 `Assets/FirePlay/Art/TravelerRebuild/Traveler_Modular.fbx`，完全不读取旧角色网格；人体、衣装、头发、配饰分部件，统一骨架含手指骨，采用按部位/关节环显式权重与旋转动画，新增 11 条基础/活动 Action。第一版造型预览位于 `Authoring/TravelerRebuild/Preview/Traveler_Portrait.png`。这是制作初版，肩胯接缝与动作精修、Unity Avatar/Controller/正式 Player 接入仍未完成，不能宣称最终可用标准或变形验收通过。
+- 本轮 UI 收尾的已运行事实：`f3463de` Windows 构建成功（`Build/UiMigration_20260909/FirePlay.exe`）；Rest/Stargazing 真实地点进入/离开与锁恢复通过。之后 Guitar 改为 21 个显式按钮事件并确认演奏计数和键盘单次输入；定位活动 UI 光标仍锁定并补入 UI 期间释放/归还光标的修复。按用户要求停止测试，光标修复与最新代码未重新构建/验收，鼠标/触屏及多端验收均待用户验收。

@@ -23,6 +23,35 @@ namespace DemonViglu.FirePlay.UI
         private readonly List<string> _stack = new();
         private FirePlayUiCatalog _catalog;
         private bool _initialized;
+        private bool _blocksGameplayPointer;
+        private DemonViglu.FirePlay.Player.PlayerLook _pointerOwner;
+        private bool _restoreCursorCapture;
+
+        private void LateUpdate() => UpdatePointerOwnership();
+
+        private void UpdatePointerOwnership()
+        {
+            var current = DemonViglu.FirePlay.Player.LocalPlayerContext.Current?.Look;
+            if (_pointerOwner != null && (!_blocksGameplayPointer || _pointerOwner != current))
+            {
+                if (_pointerOwner == current && _pointerOwner.HasLocalControl)
+                    _pointerOwner.SetCursorCaptured(_restoreCursorCapture);
+                _pointerOwner = null;
+            }
+            if (!_blocksGameplayPointer || current == null) return;
+            if (_pointerOwner == null)
+            {
+                _pointerOwner = current;
+                _restoreCursorCapture = current.IsCursorCaptured;
+            }
+            current.SetCursorCaptured(false);
+        }
+
+        private void OnDisable()
+        {
+            _blocksGameplayPointer = false;
+            UpdatePointerOwnership();
+        }
 
         private void Update()
         {
@@ -206,6 +235,8 @@ namespace DemonViglu.FirePlay.UI
             }
 
             var blocksUnderlyingInput = focusedStackState?.Entry.BlocksInput == true;
+            _blocksGameplayPointer = blocksUnderlyingInput;
+            UpdatePointerOwnership();
             var hasBlockingModal = false;
             foreach (var state in _views.Values)
             {

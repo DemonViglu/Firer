@@ -27,6 +27,7 @@ namespace DemonViglu.FirePlay.UI
         [SerializeField] private Text[] _keyLabels;
 
         private UnityAction _closeHandler;
+        private UnityAction[] _keyHandlers;
         private IActivityActionRequester _requester;
         private bool _acceptInput;
 
@@ -68,7 +69,6 @@ namespace DemonViglu.FirePlay.UI
             if (!gameObject.activeInHierarchy || !_acceptInput)
                 return;
 
-            ProcessPointerInput();
             ProcessKeyboardInput();
             Refresh();
         }
@@ -121,6 +121,21 @@ namespace DemonViglu.FirePlay.UI
         {
             UnbindButtons();
 
+            if (_keyButtons != null)
+            {
+                _keyHandlers = new UnityAction[_keyButtons.Length];
+                for (var index = 0; index < _keyButtons.Length; index++)
+                {
+                    var key = index + 1;
+                    _keyHandlers[index] = () =>
+                    {
+                        if (IsFocused && TryGetActiveState(out _))
+                            Submit(GuitarActivityLogic.GetKeyActionId(key));
+                    };
+                    _keyButtons[index]?.onClick.AddListener(_keyHandlers[index]);
+                }
+            }
+
             if (_closeButton != null)
             {
                 _closeHandler = OnCloseClicked;
@@ -130,32 +145,13 @@ namespace DemonViglu.FirePlay.UI
 
         private void UnbindButtons()
         {
+            if (_keyHandlers != null && _keyButtons != null)
+                for (var index = 0; index < _keyButtons.Length && index < _keyHandlers.Length; index++)
+                    _keyButtons[index]?.onClick.RemoveListener(_keyHandlers[index]);
+            _keyHandlers = null;
             if (_closeButton != null && _closeHandler != null)
                 _closeButton.onClick.RemoveListener(_closeHandler);
             _closeHandler = null;
-        }
-
-        private void ProcessPointerInput()
-        {
-            var pointer = Pointer.current;
-            if (pointer == null || !pointer.press.wasPressedThisFrame || !TryGetActiveState(out _))
-                return;
-
-            var screenPoint = pointer.position.ReadValue();
-            for (var index = 0; index < _keyButtons.Length; index++)
-            {
-                var button = _keyButtons[index];
-                if (button == null
-                    || !button.interactable
-                    || button.transform is not RectTransform keyRect
-                    || !RectTransformUtility.RectangleContainsScreenPoint(keyRect, screenPoint, null))
-                {
-                    continue;
-                }
-
-                Submit(GuitarActivityLogic.GetKeyActionId(index + 1));
-                return;
-            }
         }
 
         private void Refresh()

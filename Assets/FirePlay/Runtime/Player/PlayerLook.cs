@@ -23,6 +23,7 @@ namespace DemonViglu.FirePlay.Player
         public Transform CameraPivot => _cameraPivot;
         public bool LookLocked { get; private set; }
         public bool HasLocalControl => _localControl;
+        public bool IsCursorCaptured => _cursorCaptured;
 
         private void Awake()
         {
